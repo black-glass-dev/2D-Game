@@ -22,7 +22,7 @@
 
 `.github/workflows/android-apk.yml` is the reproducible remote build/test lane. On a push to the Arena branch or a manual GitHub Actions dispatch it installs Godot 4.7.2 plus export templates, exports the arm64/x86_64 debug APK, verifies the archive/signature, installs it in an API 35 x86_64 Android emulator, launches the package, scans the launch log for fatal Android errors, and uploads the APK plus log as a workflow artifact. The workflow must finish green before its artifact is called a tested APK.
 
-**Current remote-run status:** The workflow file is active on GitHub, but this Arena GitHub integration received `HTTP 403: Resource not accessible by integration` when attempting `workflow_dispatch`; no workflow run or APK artifact exists yet. The account connection needs GitHub Actions dispatch permission (or the user can manually run **Build and verify Android APK** from the repository’s Actions tab on `arena/e2b9c124-2d-game`).
+**Current remote-run status:** A push correctly triggered workflow run `#1`, so no manual permission is needed for normal branch pushes. Its source/C++ checks passed, then the Godot installation step stopped before export because `$HOME/.local/bin` had not been created. The workflow now explicitly creates that directory; the next pushed fix will automatically re-run the APK build. No APK artifact exists until a green run finishes.
 
 ## Not yet executable in this local environment
 
