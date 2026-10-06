@@ -30,6 +30,9 @@ def main() -> None:
 
     checked_links = 0
     for source in ROOT.rglob("*"):
+        relative_source = source.relative_to(ROOT)
+        if any(part.startswith(".") or part == "node_modules" for part in relative_source.parts):
+            continue
         if source.suffix not in TEXT_EXTENSIONS or not source.is_file():
             continue
         content = source.read_text(encoding="utf-8")

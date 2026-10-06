@@ -45,8 +45,8 @@ func try_fire(camera: Camera3D) -> bool:
 	ammo_changed.emit(ammo, reserve)
 	if gun_root != null:
 		gun_root.rotation.x = deg_to_rad(-5.5)
-	var origin := camera.global_position
-	var direction := -camera.global_transform.basis.z
+	var origin: Vector3 = camera.global_position
+	var direction: Vector3 = -camera.global_transform.basis.z
 	var query := PhysicsRayQueryParameters3D.create(origin, origin + direction * 80.0, 5)
 	query.collide_with_areas = false
 	var player := camera.get_parent().get_parent()
@@ -72,7 +72,7 @@ func start_reload() -> void:
 
 func _complete_reload() -> void:
 	var needed := MAGAZINE_SIZE - ammo
-	var moved := min(needed, reserve)
+	var moved: int = mini(needed, reserve)
 	ammo += moved
 	reserve -= moved
 	ammo_changed.emit(ammo, reserve)

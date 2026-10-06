@@ -1,0 +1,106 @@
+name: Build and verify Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - arena/e2b9c124-2d-game
+    paths:
+      - ".github/workflows/android-apk.yml"
+      - "assets/**"
+      - "native/**"
+      - "scenes/**"
+      - "scripts/**"
+      - "tools/**"
+      - "project.godot"
+      - "export_presets.cfg"
+      - "package.json"
+      - "package-lock.json"
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-smoke-test:
+    name: Android APK and emulator smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node for GDScript static analysis
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Run source and C++ tests
+        run: |
+          npm ci
+          npm run test:gdscript
+          python3 tools/validate_project.py
+          ./scripts/run_native_tests.sh
+
+      - name: Set up JDK 17 for Android signing
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install Godot 4.7.2 and Android export templates
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="4.7.2-stable"
+          ENGINE="Godot_v${VERSION}_linux.x86_64"
+          curl --fail --location --retry 3 --output /tmp/godot.zip \
+            "https://github.com/godotengine/godot/releases/download/${VERSION}/${ENGINE}.zip"
+          unzip -q /tmp/godot.zip -d "$HOME/.local/bin"
+          chmod +x "$HOME/.local/bin/${ENGINE}"
+          ln -sf "$HOME/.local/bin/${ENGINE}" "$HOME/.local/bin/godot"
+          curl --fail --location --retry 3 --output /tmp/templates.tpz \
+            "https://github.com/godotengine/godot/releases/download/${VERSION}/Godot_v${VERSION}_export_templates.tpz"
+          mkdir -p "$HOME/.local/share/godot/export_templates/4.7.2.stable"
+          unzip -q /tmp/templates.tpz -d "$HOME/.local/share/godot/export_templates/4.7.2.stable"
+          "$HOME/.local/bin/godot" --version
+
+      - name: Import project and export debug APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.local/bin:$PATH"
+          godot --headless --path . --editor --quit
+          mkdir -p build
+          godot --headless --path . --export-debug "Android Debug" build/OperationRedline-debug.apk
+          test -s build/OperationRedline-debug.apk
+          unzip -t build/OperationRedline-debug.apk
+          jarsigner -verify -certs -verbose build/OperationRedline-debug.apk
+
+      - name: Install and launch APK in Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          script: |
+            adb install -r build/OperationRedline-debug.apk
+            adb shell monkey -p com.operationredline.outpost 1
+            sleep 12
+            adb logcat -d -t 900 > build/android-emulator.log
+            if grep -E "FATAL EXCEPTION|AndroidRuntime.*Process.*com\.operationredline\.outpost" build/android-emulator.log; then
+              echo "Android runtime crash found in logcat."
+              exit 1
+            fi
+
+      - name: Upload tested build evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: operation-redline-android-debug
+          if-no-files-found: warn
+          path: |
+            build/OperationRedline-debug.apk
+            build/android-emulator.log

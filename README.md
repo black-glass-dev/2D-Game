@@ -43,11 +43,16 @@ Desktop development controls:
 | RELOAD button | Reload |
 | Escape | Release mouse cursor |
 
-Before opening the project, run the source-only consistency check:
+Before opening the project, run the headless source checks:
 
 ```bash
+npm ci
+npm run test:gdscript
 python3 tools/validate_project.py
+./scripts/run_native_tests.sh
 ```
+
+`npm run test:gdscript` uses a pinned Godot 4.x GDScript static analyzer. It catches parser/type diagnostics without requiring a Godot editor; it does not replace a real scene launch or Android device test.
 
 ## Android debug APK export
 
@@ -70,6 +75,8 @@ python3 tools/validate_project.py
    ```
 
 The APK is intentionally ignored by Git. Source, export preset, asset generator, native tests and test report remain versioned.
+
+A reproducible GitHub Actions lane is included at [`.github/workflows/android-apk.yml`](.github/workflows/android-apk.yml). It runs source checks, exports this exact Android preset, checks the APK archive/signature, installs it into an API 35 emulator and uploads the APK plus launch log as an artifact. A green workflow artifact is the handoff candidate; it is not considered a fully manual touch-control playtest.
 
 ## Verification status
 

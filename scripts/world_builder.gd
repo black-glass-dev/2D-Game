@@ -145,15 +145,15 @@ static func _add_distant_mountains(root: Node3D, material: Material) -> void:
 		root.add_child(mountain)
 
 static func _add_sign(root: Node3D) -> void:
-	var sign := Label3D.new()
-	sign.name = "Outpost sign"
-	sign.text = "REDLINE\nOUTPOST"
-	sign.font_size = 64
-	sign.outline_size = 8
-	sign.modulate = Color("ffe0ad")
-	sign.position = Vector3(-8.4, 3.4, -0.88)
-	sign.rotation_degrees = Vector3(0, 180, 0)
-	root.add_child(sign)
+	var outpost_sign := Label3D.new()
+	outpost_sign.name = "Outpost sign"
+	outpost_sign.text = "REDLINE\nOUTPOST"
+	outpost_sign.font_size = 64
+	outpost_sign.outline_size = 8
+	outpost_sign.modulate = Color("ffe0ad")
+	outpost_sign.position = Vector3(-8.4, 3.4, -0.88)
+	outpost_sign.rotation_degrees = Vector3(0, 180, 0)
+	root.add_child(outpost_sign)
 
 static func _material(texture_path: String, tint: Color) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()

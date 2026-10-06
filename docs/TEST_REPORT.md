@@ -12,12 +12,17 @@
 | --- | --- | --- |
 | Original texture dimensions | `python3 tools/validate_project.py` reads PNG IHDR headers | **PASS** — 4 textures, all exactly 128×128 |
 | Referenced-resource consistency | `python3 tools/validate_project.py` scans committed `res://` references | **PASS** — 7 resource links resolve |
+| GDScript parse/type diagnostics | `npm ci && npm run test:gdscript` via pinned Godot 4.x analyzer | **PASS** — 6 scripts, 0 errors, 0 warnings |
 | Startup scene presence | Same validator checks `project.godot` and `scenes/Main.tscn` | **PASS** |
 | C++ warning-clean compile | `g++ -std=c++20 -Wall -Wextra -Werror -pedantic ...` | **PASS** |
 | C++ survival pacing unit tests | `./scripts/run_native_tests.sh` | **PASS** — waves 1–3, 27 spawns, wave clear, completion state, stopped-state invariant |
 | Repository artifact size | `find ... -size +1M` | **PASS** — no large generated binary was placed in source control |
 
-## Not yet executable in this environment
+## Remote Android build gate
+
+`.github/workflows/android-apk.yml` is the reproducible remote build/test lane. On a push to the Arena branch or a manual GitHub Actions dispatch it installs Godot 4.7.2 plus export templates, exports the arm64/x86_64 debug APK, verifies the archive/signature, installs it in an API 35 x86_64 Android emulator, launches the package, scans the launch log for fatal Android errors, and uploads the APK plus log as a workflow artifact. The workflow must finish green before its artifact is called a tested APK.
+
+## Not yet executable in this local environment
 
 | Gate | Why it cannot be marked passed | Required before handoff |
 | --- | --- | --- |

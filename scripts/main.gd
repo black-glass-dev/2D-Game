@@ -77,7 +77,7 @@ func _spawn_raider(serial: int) -> void:
 		return
 	var enemy := Raider.new()
 	enemy.setup(serial)
-	var candidate := SPAWN_POINTS[(serial - 1) % SPAWN_POINTS.size()]
+	var candidate: Vector3 = SPAWN_POINTS[(serial - 1) % SPAWN_POINTS.size()]
 	# Do not make every wave feel identical: rotate the selected lane each round.
 	var lateral := Vector3(float((serial * 7) % 5 - 2) * 0.7, 0, float((serial * 3) % 5 - 2) * 0.5)
 	enemy.position = candidate + lateral
@@ -204,8 +204,8 @@ func _show_end_panel(title: String, description: String, tint: Color) -> void:
 	panel.color = Color(0.025, 0.04, 0.035, 0.86)
 	panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	hud.add_child(panel)
-	var headline := _label(title, Vector2(-260, -85), Vector2(520, 42), 30, tint, Control.PRESET_CENTER, HORIZONTAL_ALIGNMENT_CENTER)
-	var copy := _label(description, Vector2(-290, -32), Vector2(580, 35), 17, Color("e6dcc1"), Control.PRESET_CENTER, HORIZONTAL_ALIGNMENT_CENTER)
+	_label(title, Vector2(-260, -85), Vector2(520, 42), 30, tint, Control.PRESET_CENTER, HORIZONTAL_ALIGNMENT_CENTER)
+	_label(description, Vector2(-290, -32), Vector2(580, 35), 17, Color("e6dcc1"), Control.PRESET_CENTER, HORIZONTAL_ALIGNMENT_CENTER)
 	restart_button = _button("RESTART OPERATION", Vector2(-128, 28), Vector2(256, 56), Control.PRESET_CENTER, Color("596d52"))
 	restart_button.pressed.connect(_restart)
 

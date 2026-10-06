@@ -8,6 +8,9 @@
 .idea/
 .DS_Store
 
+# Node-based static-analysis dependency install
+node_modules/
+
 # Native extension build outputs
 native/bin/
 native/.sconsign.dblite
