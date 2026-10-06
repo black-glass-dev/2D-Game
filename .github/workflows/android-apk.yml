@@ -18,7 +18,7 @@ on:
       - "package-lock.json"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build-and-smoke-test:
@@ -107,6 +107,22 @@ jobs:
           test -s build/OperationRedline-debug.apk
           unzip -t build/OperationRedline-debug.apk
           jarsigner -verify -certs -verbose build/OperationRedline-debug.apk
+
+      - name: Commit Godot diagnostics if export fails
+        if: failure()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ci-logs
+          cp build/godot-*.log ci-logs/ 2>/dev/null || true
+          if ! compgen -G "ci-logs/godot-*.log" > /dev/null; then
+            echo "Godot did not create a diagnostic log." > ci-logs/no-godot-log.txt
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ci-logs
+          git diff --cached --quiet || git commit -m "ci: capture Android export diagnostics"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
 
       - name: Install and launch APK in Android emulator
         uses: reactivecircus/android-emulator-runner@v2
