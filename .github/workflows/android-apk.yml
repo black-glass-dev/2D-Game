@@ -92,8 +92,13 @@ jobs:
           ln -sf "$HOME/.local/bin/${ENGINE}" "$HOME/.local/bin/godot"
           curl --fail --location --retry 3 --output /tmp/templates.tpz \
             "https://github.com/godotengine/godot/releases/download/${VERSION}/Godot_v${VERSION}_export_templates.tpz"
-          mkdir -p "$HOME/.local/share/godot/export_templates/4.7.2.stable"
-          unzip -q /tmp/templates.tpz -d "$HOME/.local/share/godot/export_templates/4.7.2.stable"
+          TEMPLATE_DIR="$HOME/.local/share/godot/export_templates/4.7.2.stable"
+          mkdir -p "$TEMPLATE_DIR" /tmp/godot-templates
+          unzip -q /tmp/templates.tpz -d /tmp/godot-templates
+          # A .tpz archive wraps actual templates in its top-level templates/ directory.
+          cp -a /tmp/godot-templates/templates/. "$TEMPLATE_DIR/"
+          test -f "$TEMPLATE_DIR/android_debug.apk"
+          test -f "$TEMPLATE_DIR/android_release.apk"
           "$HOME/.local/bin/godot" --version
 
       - name: Import project and export debug APK

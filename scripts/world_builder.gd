@@ -160,7 +160,7 @@ static func _material(texture_path: String, tint: Color) -> StandardMaterial3D:
 	material.albedo_color = tint
 	material.albedo_texture = load(texture_path)
 	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-	material.texture_repeat = BaseMaterial3D.TEXTURE_REPEAT_ENABLED
+	material.texture_repeat = true
 	material.roughness = 0.9
 	return material
 
