@@ -1,0 +1,163 @@
+name: Build and verify Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - arena/e2b9c124-2d-game
+    paths:
+      - ".github/workflows/android-apk.yml"
+      - "assets/**"
+      - "native/**"
+      - "scenes/**"
+      - "scripts/**"
+      - "tools/**"
+      - "project.godot"
+      - "export_presets.cfg"
+      - "package.json"
+      - "package-lock.json"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-smoke-test:
+    name: Android APK and emulator smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node for GDScript static analysis
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Run source and C++ tests
+        run: |
+          npm ci
+          npm run test:gdscript
+          python3 tools/validate_project.py
+          ./scripts/run_native_tests.sh
+
+      - name: Set up JDK 17 for Android signing
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Configure Android SDK and debug signing for Godot
+        shell: bash
+        run: |
+          set -euo pipefail
+          export ANDROID_HOME="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          export ANDROID_SDK_ROOT="$ANDROID_HOME"
+          export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
+          command -v sdkmanager
+          echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> "$GITHUB_ENV"
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
+          yes | sdkmanager --sdk_root="$ANDROID_HOME" --licenses > /dev/null || true
+          sdkmanager --sdk_root="$ANDROID_HOME" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+          mkdir -p "$HOME/.android" "$HOME/.config/godot"
+          keytool -genkeypair -noprompt -keystore "$HOME/.android/debug.keystore" \
+            -storepass android -keypass android -alias androiddebugkey \
+            -dname "CN=Android Debug,O=Android,C=US" -keyalg RSA -keysize 2048 -validity 10000
+          cat > "$HOME/.config/godot/editor_settings-4.tres" <<EOF
+          [gd_resource type="EditorSettings" format=3]
+
+          [resource]
+          export/android/android_sdk_path = "$ANDROID_HOME"
+          export/android/java_sdk_path = "$JAVA_HOME"
+          export/android/debug_keystore = "$HOME/.android/debug.keystore"
+          export/android/debug_keystore_user = "androiddebugkey"
+          export/android/debug_keystore_pass = "android"
+          EOF
+
+      - name: Install Godot 4.7.2 and Android export templates
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="4.7.2-stable"
+          ENGINE="Godot_v${VERSION}_linux.x86_64"
+          mkdir -p "$HOME/.local/bin"
+          curl --fail --location --retry 3 --output /tmp/godot.zip \
+            "https://github.com/godotengine/godot/releases/download/${VERSION}/${ENGINE}.zip"
+          unzip -q /tmp/godot.zip -d "$HOME/.local/bin"
+          chmod +x "$HOME/.local/bin/${ENGINE}"
+          ln -sf "$HOME/.local/bin/${ENGINE}" "$HOME/.local/bin/godot"
+          curl --fail --location --retry 3 --output /tmp/templates.tpz \
+            "https://github.com/godotengine/godot/releases/download/${VERSION}/Godot_v${VERSION}_export_templates.tpz"
+          TEMPLATE_DIR="$HOME/.local/share/godot/export_templates/4.7.2.stable"
+          mkdir -p "$TEMPLATE_DIR" /tmp/godot-templates
+          unzip -q /tmp/templates.tpz -d /tmp/godot-templates
+          # A .tpz archive wraps actual templates in its top-level templates/ directory.
+          cp -a /tmp/godot-templates/templates/. "$TEMPLATE_DIR/"
+          test -f "$TEMPLATE_DIR/android_debug.apk"
+          test -f "$TEMPLATE_DIR/android_release.apk"
+          "$HOME/.local/bin/godot" --version
+
+      - name: Import project and export debug APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.local/bin:$PATH"
+          mkdir -p build
+          godot --headless --path . --editor --quit 2>&1 | tee build/godot-import.log
+          godot --headless --path . --export-debug "Android Debug" build/OperationRedline-debug.apk 2>&1 | tee build/godot-export.log
+          test -s build/OperationRedline-debug.apk
+          unzip -t build/OperationRedline-debug.apk
+          jarsigner -verify -certs -verbose build/OperationRedline-debug.apk
+
+      - name: Commit Godot diagnostics if export fails
+        if: failure()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ci-logs
+          cp build/godot-*.log ci-logs/ 2>/dev/null || true
+          if ! compgen -G "ci-logs/godot-*.log" > /dev/null; then
+            echo "Godot did not create a diagnostic log." > ci-logs/no-godot-log.txt
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ci-logs
+          git diff --cached --quiet || git commit -m "ci: capture Android export diagnostics"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+
+      - name: Install and launch APK in Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          # API 30/default boots reliably on GitHub-hosted x86_64 runners and is
+          # sufficient to validate this Android 35-compiled, min-SDK-compatible APK.
+          api-level: 30
+          target: default
+          arch: x86_64
+          profile: pixel_2
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          disable-animations: true
+          script: |
+            adb install -r build/OperationRedline-debug.apk
+            adb shell monkey -p com.operationredline.outpost 1
+            sleep 12
+            adb logcat -d -t 900 > build/android-emulator.log
+            if grep -E "FATAL EXCEPTION|AndroidRuntime.*Process.*com\.operationredline\.outpost" build/android-emulator.log; then
+              echo "Android runtime crash found in logcat."
+              exit 1
+            fi
+
+      - name: Upload tested build evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: operation-redline-android-debug
+          if-no-files-found: warn
+          path: |
+            build/OperationRedline-debug.apk
+            build/android-emulator.log
+            build/godot-import.log
+            build/godot-export.log
