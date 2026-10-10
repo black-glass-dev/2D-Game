@@ -7,7 +7,7 @@ const SPAWN_POINTS := [
 	Vector3(47, 0.15, 3), Vector3(-48, 0.15, 3)
 ]
 const HUD_LAYOUT_FILE := "user://operation_redline_hud.cfg"
-const HUD_KEYS := ["joystick", "fire", "aim", "reload", "jump", "crouch"]
+const HUD_KEYS := ["joystick", "fire", "aim", "reload", "jump", "crouch", "minimap"]
 
 var player: OutpostPlayer
 var rifle: ServiceRifle
@@ -22,6 +22,15 @@ var accuracy_label: Label
 var status_label: Label
 var alert_label: Label
 var damage_overlay: ColorRect
+var damage_edges: Array[ColorRect] = []
+var damage_indicator: Label
+var hit_marker: Label
+var kill_feed: VBoxContainer
+var minimap: TacticalRadar
+var settings := RedlineSettings.new()
+var settings_button: Button
+var settings_panel: Panel
+var settings_summary: Label
 var aim_button: Button
 var reload_button: Button
 var fire_button: Button
@@ -43,8 +52,12 @@ var shots := 0
 var hits := 0
 var touch_aim := false
 var damage_flash := 0.0
+var damage_indicator_left := 0.0
+var respawn_left := -1.0
+var respawn_last_second := -1
 
 func _ready() -> void:
+	settings.load_from_disk()
 	WorldBuilder.build(self)
 	player = OutpostPlayer.new()
 	player.position = PLAYER_SPAWN
@@ -52,6 +65,7 @@ func _ready() -> void:
 	player.fire_requested.connect(_fire)
 	player.movement_touch_changed.connect(_update_movement_stick)
 	player.health_changed.connect(_on_health_changed)
+	player.damage_taken.connect(_on_player_damage)
 	player.player_down.connect(_on_player_down)
 
 	rifle = ServiceRifle.new()
@@ -60,6 +74,7 @@ func _ready() -> void:
 	rifle.ammo_changed.connect(_on_ammo_changed)
 	rifle.weapon_message.connect(_set_status)
 	rifle.shot_resolved.connect(_on_shot_resolved)
+	rifle.shot_feedback.connect(_on_shot_feedback)
 
 	director = SurvivalDirector.new()
 	add_child(director)
@@ -69,6 +84,7 @@ func _ready() -> void:
 	director.operation_complete.connect(_on_operation_complete)
 
 	_build_hud()
+	_apply_settings()
 	get_viewport().size_changed.connect(_on_viewport_size_changed)
 	_set_status("SECURE THE OUTPOST")
 	_show_alert("OPERATION REDLINE", 2.1)
@@ -82,9 +98,16 @@ func _process(delta: float) -> void:
 		if desktop_mouse and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 			_fire()
 		player.set_aim(touch_aim or (desktop_mouse and Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)))
+	_update_respawn(delta)
 	damage_flash = maxf(damage_flash - delta * 1.8, 0.0)
+	damage_indicator_left = maxf(damage_indicator_left - delta, 0.0)
+	var effect_alpha := damage_flash if settings.screen_effects else 0.0
 	if damage_overlay != null:
-		damage_overlay.color.a = damage_flash
+		damage_overlay.color.a = effect_alpha * 0.08
+	for edge in damage_edges:
+		edge.color.a = effect_alpha * 0.48
+	if damage_indicator != null:
+		damage_indicator.modulate.a = clampf(damage_indicator_left * 1.6, 0.0, 1.0) if settings.screen_effects else 0.0
 
 func _fire() -> void:
 	if player == null or not player.can_control or rifle == null:
@@ -143,17 +166,42 @@ func _on_operation_complete() -> void:
 
 func _on_player_down() -> void:
 	director.stop_operation()
-	damage_flash = 0.75
+	damage_flash = 1.0
+	respawn_left = 2.8
+	respawn_last_second = -1
 	_set_status("YOU ARE DOWN")
-	_show_alert("MISSION FAILED", 100.0)
-	_show_end_panel("MISSION FAILED", "Regroup and hold the outpost again.", Color("ed8a74"))
+	_show_alert("REDEPLOYING", 2.5)
+	_show_end_panel("MISSION FAILED", "Redeploy sequence started.", Color("ed8a74"))
+
+func _update_respawn(delta: float) -> void:
+	if respawn_left <= 0.0:
+		return
+	respawn_left -= delta
+	var remaining := maxi(0, ceili(respawn_left))
+	if remaining != respawn_last_second:
+		respawn_last_second = remaining
+		_set_status("REDEPLOYING  %d" % remaining)
+	if respawn_left <= 0.0:
+		_restart()
 
 func _on_health_changed(current: int, maximum: int) -> void:
 	if health_label == null:
 		return
 	health_label.text = "HP  %03d / %03d" % [current, maximum]
-	if current < maximum:
-		damage_flash = maxf(damage_flash, 0.22)
+
+func _on_player_damage(amount: int, source_position: Vector3) -> void:
+	damage_flash = maxf(damage_flash, clampf(float(amount) / 14.0, 0.30, 0.85))
+	damage_indicator_left = 0.62
+	if damage_indicator == null or player == null:
+		return
+	var toward_source := source_position - player.global_position
+	toward_source.y = 0.0
+	if toward_source.length_squared() < 0.01:
+		return
+	toward_source = toward_source.normalized()
+	var screen_direction := Vector2(toward_source.dot(player.global_transform.basis.x), toward_source.dot(-player.global_transform.basis.z))
+	damage_indicator.position = screen_direction * 62.0 + Vector2(-14, -18)
+	damage_indicator.rotation = atan2(screen_direction.y, screen_direction.x) + PI * 0.5
 
 func _on_ammo_changed(in_magazine: int, reserve: int) -> void:
 	if ammo_label != null:
@@ -162,8 +210,15 @@ func _on_ammo_changed(in_magazine: int, reserve: int) -> void:
 func _on_shot_resolved(hit: bool, _target_name: String) -> void:
 	if hit:
 		hits += 1
-		_show_hit_marker()
+		_show_hit_marker(false, false)
 	_update_accuracy()
+
+func _on_shot_feedback(headshot: bool, eliminated: bool, target_name: String) -> void:
+	if headshot or eliminated:
+		_show_hit_marker(headshot, eliminated)
+	if eliminated:
+		_push_kill_feed("HEADSHOT  •  %s" % target_name if headshot else "HOSTILE CAPTURED  •  %s" % target_name, headshot)
+		_show_alert("HEADSHOT" if headshot else "HOSTILE DOWN", 0.55)
 
 func _update_accuracy() -> void:
 	if accuracy_label != null:
@@ -183,13 +238,30 @@ func _show_alert(message: String, duration: float) -> void:
 	tween.tween_interval(duration)
 	tween.tween_property(alert_label, "modulate:a", 0.0, 0.45)
 
-func _show_hit_marker() -> void:
-	var marker := hud.get_node_or_null("HitMarker") as Label
-	if marker == null:
+func _show_hit_marker(headshot: bool, eliminated: bool) -> void:
+	if hit_marker == null:
 		return
-	marker.modulate.a = 1.0
+	hit_marker.text = "✕"
+	hit_marker.add_theme_color_override("font_color", Color("ffda78") if headshot else (Color("ff8069") if eliminated else Color("ffdf9a")))
+	hit_marker.add_theme_font_size_override("font_size", 50 if headshot or eliminated else 42)
+	hit_marker.modulate.a = 1.0
 	var tween := create_tween()
-	tween.tween_property(marker, "modulate:a", 0.0, 0.12)
+	tween.tween_property(hit_marker, "modulate:a", 0.0, 0.16 if headshot or eliminated else 0.10)
+
+func _push_kill_feed(message: String, headshot: bool) -> void:
+	if kill_feed == null:
+		return
+	var entry := Label.new()
+	entry.text = message
+	entry.add_theme_font_size_override("font_size", 14)
+	entry.add_theme_color_override("font_color", Color("ffdb7b") if headshot else Color("f1ded0"))
+	entry.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	entry.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	kill_feed.add_child(entry)
+	var tween := create_tween()
+	tween.tween_interval(2.5)
+	tween.tween_property(entry, "modulate:a", 0.0, 0.35)
+	tween.tween_callback(entry.queue_free)
 
 func _build_hud() -> void:
 	hud = CanvasLayer.new()
@@ -210,9 +282,18 @@ func _build_hud() -> void:
 	alert_label = _label("", Vector2(-300, 70), Vector2(600, 42), 24, Color("fff0cc"), Control.PRESET_CENTER_TOP, HORIZONTAL_ALIGNMENT_CENTER)
 	var reticle := _label("+", Vector2(-14, -18), Vector2(28, 36), 30, Color("f5eccf"), Control.PRESET_CENTER, HORIZONTAL_ALIGNMENT_CENTER)
 	reticle.name = "Reticle"
-	var hit_marker := _label("×", Vector2(-22, -31), Vector2(44, 50), 42, Color("ffdf9a"), Control.PRESET_CENTER, HORIZONTAL_ALIGNMENT_CENTER)
+	hit_marker = _label("✕", Vector2(-25, -31), Vector2(50, 50), 42, Color("ffdf9a"), Control.PRESET_CENTER, HORIZONTAL_ALIGNMENT_CENTER)
 	hit_marker.name = "HitMarker"
 	hit_marker.modulate.a = 0.0
+	damage_indicator = _label("▲", Vector2(-14, -80), Vector2(28, 36), 26, Color("ff8a76"), Control.PRESET_CENTER, HORIZONTAL_ALIGNMENT_CENTER)
+	damage_indicator.name = "Damage direction indicator"
+	damage_indicator.modulate.a = 0.0
+	kill_feed = VBoxContainer.new()
+	kill_feed.name = "Kill feed"
+	kill_feed.position = Vector2(16, 62)
+	kill_feed.size = Vector2(300, 130)
+	kill_feed.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud.add_child(kill_feed)
 
 	controls_root = Control.new()
 	controls_root.name = "Customizable controls"
@@ -223,6 +304,9 @@ func _build_hud() -> void:
 	movement_stick = TouchJoystick.new()
 	movement_stick.name = "Movement joystick"
 	controls_root.add_child(movement_stick)
+	minimap = TacticalRadar.new()
+	minimap.track_player(player)
+	controls_root.add_child(minimap)
 	fire_button = _button("FIRE", Vector2.ZERO, Vector2(154, 132), Control.PRESET_TOP_LEFT, Color("a94f3f"), controls_root)
 	reload_button = _button("RELOAD", Vector2.ZERO, Vector2(128, 58), Control.PRESET_TOP_LEFT, Color("596b4e"), controls_root)
 	aim_button = _button("AIM", Vector2.ZERO, Vector2(128, 58), Control.PRESET_TOP_LEFT, Color("3d6661"), controls_root)
@@ -241,12 +325,17 @@ func _build_hud() -> void:
 		"reload": reload_button,
 		"jump": jump_button,
 		"crouch": crouch_button,
+		"minimap": minimap,
 	}
 
 	hud_edit_button = _button("HUD", Vector2(245, 9), Vector2(70, 34), Control.PRESET_TOP_LEFT, Color("526b68"))
 	hud_edit_button.add_theme_font_size_override("font_size", 14)
 	hud_edit_button.pressed.connect(_enter_hud_edit)
+	settings_button = _button("SET", Vector2(326, 9), Vector2(64, 34), Control.PRESET_TOP_LEFT, Color("605b72"))
+	settings_button.add_theme_font_size_override("font_size", 14)
+	settings_button.pressed.connect(_open_settings)
 	_build_hud_editor()
+	_build_settings_panel()
 
 	damage_overlay = ColorRect.new()
 	damage_overlay.name = "Damage vignette"
@@ -254,7 +343,103 @@ func _build_hud() -> void:
 	damage_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	damage_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hud.add_child(damage_overlay)
+	_build_damage_edges()
 	call_deferred("_load_hud_layout")
+
+func _build_damage_edges() -> void:
+	var edge_specs := [
+		[Control.PRESET_TOP_WIDE, Vector2(0, 0), Vector2(0, 42)],
+		[Control.PRESET_BOTTOM_WIDE, Vector2(0, -42), Vector2(0, 42)],
+		[Control.PRESET_LEFT_WIDE, Vector2(0, 0), Vector2(46, 0)],
+		[Control.PRESET_RIGHT_WIDE, Vector2(-46, 0), Vector2(46, 0)]
+	]
+	for spec in edge_specs:
+		var edge := ColorRect.new()
+		edge.color = Color(0.72, 0.025, 0.01, 0.0)
+		edge.set_anchors_preset(spec[0])
+		edge.position = spec[1]
+		edge.size = spec[2]
+		edge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		hud.add_child(edge)
+		damage_edges.append(edge)
+
+func _build_settings_panel() -> void:
+	settings_panel = Panel.new()
+	settings_panel.name = "Settings panel"
+	settings_panel.set_anchors_preset(Control.PRESET_CENTER)
+	settings_panel.position = Vector2(-230, -108)
+	settings_panel.size = Vector2(460, 216)
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.035, 0.07, 0.065, 0.96)
+	style.border_color = Color("8bc5b3")
+	style.set_border_width_all(2)
+	style.corner_radius_top_left = 12
+	style.corner_radius_top_right = 12
+	style.corner_radius_bottom_left = 12
+	style.corner_radius_bottom_right = 12
+	settings_panel.add_theme_stylebox_override("panel", style)
+	settings_panel.visible = false
+	hud.add_child(settings_panel)
+	var title := Label.new()
+	title.text = "FIELD SETTINGS"
+	title.position = Vector2(18, 12)
+	title.size = Vector2(424, 28)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 20)
+	title.add_theme_color_override("font_color", Color("d9f0d4"))
+	settings_panel.add_child(title)
+	settings_summary = Label.new()
+	settings_summary.position = Vector2(22, 46)
+	settings_summary.size = Vector2(416, 38)
+	settings_summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	settings_summary.add_theme_font_size_override("font_size", 15)
+	settings_summary.add_theme_color_override("font_color", Color("f0d6a1"))
+	settings_panel.add_child(settings_summary)
+	var less := _button("− LOOK", Vector2(24, 102), Vector2(110, 44), Control.PRESET_TOP_LEFT, Color("576a6e"), settings_panel)
+	less.pressed.connect(_adjust_sensitivity.bind(-0.10))
+	var more := _button("+ LOOK", Vector2(146, 102), Vector2(110, 44), Control.PRESET_TOP_LEFT, Color("526d6a"), settings_panel)
+	more.pressed.connect(_adjust_sensitivity.bind(0.10))
+	var assist := _button("AIM ASSIST", Vector2(268, 102), Vector2(168, 44), Control.PRESET_TOP_LEFT, Color("665849"), settings_panel)
+	assist.pressed.connect(_toggle_aim_assist)
+	var effects := _button("EFFECTS", Vector2(88, 158), Vector2(130, 42), Control.PRESET_TOP_LEFT, Color("5d684a"), settings_panel)
+	effects.pressed.connect(_toggle_screen_effects)
+	var close := _button("CLOSE", Vector2(242, 158), Vector2(130, 42), Control.PRESET_TOP_LEFT, Color("54734f"), settings_panel)
+	close.pressed.connect(_close_settings)
+
+func _open_settings() -> void:
+	settings_panel.visible = true
+	settings_button.visible = false
+	_update_settings_summary()
+
+func _close_settings() -> void:
+	settings.save_to_disk()
+	settings_panel.visible = false
+	settings_button.visible = true
+	_set_status("SETTINGS SAVED")
+
+func _adjust_sensitivity(amount: float) -> void:
+	settings.look_sensitivity = clampf(settings.look_sensitivity + amount, 0.55, 1.65)
+	_apply_settings()
+
+func _toggle_aim_assist() -> void:
+	settings.aim_assist = not settings.aim_assist
+	_apply_settings()
+
+func _toggle_screen_effects() -> void:
+	settings.screen_effects = not settings.screen_effects
+	_apply_settings()
+
+func _apply_settings() -> void:
+	if player != null:
+		player.set_look_sensitivity(settings.look_sensitivity)
+	if rifle != null:
+		rifle.set_aim_assist_enabled(settings.aim_assist)
+		rifle.set_effects_enabled(settings.screen_effects)
+	_update_settings_summary()
+
+func _update_settings_summary() -> void:
+	if settings_summary != null:
+		settings_summary.text = "LOOK  %.0f%%   •   ASSIST  %s   •   EFFECTS  %s" % [settings.look_sensitivity * 100.0, "ON" if settings.aim_assist else "OFF", "ON" if settings.screen_effects else "OFF"]
 
 func _build_hud_editor() -> void:
 	editor_surface = Control.new()
@@ -332,6 +517,7 @@ func _apply_default_hud_layout() -> void:
 	_set_control_rect("reload", Vector2(screen.x - 310, screen.y - 144), Vector2(128, 58))
 	_set_control_rect("jump", Vector2(screen.x - 306, screen.y - 238), Vector2(104, 72))
 	_set_control_rect("crouch", Vector2(screen.x - 434, screen.y - 232), Vector2(112, 62))
+	_set_control_rect("minimap", Vector2(screen.x - 166, 62), Vector2(148, 148))
 
 func _set_control_rect(key: String, position_value: Vector2, size_value: Vector2) -> void:
 	var control := adjustable_controls.get(key) as Control

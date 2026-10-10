@@ -4,6 +4,7 @@ extends Node3D
 signal ammo_changed(in_magazine: int, reserve: int)
 signal weapon_message(text: String)
 signal shot_resolved(hit: bool, target_name: String)
+signal shot_feedback(headshot: bool, eliminated: bool, target_name: String)
 
 const MAGAZINE_SIZE := 24
 const STARTING_RESERVE := 144
@@ -34,6 +35,7 @@ var reload_audio: AudioStreamPlayer
 var bloom := 0.0
 var shot_serial := 0
 var visual_recoil := 0.0
+var aim_assist_enabled := true
 
 func _ready() -> void:
 	name = "Service Rifle"
@@ -44,6 +46,13 @@ func _ready() -> void:
 
 func bind_player(player_value: OutpostPlayer) -> void:
 	owner_player = player_value
+
+func set_aim_assist_enabled(enabled: bool) -> void:
+	aim_assist_enabled = enabled
+
+func set_effects_enabled(enabled: bool) -> void:
+	if effects != null:
+		effects.set_effects_enabled(enabled)
 
 func _process(delta: float) -> void:
 	cooldown = maxf(cooldown - delta, 0.0)
@@ -77,29 +86,35 @@ func try_fire(camera: Camera3D) -> bool:
 	_play_sound(shot_audio)
 
 	var origin: Vector3 = camera.global_position
-	var direction := _shot_direction(camera)
+	var direction := _apply_aim_assist(camera, _shot_direction(camera))
 	var destination := origin + direction * RANGE
 	var impact_normal := Vector3.UP
-	var query := PhysicsRayQueryParameters3D.create(origin, destination, 5)
-	query.collide_with_areas = false
+	var query := PhysicsRayQueryParameters3D.create(origin, destination, 13)
+	query.collide_with_areas = true
 	if owner_player != null:
 		query.exclude = [owner_player.get_rid()]
 	var hit := camera.get_world_3d().direct_space_state.intersect_ray(query)
 	var hit_target := false
+	var headshot := false
+	var eliminated := false
 	var target_name := ""
 	if not hit.is_empty():
 		destination = hit["position"]
 		impact_normal = hit["normal"]
 		var collider: Object = hit.get("collider")
-		if collider != null and collider.has_method("take_damage"):
-			collider.take_damage(DAMAGE)
+		var target := _resolve_raider(collider)
+		headshot = collider is Area3D and collider.name == "Headshot hitbox"
+		if target != null:
+			var damage := DAMAGE * (2 if headshot else 1)
+			eliminated = target.take_damage(damage, headshot)
 			hit_target = true
-			target_name = collider.name
+			target_name = target.name
 	if effects != null:
 		effects.emit_shot(origin, destination, impact_normal, not hit.is_empty())
 		if gun_root != null:
 			effects.emit_casing(gun_root.global_position + camera.global_transform.basis.x * 0.10, camera.global_transform.basis.x, camera.global_transform.basis.y, shot_serial)
 	shot_resolved.emit(hit_target, target_name)
+	shot_feedback.emit(headshot, eliminated, target_name)
 	return true
 
 func start_reload() -> void:
@@ -127,6 +142,34 @@ func _shot_direction(camera: Camera3D) -> Vector3:
 
 func _accuracy_multiplier() -> float:
 	return owner_player.get_accuracy_multiplier() if owner_player != null else 1.0
+
+func _resolve_raider(collider: Object) -> Raider:
+	if collider is Raider:
+		return collider as Raider
+	if collider is Area3D and collider.get_parent() is Raider:
+		return collider.get_parent() as Raider
+	return null
+
+func _apply_aim_assist(camera: Camera3D, direction: Vector3) -> Vector3:
+	if not aim_assist_enabled or not OS.has_feature("mobile") or owner_player == null:
+		return direction
+	var best_direction := direction
+	var best_alignment := 0.992
+	for node in get_tree().get_nodes_in_group("raiders"):
+		var raider := node as Raider
+		if raider == null or not raider.active:
+			continue
+		var target_point := raider.global_position + Vector3(0, 1.35, 0)
+		var to_target := target_point - camera.global_position
+		var distance := to_target.length()
+		if distance < 1.0 or distance > 42.0:
+			continue
+		var target_direction := to_target / distance
+		var alignment := direction.dot(target_direction)
+		if alignment > best_alignment:
+			best_alignment = alignment
+			best_direction = target_direction
+	return direction.slerp(best_direction, 0.16).normalized()
 
 func _update_weapon_pose(delta: float) -> void:
 	if gun_root == null:

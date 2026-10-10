@@ -5,6 +5,7 @@ extends CharacterBody3D
 ## forwards button state, keeping desktop and touch play on the same movement path.
 signal fire_requested
 signal health_changed(current: int, maximum: int)
+signal damage_taken(amount: int, source_position: Vector3)
 signal player_down
 signal movement_touch_changed(direction: Vector2, active: bool)
 signal landed(impact: float)
@@ -22,6 +23,8 @@ const JUMP_CUT_MULTIPLIER := 0.48
 const COYOTE_TIME := 0.12
 const JUMP_BUFFER_TIME := 0.14
 const MAX_HEALTH := 100
+const HEALTH_REGEN_DELAY := 4.0
+const HEALTH_REGEN_PER_SECOND := 11.0
 const TOUCH_RADIUS := 78.0
 const STAND_HEIGHT := 1.72
 const CROUCH_HEIGHT := 1.13
@@ -69,6 +72,8 @@ var landing_dip := 0.0
 var bob_phase := 0.0
 var current_move_input := Vector2.ZERO
 var recoil_rotation := Vector2.ZERO
+var regen_delay_left := 0.0
+var regen_fraction := 0.0
 var landing_audio: AudioStreamPlayer
 
 func _ready() -> void:
@@ -208,6 +213,7 @@ func _rotate_look(delta: Vector2) -> void:
 func _physics_process(delta: float) -> void:
 	if not can_control:
 		return
+	_update_health_regeneration(delta)
 	if is_mantling:
 		_update_mantle(delta)
 		_update_view(delta)
@@ -417,10 +423,28 @@ func get_accuracy_multiplier() -> float:
 		return 1.65
 	return 1.0
 
-func take_damage(amount: int) -> void:
+func _update_health_regeneration(delta: float) -> void:
+	if health >= MAX_HEALTH:
+		regen_fraction = 0.0
+		return
+	regen_delay_left = maxf(regen_delay_left - delta, 0.0)
+	if regen_delay_left > 0.0:
+		return
+	regen_fraction += HEALTH_REGEN_PER_SECOND * delta
+	var restored := int(floor(regen_fraction))
+	if restored <= 0:
+		return
+	regen_fraction -= float(restored)
+	health = mini(MAX_HEALTH, health + restored)
+	health_changed.emit(health, MAX_HEALTH)
+
+func take_damage(amount: int, source_position: Vector3 = Vector3.ZERO) -> void:
 	if health <= 0:
 		return
 	health = max(health - amount, 0)
+	regen_delay_left = HEALTH_REGEN_DELAY
+	regen_fraction = 0.0
+	damage_taken.emit(amount, source_position)
 	health_changed.emit(health, MAX_HEALTH)
 	if health == 0:
 		can_control = false
@@ -434,6 +458,8 @@ func reset_at(spawn_point: Vector3) -> void:
 	is_sprinting = false
 	is_sliding = false
 	is_mantling = false
+	regen_delay_left = 0.0
+	regen_fraction = 0.0
 	crouch_requested = false
 	_set_crouching(false)
 	_set_touch_move(Vector2.ZERO)

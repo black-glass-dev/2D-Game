@@ -9,13 +9,16 @@ const ATTACK_RANGE := 14.0
 const ATTACK_COOLDOWN := 1.65
 const SIGHT_CHECK_INTERVAL := 0.22
 const GRAVITY := 18.0
+const RADAR_NEAR_RANGE := 22.0
 
 var health := MAX_HEALTH
 var attack_timer := 1.0
 var sight_timer := 0.0
+var radar_reveal_left := 0.0
 var active := true
 var body_visual: Node3D
 var hit_light: OmniLight3D
+var head_hitbox: Area3D
 var spawn_index := 0
 
 func setup(index: int) -> void:
@@ -33,11 +36,13 @@ func _ready() -> void:
 	collider.shape = shape
 	collider.position.y = 0.87
 	add_child(collider)
+	_build_headshot_hitbox()
 	_build_model()
 
 func _physics_process(delta: float) -> void:
 	if not active:
 		return
+	radar_reveal_left = maxf(radar_reveal_left - delta, 0.0)
 	var player := get_tree().get_first_node_in_group("player") as OutpostPlayer
 	if player == null or not player.can_control:
 		return
@@ -67,24 +72,37 @@ func _physics_process(delta: float) -> void:
 		sight_timer = SIGHT_CHECK_INTERVAL + float(spawn_index % 3) * 0.03
 		if _has_line_of_sight(player):
 			attack_timer = ATTACK_COOLDOWN + float(spawn_index % 3) * 0.10
-			player.take_damage(3 + (spawn_index % 3))
+			radar_reveal_left = 1.9
+			player.take_damage(3 + (spawn_index % 3), global_position)
 			_flash_body(Color("ffb55e"))
 
-func take_damage(amount: int) -> void:
+func take_damage(amount: int, was_headshot := false) -> bool:
 	if not active:
-		return
+		return false
 	health -= amount
-	_flash_body(Color("fff2c4"))
-	if health <= 0:
-		active = false
-		collision_layer = 0
-		velocity = Vector3.ZERO
-		eliminated.emit(self, 100)
-		var tween := create_tween()
-		tween.tween_property(body_visual, "rotation:z", deg_to_rad(84), 0.18)
-		tween.parallel().tween_property(body_visual, "position:y", -0.48, 0.18)
-		tween.tween_interval(2.3)
-		tween.tween_callback(queue_free)
+	radar_reveal_left = 2.4
+	_flash_body(Color("fff2c4") if not was_headshot else Color("ffdb78"))
+	if health > 0:
+		return false
+	active = false
+	collision_layer = 0
+	if head_hitbox != null:
+		head_hitbox.collision_layer = 0
+	velocity = Vector3.ZERO
+	eliminated.emit(self, 100)
+	var tween := create_tween()
+	tween.tween_property(body_visual, "rotation:z", deg_to_rad(84), 0.18)
+	tween.parallel().tween_property(body_visual, "position:y", -0.48, 0.18)
+	tween.tween_interval(2.3)
+	tween.tween_callback(queue_free)
+	return true
+
+func is_radar_visible(observer_position: Vector3) -> bool:
+	if not active:
+		return false
+	var horizontal_delta := observer_position - global_position
+	horizontal_delta.y = 0.0
+	return horizontal_delta.length_squared() <= RADAR_NEAR_RANGE * RADAR_NEAR_RANGE or radar_reveal_left > 0.0
 
 func _has_line_of_sight(player: OutpostPlayer) -> bool:
 	var eye := global_position + Vector3(0, 1.35, 0)
@@ -93,6 +111,19 @@ func _has_line_of_sight(player: OutpostPlayer) -> bool:
 	query.exclude = [get_rid()]
 	var hit := get_world_3d().direct_space_state.intersect_ray(query)
 	return not hit.is_empty() and hit.get("collider") == player
+
+func _build_headshot_hitbox() -> void:
+	head_hitbox = Area3D.new()
+	head_hitbox.name = "Headshot hitbox"
+	head_hitbox.collision_layer = 8
+	head_hitbox.collision_mask = 0
+	var shape_node := CollisionShape3D.new()
+	var shape := SphereShape3D.new()
+	shape.radius = 0.25
+	shape_node.shape = shape
+	shape_node.position = Vector3(0, 1.75, 0)
+	head_hitbox.add_child(shape_node)
+	add_child(head_hitbox)
 
 func _build_model() -> void:
 	body_visual = Node3D.new()
