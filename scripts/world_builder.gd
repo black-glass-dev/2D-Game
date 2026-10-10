@@ -181,7 +181,9 @@ static func _add_sign(root: Node3D) -> void:
 	outpost_sign.outline_size = 8
 	outpost_sign.modulate = Color("ffe0ad")
 	outpost_sign.position = Vector3(-8.4, 3.4, -0.88)
-	outpost_sign.rotation_degrees = Vector3(0, 180, 0)
+	# The command-building front faces the player spawn (+Z), so no Y flip is
+	# needed. Keeping it unflipped avoids mirrored lettering on mobile.
+	outpost_sign.rotation_degrees = Vector3.ZERO
 	root.add_child(outpost_sign)
 
 static func _material(texture_path: String, tint: Color) -> StandardMaterial3D:
