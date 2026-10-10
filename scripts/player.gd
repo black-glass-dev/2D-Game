@@ -23,6 +23,7 @@ var move_touch_origin := Vector2.ZERO
 var look_touch_last := Vector2.ZERO
 var touch_move := Vector2.ZERO
 var movement_touch_region := Rect2()
+var touch_radius := TOUCH_RADIUS
 var mouse_sensitivity := 0.0028
 var can_control := true
 
@@ -95,13 +96,14 @@ func _handle_touch_press(event: InputEventScreenTouch) -> void:
 
 func _handle_touch_drag(event: InputEventScreenDrag) -> void:
 	if event.index == move_touch:
-		_set_touch_move((event.position - move_touch_origin).limit_length(TOUCH_RADIUS) / TOUCH_RADIUS)
+		_set_touch_move((event.position - move_touch_origin).limit_length(touch_radius) / touch_radius)
 	elif event.index == look_touch:
 		_rotate_look((event.position - look_touch_last) * 0.0055)
 		look_touch_last = event.position
 
-func set_movement_touch_region(region: Rect2) -> void:
+func set_movement_touch_region(region: Rect2, input_radius: float = TOUCH_RADIUS) -> void:
 	movement_touch_region = region
+	touch_radius = maxf(28.0, input_radius)
 
 func _set_touch_move(value: Vector2) -> void:
 	touch_move = value.limit_length(1.0)

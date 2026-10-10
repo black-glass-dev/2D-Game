@@ -50,6 +50,13 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      - name: Restore persistent debug signing key
+        id: debug_signing_key
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.android/operation-redline-debug.keystore
+          key: operation-redline-debug-keystore-v1
+
       - name: Configure Android SDK and debug signing for Godot
         shell: bash
         run: |
@@ -65,19 +72,51 @@ jobs:
           yes | sdkmanager --sdk_root="$ANDROID_HOME" --licenses > /dev/null || true
           sdkmanager --sdk_root="$ANDROID_HOME" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
           mkdir -p "$HOME/.android" "$HOME/.config/godot"
-          keytool -genkeypair -noprompt -keystore "$HOME/.android/debug.keystore" \
-            -storepass android -keypass android -alias androiddebugkey \
-            -dname "CN=Android Debug,O=Android,C=US" -keyalg RSA -keysize 2048 -validity 10000
+          KEYSTORE="$HOME/.android/operation-redline-debug.keystore"
+          # Keep one debug certificate across CI runs. Android only accepts an
+          # in-place update when package ID *and* signing certificate match.
+          if [[ ! -f "$KEYSTORE" ]]; then
+            keytool -genkeypair -noprompt -keystore "$KEYSTORE" \
+              -storepass android -keypass android -alias androiddebugkey \
+              -dname "CN=Operation Redline Debug,O=Operation Redline,C=BD" \
+              -keyalg RSA -keysize 2048 -validity 10000
+          fi
           cat > "$HOME/.config/godot/editor_settings-4.tres" <<EOF
           [gd_resource type="EditorSettings" format=3]
 
           [resource]
           export/android/android_sdk_path = "$ANDROID_HOME"
           export/android/java_sdk_path = "$JAVA_HOME"
-          export/android/debug_keystore = "$HOME/.android/debug.keystore"
+          export/android/debug_keystore = "$HOME/.android/operation-redline-debug.keystore"
           export/android/debug_keystore_user = "androiddebugkey"
           export/android/debug_keystore_pass = "android"
           EOF
+
+      - name: Save persistent debug signing key
+        if: steps.debug_signing_key.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.android/operation-redline-debug.keystore
+          key: operation-redline-debug-keystore-v1
+
+      - name: Set monotonically increasing Android version
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          preset = Path("export_presets.cfg")
+          content = preset.read_text()
+          run_number = int(os.environ["GITHUB_RUN_NUMBER"])
+          content, code_count = re.subn(r"version/code=\d+", f"version/code={run_number}", content)
+          content, name_count = re.subn(r'version/name="[^"]*"', f'version/name="0.1.0-candidate.{run_number}"', content)
+          if code_count != 1 or name_count != 1:
+              raise SystemExit("Android version fields were not found exactly once.")
+          preset.write_text(content)
+          PY
 
       - name: Install Godot 4.7.2 and Android export templates
         shell: bash

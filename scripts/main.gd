@@ -305,7 +305,7 @@ func _apply_default_hud_layout() -> void:
 	# Keep the thumb zones clear of the screen edge so the first launch is
 	# comfortable even before a player opens the HUD editor.
 	_set_control_rect("joystick", Vector2(32, screen.y - 278), Vector2(196, 196))
-	_set_control_rect("fire", Vector2(screen.x - 178, screen.y - 218), Vector2(150, 132))
+	_set_control_rect("fire", Vector2(screen.x - 176, screen.y - 242), Vector2(148, 148))
 	_set_control_rect("aim", Vector2(screen.x - 452, screen.y - 144), Vector2(128, 58))
 	_set_control_rect("reload", Vector2(screen.x - 310, screen.y - 144), Vector2(128, 58))
 
@@ -330,7 +330,10 @@ func _clamp_control_position(position_value: Vector2, control_size: Vector2) -> 
 
 func _sync_movement_touch_region() -> void:
 	if player != null and movement_stick != null:
-		player.set_movement_touch_region(Rect2(movement_stick.position, movement_stick.size).grow(14.0))
+		player.set_movement_touch_region(
+			Rect2(movement_stick.position, movement_stick.size).grow(14.0),
+			movement_stick.get_input_radius()
+		)
 
 func _enter_hud_edit() -> void:
 	if editor_surface == null:
@@ -473,26 +476,31 @@ func _button(text_value: String, position_offset: Vector2, control_size: Vector2
 	else:
 		button.position = position_offset
 		parent.add_child(button)
-	button.add_theme_font_size_override("font_size", 18)
+	var is_primary_fire := text_value == "FIRE"
+	var corner_radius := 66 if is_primary_fire else 12
+	button.add_theme_font_size_override("font_size", 22 if is_primary_fire else 18)
 	button.add_theme_color_override("font_color", Color("fff6d4"))
 	button.add_theme_color_override("font_outline_color", Color("18201c"))
 	button.add_theme_constant_override("outline_size", 4)
 	var normal := StyleBoxFlat.new()
-	normal.bg_color = Color(color.r, color.g, color.b, 0.84)
-	normal.border_color = Color("f4d39a")
-	normal.set_border_width_all(2)
-	normal.corner_radius_top_left = 12
-	normal.corner_radius_top_right = 12
-	normal.corner_radius_bottom_left = 12
-	normal.corner_radius_bottom_right = 12
+	normal.bg_color = Color(color.r, color.g, color.b, 0.91 if is_primary_fire else 0.84)
+	normal.border_color = Color("ffd88b") if is_primary_fire else Color("f4d39a")
+	normal.set_border_width_all(3 if is_primary_fire else 2)
+	normal.corner_radius_top_left = corner_radius
+	normal.corner_radius_top_right = corner_radius
+	normal.corner_radius_bottom_left = corner_radius
+	normal.corner_radius_bottom_right = corner_radius
+	normal.shadow_color = Color(0.03, 0.02, 0.01, 0.48)
+	normal.shadow_size = 8 if is_primary_fire else 3
+	normal.shadow_offset = Vector2(0, 3)
 	button.add_theme_stylebox_override("normal", normal)
 	var pressed := StyleBoxFlat.new()
 	pressed.bg_color = Color("e5a45b")
 	pressed.border_color = Color("fff0c4")
-	pressed.set_border_width_all(2)
-	pressed.corner_radius_top_left = 12
-	pressed.corner_radius_top_right = 12
-	pressed.corner_radius_bottom_left = 12
-	pressed.corner_radius_bottom_right = 12
+	pressed.set_border_width_all(3 if is_primary_fire else 2)
+	pressed.corner_radius_top_left = corner_radius
+	pressed.corner_radius_top_right = corner_radius
+	pressed.corner_radius_bottom_left = corner_radius
+	pressed.corner_radius_bottom_right = corner_radius
 	button.add_theme_stylebox_override("pressed", pressed)
 	return button
