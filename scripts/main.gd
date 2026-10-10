@@ -302,10 +302,12 @@ func _load_hud_layout() -> void:
 
 func _apply_default_hud_layout() -> void:
 	var screen := controls_root.size
-	_set_control_rect("joystick", Vector2(32, screen.y - 232), Vector2(196, 196))
+	# Keep the thumb zones clear of the screen edge so the first launch is
+	# comfortable even before a player opens the HUD editor.
+	_set_control_rect("joystick", Vector2(32, screen.y - 278), Vector2(196, 196))
 	_set_control_rect("fire", Vector2(screen.x - 178, screen.y - 218), Vector2(150, 132))
-	_set_control_rect("aim", Vector2(screen.x - 452, screen.y - 94), Vector2(128, 58))
-	_set_control_rect("reload", Vector2(screen.x - 310, screen.y - 94), Vector2(128, 58))
+	_set_control_rect("aim", Vector2(screen.x - 452, screen.y - 144), Vector2(128, 58))
+	_set_control_rect("reload", Vector2(screen.x - 310, screen.y - 144), Vector2(128, 58))
 
 func _set_control_rect(key: String, position_value: Vector2, size_value: Vector2) -> void:
 	var control := adjustable_controls.get(key) as Control
