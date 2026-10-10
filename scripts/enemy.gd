@@ -4,13 +4,15 @@ extends CharacterBody3D
 signal eliminated(raider: Raider, score_value: int)
 
 const MAX_HEALTH := 100
-const MOVE_SPEED := 2.15
-const ATTACK_RANGE := 17.0
-const ATTACK_COOLDOWN := 1.15
+const MOVE_SPEED := 2.0
+const ATTACK_RANGE := 14.0
+const ATTACK_COOLDOWN := 1.65
+const SIGHT_CHECK_INTERVAL := 0.22
 const GRAVITY := 18.0
 
 var health := MAX_HEALTH
-var attack_timer := 0.35
+var attack_timer := 1.0
+var sight_timer := 0.0
 var active := true
 var body_visual: Node3D
 var hit_light: OmniLight3D
@@ -58,10 +60,15 @@ func _physics_process(delta: float) -> void:
 		velocity.y = -0.1
 	move_and_slide()
 	attack_timer -= delta
-	if distance <= ATTACK_RANGE and attack_timer <= 0.0 and _has_line_of_sight(player):
-		attack_timer = ATTACK_COOLDOWN + float(spawn_index % 3) * 0.08
-		player.take_damage(8 + (spawn_index % 3) * 2)
-		_flash_body(Color("ffb55e"))
+	sight_timer -= delta
+	# Ray casts are deliberately throttled for mobile frame pacing. Six enemies no
+	# longer ask the physics server for line-of-sight every rendered frame.
+	if distance <= ATTACK_RANGE and attack_timer <= 0.0 and sight_timer <= 0.0:
+		sight_timer = SIGHT_CHECK_INTERVAL + float(spawn_index % 3) * 0.03
+		if _has_line_of_sight(player):
+			attack_timer = ATTACK_COOLDOWN + float(spawn_index % 3) * 0.10
+			player.take_damage(3 + (spawn_index % 3))
+			_flash_body(Color("ffb55e"))
 
 func take_damage(amount: int) -> void:
 	if not active:

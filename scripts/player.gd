@@ -4,12 +4,14 @@ extends CharacterBody3D
 signal fire_requested
 signal health_changed(current: int, maximum: int)
 signal player_down
+signal movement_touch_changed(direction: Vector2, active: bool)
 
 const WALK_SPEED := 5.2
 const AIM_SPEED := 3.15
 const ACCELERATION := 20.0
 const GRAVITY := 18.0
 const MAX_HEALTH := 100
+const TOUCH_RADIUS := 78.0
 
 var health := MAX_HEALTH
 var camera: Camera3D
@@ -50,22 +52,22 @@ func _ready() -> void:
 	var fill := OmniLight3D.new()
 	fill.name = "Weapon fill light"
 	fill.light_color = Color("ffd7ac")
-	fill.light_energy = 0.45
-	fill.omni_range = 4.0
+	fill.light_energy = 0.32
+	fill.omni_range = 3.2
 	fill.position = Vector3(0.24, -0.2, -0.45)
 	camera.add_child(fill)
-	if not OS.has_feature("mobile"):
+	if not _is_mobile():
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	health_changed.emit(health, MAX_HEALTH)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not can_control:
 		return
-	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+	if not _is_mobile() and event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		_rotate_look(event.relative * mouse_sensitivity)
-	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+	elif not _is_mobile() and event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		fire_requested.emit()
-	elif event is InputEventKey and event.keycode == KEY_ESCAPE and event.pressed:
+	elif not _is_mobile() and event is InputEventKey and event.keycode == KEY_ESCAPE and event.pressed:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	elif event is InputEventScreenTouch:
 		_handle_touch_press(event)
@@ -73,29 +75,34 @@ func _unhandled_input(event: InputEvent) -> void:
 		_handle_touch_drag(event)
 
 func _handle_touch_press(event: InputEventScreenTouch) -> void:
-	var width := get_viewport().get_visible_rect().size.x
+	var viewport_size := get_viewport().get_visible_rect().size
 	if event.pressed:
-		if event.position.x < width * 0.46 and move_touch == -1:
+		# Reserve the lower-left quarter for movement. GUI buttons consume their own
+		# touches, so a touch on FIRE can never become a look or movement drag.
+		if event.position.x < viewport_size.x * 0.48 and event.position.y > viewport_size.y * 0.42 and move_touch == -1:
 			move_touch = event.index
 			move_touch_origin = event.position
-			touch_move = Vector2.ZERO
+			_set_touch_move(Vector2.ZERO)
 		elif look_touch == -1:
 			look_touch = event.index
 			look_touch_last = event.position
 	else:
 		if event.index == move_touch:
 			move_touch = -1
-			touch_move = Vector2.ZERO
+			_set_touch_move(Vector2.ZERO)
 		if event.index == look_touch:
 			look_touch = -1
 
 func _handle_touch_drag(event: InputEventScreenDrag) -> void:
 	if event.index == move_touch:
-		var radius := maxf(get_viewport().get_visible_rect().size.x * 0.10, 72.0)
-		touch_move = (event.position - move_touch_origin).limit_length(radius) / radius
+		_set_touch_move((event.position - move_touch_origin).limit_length(TOUCH_RADIUS) / TOUCH_RADIUS)
 	elif event.index == look_touch:
-		_rotate_look((event.position - look_touch_last) * 0.007)
+		_rotate_look((event.position - look_touch_last) * 0.0055)
 		look_touch_last = event.position
+
+func _set_touch_move(value: Vector2) -> void:
+	touch_move = value.limit_length(1.0)
+	movement_touch_changed.emit(touch_move, move_touch != -1)
 
 func _rotate_look(delta: Vector2) -> void:
 	rotate_y(-delta.x)
@@ -140,4 +147,8 @@ func reset_at(spawn_point: Vector3) -> void:
 	global_position = spawn_point
 	velocity = Vector3.ZERO
 	can_control = true
+	_set_touch_move(Vector2.ZERO)
 	health_changed.emit(health, MAX_HEALTH)
+
+func _is_mobile() -> bool:
+	return OS.has_feature("mobile")

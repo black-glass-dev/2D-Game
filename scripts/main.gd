@@ -23,6 +23,7 @@ var aim_button: Button
 var reload_button: Button
 var fire_button: Button
 var restart_button: Button
+var movement_stick: TouchJoystick
 var score := 0
 var shots := 0
 var hits := 0
@@ -35,6 +36,7 @@ func _ready() -> void:
 	player.position = PLAYER_SPAWN
 	add_child(player)
 	player.fire_requested.connect(_fire)
+	player.movement_touch_changed.connect(_update_movement_stick)
 	player.health_changed.connect(_on_health_changed)
 	player.player_down.connect(_on_player_down)
 
@@ -58,9 +60,12 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	if player != null and player.can_control:
-		if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		# Android maps every screen press to a mouse click on some devices. Restrict
+		# desktop auto-fire to non-mobile platforms so only the FIRE control shoots.
+		var desktop_mouse := not OS.has_feature("mobile")
+		if desktop_mouse and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 			_fire()
-		player.set_aim(touch_aim or Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT))
+		player.set_aim(touch_aim or (desktop_mouse and Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)))
 	damage_flash = maxf(damage_flash - delta * 1.8, 0.0)
 	if damage_overlay != null:
 		damage_overlay.color.a = damage_flash
@@ -71,6 +76,10 @@ func _fire() -> void:
 	if rifle.try_fire(player.camera):
 		shots += 1
 		_update_accuracy()
+
+func _update_movement_stick(direction: Vector2, active: bool) -> void:
+	if movement_stick != null:
+		movement_stick.set_input(direction, active)
 
 func _spawn_raider(serial: int) -> void:
 	if not player.can_control:
@@ -179,16 +188,25 @@ func _build_hud() -> void:
 	hit_marker.name = "HitMarker"
 	hit_marker.modulate.a = 0.0
 
-	# The left pad is a non-blocking visual guide. Finger drags on this zone steer movement.
-	var move_pad := _label("◉\nMOVE", Vector2(30, -151), Vector2(110, 112), 16, Color(0.85, 0.92, 0.77, 0.52), Control.PRESET_BOTTOM_LEFT, HORIZONTAL_ALIGNMENT_CENTER)
-	move_pad.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	move_pad.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# A high-contrast, visible movement pad. It is passive visually; OutpostPlayer
+	# receives only unhandled lower-left touch drags and updates this display.
+	movement_stick = TouchJoystick.new()
+	movement_stick.name = "Movement joystick"
+	movement_stick.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	movement_stick.position = Vector2(24, -184)
+	movement_stick.size = Vector2(156, 156)
+	hud.add_child(movement_stick)
+	var move_caption := _label("MOVE", Vector2(47, -31), Vector2(110, 22), 15, Color("f7e0ad"), Control.PRESET_BOTTOM_LEFT, HORIZONTAL_ALIGNMENT_CENTER)
+	move_caption.add_theme_color_override("font_outline_color", Color("1a211d"))
+	move_caption.add_theme_constant_override("outline_size", 5)
+	var look_caption := _label("DRAG TO LOOK", Vector2(-240, -35), Vector2(190, 20), 13, Color(0.95, 0.88, 0.67, 0.50), Control.PRESET_BOTTOM_RIGHT, HORIZONTAL_ALIGNMENT_RIGHT)
+	look_caption.add_theme_constant_override("outline_size", 4)
 
-	fire_button = _button("FIRE", Vector2(-132, -154), Vector2(112, 88), Control.PRESET_BOTTOM_RIGHT, Color("a74f3e"))
+	fire_button = _button("FIRE", Vector2(-150, -184), Vector2(126, 102), Control.PRESET_BOTTOM_RIGHT, Color("a94f3f"))
 	fire_button.button_down.connect(_fire)
-	reload_button = _button("RELOAD", Vector2(-250, -76), Vector2(105, 48), Control.PRESET_BOTTOM_RIGHT, Color("5d684a"))
+	reload_button = _button("RELOAD", Vector2(-286, -78), Vector2(120, 52), Control.PRESET_BOTTOM_RIGHT, Color("596b4e"))
 	reload_button.pressed.connect(rifle.start_reload)
-	aim_button = _button("AIM", Vector2(-368, -76), Vector2(105, 48), Control.PRESET_BOTTOM_RIGHT, Color("455f5a"))
+	aim_button = _button("AIM", Vector2(-416, -78), Vector2(120, 52), Control.PRESET_BOTTOM_RIGHT, Color("3d6661"))
 	aim_button.pressed.connect(_toggle_aim)
 
 	damage_overlay = ColorRect.new()
@@ -236,8 +254,10 @@ func _button(text_value: String, position_offset: Vector2, control_size: Vector2
 	button.position = position_offset
 	button.size = control_size
 	button.set_anchors_preset(preset)
-	button.add_theme_font_size_override("font_size", 16)
-	button.add_theme_color_override("font_color", Color("fff1ce"))
+	button.add_theme_font_size_override("font_size", 18)
+	button.add_theme_color_override("font_color", Color("fff6d4"))
+	button.add_theme_color_override("font_outline_color", Color("18201c"))
+	button.add_theme_constant_override("outline_size", 4)
 	var normal := StyleBoxFlat.new()
 	normal.bg_color = Color(color.r, color.g, color.b, 0.82)
 	normal.border_color = Color("f4d39a")

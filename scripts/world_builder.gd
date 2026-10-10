@@ -8,13 +8,15 @@ const WOOD_TEXTURE := "res://assets/textures/crate_128.png"
 
 static func build(root: Node3D) -> void:
 	_build_environment(root)
-	var sand := _material(SAND_TEXTURE, Color("c99055"))
-	var concrete := _material(CONCRETE_TEXTURE, Color("7f7566"))
-	var metal := _material(METAL_TEXTURE, Color("69766d"))
-	var olive := _material(METAL_TEXTURE, Color("596448"))
-	var crate := _material(WOOD_TEXTURE, Color("a46f3f"))
-	var dark := _flat_material(Color("1d2521"))
-	var lamp_glow := _flat_material(Color("ffb35c"), Color("ff8b36"), 2.0)
+	# Muted earth colors keep the outpost readable in bright sunlight instead of
+	# washing the whole screen orange. The 128x128 maps provide the pixel detail.
+	var sand := _material(SAND_TEXTURE, Color("ae8259"))
+	var concrete := _material(CONCRETE_TEXTURE, Color("79776b"))
+	var metal := _material(METAL_TEXTURE, Color("637169"))
+	var olive := _material(METAL_TEXTURE, Color("526049"))
+	var crate := _material(WOOD_TEXTURE, Color("895c3c"))
+	var dark := _flat_material(Color("252d2a"))
+	var lamp_glow := _flat_material(Color("e6b66a"), Color("e28b3e"), 0.8)
 
 	# Ground and a raised, walkable command-yard create the arena's first depth layer.
 	_box(root, "Desert floor", Vector3(0, -0.25, 0), Vector3(72, 0.5, 72), sand)
@@ -67,6 +69,7 @@ static func build(root: Node3D) -> void:
 		_lamp(root, position, metal, lamp_glow)
 
 	_add_distant_mountains(root, dark)
+	_add_outpost_details(root, metal, olive, crate, lamp_glow)
 	_add_sign(root)
 
 static func _build_environment(root: Node3D) -> void:
@@ -74,24 +77,24 @@ static func _build_environment(root: Node3D) -> void:
 	world_env.name = "Dusty sunset environment"
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color("d2865c")
+	env.background_color = Color("786555")
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color("e6ad83")
-	env.ambient_light_energy = 0.7
+	env.ambient_light_color = Color("cbb198")
+	env.ambient_light_energy = 0.48
 	env.fog_enabled = true
-	env.fog_light_color = Color("c98c67")
-	env.fog_light_energy = 0.8
-	env.fog_density = 0.012
+	env.fog_light_color = Color("937863")
+	env.fog_light_energy = 0.48
+	env.fog_density = 0.0065
 	world_env.environment = env
 	root.add_child(world_env)
 
 	var sun := DirectionalLight3D.new()
 	sun.name = "Low desert sun"
 	sun.rotation_degrees = Vector3(-52, -28, 0)
-	sun.light_color = Color("ffd0a0")
-	sun.light_energy = 1.4
+	sun.light_color = Color("ffd8ae")
+	sun.light_energy = 0.95
 	sun.shadow_enabled = true
-	sun.directional_shadow_max_distance = 70
+	sun.directional_shadow_max_distance = 46
 	root.add_child(sun)
 
 static func _box(parent: Node3D, label: String, position: Vector3, size: Vector3, material: Material, collision := true) -> Node3D:
@@ -122,10 +125,36 @@ static func _lamp(parent: Node3D, position: Vector3, pole_material: Material, gl
 	var light := OmniLight3D.new()
 	light.name = "Warm pool light"
 	light.position = position
-	light.light_color = Color("ffad5b")
-	light.light_energy = 2.2
-	light.omni_range = 9.0
+	light.light_color = Color("e8a85c")
+	light.light_energy = 1.15
+	light.omni_range = 6.5
 	parent.add_child(light)
+
+static func _add_outpost_details(root: Node3D, metal: Material, olive: Material, crate: Material, glow: Material) -> void:
+	# Small repeated shapes give the low-poly scene a lived-in military silhouette
+	# without adding animated meshes or expensive dynamic lights.
+	for position in [Vector3(4.0, 0.48, -13.0), Vector3(4.9, 0.48, -13.0), Vector3(13.0, 0.48, 15.0), Vector3(13.9, 0.48, 15.0)]:
+		_barrel(root, position, olive)
+	for position in [Vector3(-13.5, 0.46, 9.5), Vector3(-12.55, 0.46, 9.5), Vector3(-11.6, 0.46, 9.5), Vector3(18.0, 0.46, -5.0), Vector3(18.95, 0.46, -5.0)]:
+		_box(root, "Sandbag", position, Vector3(0.86, 0.5, 0.42), crate, false)
+	_box(root, "Radio mast", Vector3(9.0, 6.6, -8.0), Vector3(0.12, 6.0, 0.12), metal, false)
+	_box(root, "Radio mast crossbar", Vector3(9.0, 8.4, -8.0), Vector3(2.7, 0.08, 0.08), metal, false)
+	_box(root, "Radio beacon", Vector3(9.0, 9.55, -8.0), Vector3(0.42, 0.22, 0.42), glow, false)
+	_box(root, "Supply rack", Vector3(-4.8, 1.0, -14.2), Vector3(4.2, 1.8, 0.7), metal)
+	_box(root, "Supply rack crates", Vector3(-4.8, 2.05, -14.2), Vector3(3.65, 0.55, 0.62), crate, false)
+
+static func _barrel(parent: Node3D, position: Vector3, material: Material) -> void:
+	var barrel := MeshInstance3D.new()
+	barrel.name = "Fuel drum"
+	barrel.position = position
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = 0.34
+	mesh.bottom_radius = 0.34
+	mesh.height = 0.92
+	mesh.radial_segments = 8
+	barrel.mesh = mesh
+	barrel.material_override = material
+	parent.add_child(barrel)
 
 static func _add_distant_mountains(root: Node3D, material: Material) -> void:
 	for entry in [
@@ -161,6 +190,7 @@ static func _material(texture_path: String, tint: Color) -> StandardMaterial3D:
 	material.albedo_texture = load(texture_path)
 	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 	material.texture_repeat = true
+	material.uv1_scale = Vector3(8.0, 8.0, 8.0)
 	material.roughness = 0.9
 	return material
 
