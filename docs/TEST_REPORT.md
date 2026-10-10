@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-10
 
-**Current candidate:** [Operation Redline debug APK candidate #12](https://github.com/islamyousuf032-glitch/2D-Game/releases/tag/apk-candidate-12) (`OperationRedline-debug.apk`)
+**Current candidate:** [Operation Redline debug APK candidate #13](https://github.com/islamyousuf032-glitch/2D-Game/releases/tag/apk-candidate-13) (`OperationRedline-debug.apk`)
 
 **Status:** **Build, signature, source checks and headless gameplay startup passed. The latest APK is a downloadable debug candidate; Android emulator boot infrastructure did not complete, so it is not labelled as a fully tested final release.**
 
@@ -19,13 +19,13 @@
 | Gameplay scene startup | `godot --headless --path . --quit-after 180` | **PASS** — main scene runs without a parse/runtime stop |
 | Android debug export | Godot Android Debug preset | **PASS** — arm64/x86_64 APK exported |
 | APK archive and signature | `unzip -t` and `jarsigner -verify -certs -verbose` | **PASS** |
-| Physical-device launch evidence | User-supplied Android screenshots on 2026-10-10 | **PASS** — the game scene and touch HUD launched on a real device |
+| Physical-device launch evidence | User-supplied Android screenshot of candidate #12 on 2026-10-10 | **PASS** — landscape gameplay and the prior touch HUD launched on a real device; candidate #13's new HUD/map still needs a device playthrough |
 
 ## Current APK and test evidence
 
-- Downloadable candidate #12: [`OperationRedline-debug.apk`](https://github.com/islamyousuf032-glitch/2D-Game/releases/download/apk-candidate-12/OperationRedline-debug.apk)
-- Candidate #12 contains the landscape lock, visible virtual joystick, mobile-only fire guard, lower-resolution pixel viewport, throttled enemy line-of-sight checks, visual palette improvements and corrected outpost sign orientation.
-- The GitHub Actions workflow also stores APK/log artifacts for each build run.
+- Downloadable candidate #13: [`OperationRedline-debug.apk`](https://github.com/islamyousuf032-glitch/2D-Game/releases/download/apk-candidate-13/OperationRedline-debug.apk)
+- Candidate #13 contains the landscape lock, larger default touch controls, persistent in-game HUD move/resize editing, joystick-region-aware movement routing, the expanded multi-zone outpost, lower-resolution pixel viewport, performance pacing and the corrected outpost sign orientation.
+- Candidate #13 completed the source, Android-export, APK/signature and headless-scene gates in GitHub Actions run [`38033619893`](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/38033619893). The workflow also stores APK/log artifacts for each build run.
 
 ## Outstanding gate
 
