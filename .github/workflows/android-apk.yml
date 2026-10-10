@@ -103,6 +103,7 @@ jobs:
           "$HOME/.local/bin/godot" --version
 
       - name: Import project and export debug APK
+        id: android_export
         shell: bash
         run: |
           set -euo pipefail
@@ -113,6 +114,14 @@ jobs:
           test -s build/OperationRedline-debug.apk
           unzip -t build/OperationRedline-debug.apk
           jarsigner -verify -certs -verbose build/OperationRedline-debug.apk
+
+      - name: Launch gameplay scene headlessly
+        id: gameplay_smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.local/bin:$PATH"
+          godot --headless --path . --quit-after 180 2>&1 | tee build/godot-runtime.log
 
       - name: Commit Godot diagnostics if export fails
         if: failure()
@@ -151,6 +160,21 @@ jobs:
               exit 1
             fi
 
+      - name: Publish a downloadable debug APK candidate
+        # APK export, signature verification and a short gameplay-scene launch must pass.
+        # The separate Android-emulator row remains the final mobile-device test gate.
+        if: ${{ always() && steps.android_export.outcome == 'success' && steps.gameplay_smoke.outcome == 'success' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh release create "apk-candidate-${GITHUB_RUN_NUMBER}" build/OperationRedline-debug.apk \
+            --repo "${GITHUB_REPOSITORY}" \
+            --target "${GITHUB_SHA}" \
+            --title "Operation Redline debug APK candidate #${GITHUB_RUN_NUMBER}" \
+            --prerelease \
+            --notes "Automated source checks, Godot import, APK archive/signature verification and a headless gameplay-scene launch passed. See this run's Android emulator step for the remaining device-launch status."
+
       - name: Upload tested build evidence
         if: always()
         uses: actions/upload-artifact@v5
@@ -162,3 +186,4 @@ jobs:
             build/android-emulator.log
             build/godot-import.log
             build/godot-export.log
+            build/godot-runtime.log
