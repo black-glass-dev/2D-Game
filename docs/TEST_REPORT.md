@@ -1,10 +1,10 @@
 # Operation Redline — test report
 
-**Date:** 2026-10-06
+**Date:** 2026-10-10
 
-**Build candidate:** Source revision in this repository (no Android binary produced yet)
+**Current candidate:** [Operation Redline debug APK candidate #11](https://github.com/islamyousuf032-glitch/2D-Game/releases/tag/apk-candidate-11) (`OperationRedline-debug.apk`)
 
-**Status:** **Source checks passed; Android APK gate blocked by missing local export toolchain.**
+**Status:** **Build, signature, source checks and headless gameplay startup passed. The latest APK is a downloadable debug candidate; Android emulator boot infrastructure did not complete, so it is not labelled as a fully tested final release.**
 
 ## Passed checks
 
@@ -12,35 +12,25 @@
 | --- | --- | --- |
 | Original texture dimensions | `python3 tools/validate_project.py` reads PNG IHDR headers | **PASS** — 4 textures, all exactly 128×128 |
 | Referenced-resource consistency | `python3 tools/validate_project.py` scans committed `res://` references | **PASS** — 7 resource links resolve |
-| GDScript parse/type diagnostics | `npm ci && npm run test:gdscript` via pinned Godot 4.x analyzer | **PASS** — 6 scripts, 0 errors, 0 warnings |
-| Startup scene presence | Same validator checks `project.godot` and `scenes/Main.tscn` | **PASS** |
+| GDScript parse/type diagnostics | `npm ci && npm run test:gdscript` via pinned Godot 4.x analyzer | **PASS** — 7 scripts, 0 errors, 0 warnings |
 | C++ warning-clean compile | `g++ -std=c++20 -Wall -Wextra -Werror -pedantic ...` | **PASS** |
-| C++ survival pacing unit tests | `./scripts/run_native_tests.sh` | **PASS** — waves 1–3, 27 spawns, wave clear, completion state, stopped-state invariant |
-| Repository artifact size | `find ... -size +1M` | **PASS** — no large generated binary was placed in source control |
+| C++ survival pacing unit tests | `./scripts/run_native_tests.sh` | **PASS** — 3 waves, 27 spawns and completion state |
+| Godot project import | GitHub Actions Godot 4.7.2 headless import | **PASS** |
+| Gameplay scene startup | `godot --headless --path . --quit-after 180` | **PASS** — main scene runs without a parse/runtime stop |
+| Android debug export | Godot Android Debug preset | **PASS** — arm64/x86_64 APK exported |
+| APK archive and signature | `unzip -t` and `jarsigner -verify -certs -verbose` | **PASS** |
+| Physical-device launch evidence | User-supplied Android screenshots on 2026-10-10 | **PASS** — the game scene and touch HUD launched on a real device |
 
-## Remote Android build gate
+## Current APK and test evidence
 
-`.github/workflows/android-apk.yml` is the reproducible remote build/test lane. On a push to the Arena branch or a manual GitHub Actions dispatch it installs Godot 4.7.2 plus export templates, exports the arm64/x86_64 debug APK, verifies the archive/signature, installs it in an API 35 x86_64 Android emulator, launches the package, scans the launch log for fatal Android errors, and uploads the APK plus log as a workflow artifact. The workflow must finish green before its artifact is called a tested APK.
+- Downloadable candidate #11: [`OperationRedline-debug.apk`](https://github.com/islamyousuf032-glitch/2D-Game/releases/download/apk-candidate-11/OperationRedline-debug.apk)
+- Candidate #11 contains the landscape lock, visible virtual joystick, mobile-only fire guard, lower-resolution pixel viewport, throttled enemy line-of-sight checks and visual palette improvements.
+- The GitHub Actions workflow also stores APK/log artifacts for each build run.
 
-**Current remote-run status:** A push correctly triggered workflow run `#1`, so no manual permission is needed for normal branch pushes. Its source/C++ checks passed, then the Godot installation step stopped before export because `$HOME/.local/bin` had not been created. The workflow now explicitly creates that directory; the next pushed fix will automatically re-run the APK build. No APK artifact exists until a green run finishes.
+## Outstanding gate
 
-## Not yet executable in this local environment
-
-| Gate | Why it cannot be marked passed | Required before handoff |
-| --- | --- | --- |
-| Godot import / GDScript parse | No Godot executable was installed in the supplied sandbox. Download attempts for Godot 4.7.2 reached GitHub metadata but the release-asset TLS connection was terminated before the binary could download. | Run project import and `godot --headless --path . --editor --quit` after a Godot 4.7+ editor is installed. |
-| Android export | Android SDK, NDK, JDK, Gradle and Godot Android export templates are absent. | Configure the documented Android toolchain and run the **Android Debug** export preset. |
-| APK install / launch | No APK exists yet and `adb` is absent. | Install with `adb install -r`, launch the package, complete all three waves with touch controls, then record device/emulator model, Android version, FPS and results here. |
+The GitHub-hosted Android emulator did not boot before its timeout even after the package had built and the desktop headless scene launch had passed. This is an emulator-host infrastructure failure, not an APK export or signature failure. The next candidate should be checked on a physical Android device for movement, look drag, FIRE, RELOAD, AIM, three survival waves and restart before it is described as a fully tested final build.
 
 ## APK release rule
 
-The file `build/OperationRedline-debug.apk` may only be called **tested** after all rows below are recorded as pass:
-
-- Godot startup scene imports and runs without parse/runtime errors.
-- Android debug export completes with a signed APK.
-- APK archive/package ID are inspected.
-- APK installs and launches on an Android emulator or physical arm64 device.
-- Player movement/look, fire, reload, aim, enemy damage, all three waves, success screen and restart are manually exercised.
-- No blocking error occurs during a 10-minute play session.
-
-Until those gates pass, this report deliberately does **not** claim an APK is available or tested.
+The APK may be labelled **fully tested** only after the complete touch-control playthrough (movement/look, fire, reload, aim, enemy damage, three waves, success/failure and restart) is recorded on a physical Android device or working emulator. Until then, releases are deliberately labelled **debug candidate**.
