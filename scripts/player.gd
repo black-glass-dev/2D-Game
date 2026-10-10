@@ -31,10 +31,12 @@ const SLIDE_DURATION := 0.62
 const SLIDE_START_SPEED := 8.1
 const SLIDE_END_SPEED := 3.0
 const MANTLE_DURATION := 0.22
+const LANDING_SOUND := preload("res://assets/audio/landing_thump.wav")
 
 var health := MAX_HEALTH
 var camera: Camera3D
 var head: Node3D
+var recoil_pivot: Node3D
 var is_aiming := false
 var is_sprinting := false
 var is_crouching := false
@@ -66,6 +68,8 @@ var previous_floor := false
 var landing_dip := 0.0
 var bob_phase := 0.0
 var current_move_input := Vector2.ZERO
+var recoil_rotation := Vector2.ZERO
+var landing_audio: AudioStreamPlayer
 
 func _ready() -> void:
 	name = "Player"
@@ -84,12 +88,15 @@ func _ready() -> void:
 	head.name = "Head"
 	head.position.y = STAND_HEAD_HEIGHT
 	add_child(head)
+	recoil_pivot = Node3D.new()
+	recoil_pivot.name = "Recoil pivot"
+	head.add_child(recoil_pivot)
 	camera = Camera3D.new()
 	camera.name = "PlayerCamera"
 	camera.current = true
 	camera.near = 0.05
 	camera.fov = 74.0
-	head.add_child(camera)
+	recoil_pivot.add_child(camera)
 
 	var fill := OmniLight3D.new()
 	fill.name = "Weapon fill light"
@@ -98,6 +105,11 @@ func _ready() -> void:
 	fill.omni_range = 3.2
 	fill.position = Vector3(0.24, -0.2, -0.45)
 	camera.add_child(fill)
+	landing_audio = AudioStreamPlayer.new()
+	landing_audio.name = "Landing thump"
+	landing_audio.stream = LANDING_SOUND
+	landing_audio.volume_db = -12.0
+	add_child(landing_audio)
 	if not _is_mobile():
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	health_changed.emit(health, MAX_HEALTH)
@@ -231,6 +243,9 @@ func _physics_process(delta: float) -> void:
 	if not previous_floor and grounded_now and vertical_before_move < -2.0:
 		var impact := clampf(-vertical_before_move / 13.0, 0.0, 1.0)
 		landing_dip = -lerpf(0.018, 0.09, impact)
+		if landing_audio != null:
+			landing_audio.volume_db = lerpf(-19.0, -8.0, impact)
+			landing_audio.play()
 		landed.emit(impact)
 	previous_floor = grounded_now
 	_update_view(delta)
@@ -353,6 +368,10 @@ func _update_mantle(delta: float) -> void:
 		velocity = Vector3.ZERO
 
 func _update_view(delta: float) -> void:
+	if recoil_pivot != null:
+		recoil_rotation = recoil_rotation.lerp(Vector2.ZERO, _smooth_weight(delta, 8.5))
+		recoil_pivot.rotation.x = lerpf(recoil_pivot.rotation.x, recoil_rotation.x, _smooth_weight(delta, 24.0))
+		recoil_pivot.rotation.y = lerpf(recoil_pivot.rotation.y, recoil_rotation.y, _smooth_weight(delta, 24.0))
 	var horizontal_speed := _horizontal_speed()
 	var moving_factor := clampf(horizontal_speed / SPRINT_SPEED, 0.0, 1.0)
 	var bob_speed := 7.0 + horizontal_speed * 1.35
@@ -380,6 +399,14 @@ func _smooth_weight(delta: float, sharpness: float) -> float:
 
 func set_aim(enabled: bool) -> void:
 	is_aiming = enabled and not is_sprinting and not is_sliding
+
+func add_recoil(vertical_degrees: float, horizontal_degrees: float) -> void:
+	# Recoil is an independent pivot, so recovery never fights direct look input.
+	recoil_rotation.x = clampf(recoil_rotation.x - deg_to_rad(vertical_degrees), deg_to_rad(-13.0), deg_to_rad(2.0))
+	recoil_rotation.y = clampf(recoil_rotation.y + deg_to_rad(horizontal_degrees), deg_to_rad(-5.0), deg_to_rad(5.0))
+
+func get_move_amount() -> float:
+	return current_move_input.length()
 
 func get_accuracy_multiplier() -> float:
 	if is_crouching:

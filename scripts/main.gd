@@ -56,6 +56,7 @@ func _ready() -> void:
 
 	rifle = ServiceRifle.new()
 	player.camera.add_child(rifle)
+	rifle.bind_player(player)
 	rifle.ammo_changed.connect(_on_ammo_changed)
 	rifle.weapon_message.connect(_set_status)
 	rifle.shot_resolved.connect(_on_shot_resolved)
