@@ -7,7 +7,7 @@ const SPAWN_POINTS := [
 	Vector3(47, 0.15, 3), Vector3(-48, 0.15, 3)
 ]
 const HUD_LAYOUT_FILE := "user://operation_redline_hud.cfg"
-const HUD_KEYS := ["joystick", "fire", "aim", "reload"]
+const HUD_KEYS := ["joystick", "fire", "aim", "reload", "jump", "crouch"]
 
 var player: OutpostPlayer
 var rifle: ServiceRifle
@@ -25,6 +25,8 @@ var damage_overlay: ColorRect
 var aim_button: Button
 var reload_button: Button
 var fire_button: Button
+var jump_button: Button
+var crouch_button: Button
 var restart_button: Button
 var hud_edit_button: Button
 var movement_stick: TouchJoystick
@@ -93,6 +95,18 @@ func _fire() -> void:
 func _update_movement_stick(direction: Vector2, active: bool) -> void:
 	if movement_stick != null:
 		movement_stick.set_input(direction, active)
+
+func _on_jump_button_down() -> void:
+	if player != null:
+		player.request_jump()
+
+func _on_jump_button_up() -> void:
+	if player != null:
+		player.set_jump_held(false)
+
+func _on_crouch_button_down() -> void:
+	if player != null:
+		player.request_crouch()
 
 func _spawn_raider(serial: int) -> void:
 	if not player.can_control:
@@ -211,14 +225,21 @@ func _build_hud() -> void:
 	fire_button = _button("FIRE", Vector2.ZERO, Vector2(154, 132), Control.PRESET_TOP_LEFT, Color("a94f3f"), controls_root)
 	reload_button = _button("RELOAD", Vector2.ZERO, Vector2(128, 58), Control.PRESET_TOP_LEFT, Color("596b4e"), controls_root)
 	aim_button = _button("AIM", Vector2.ZERO, Vector2(128, 58), Control.PRESET_TOP_LEFT, Color("3d6661"), controls_root)
+	jump_button = _button("JUMP", Vector2.ZERO, Vector2(104, 72), Control.PRESET_TOP_LEFT, Color("4a6370"), controls_root)
+	crouch_button = _button("CROUCH", Vector2.ZERO, Vector2(112, 62), Control.PRESET_TOP_LEFT, Color("6e5f43"), controls_root)
 	fire_button.button_down.connect(_fire)
 	reload_button.pressed.connect(rifle.start_reload)
 	aim_button.pressed.connect(_toggle_aim)
+	jump_button.button_down.connect(_on_jump_button_down)
+	jump_button.button_up.connect(_on_jump_button_up)
+	crouch_button.button_down.connect(_on_crouch_button_down)
 	adjustable_controls = {
 		"joystick": movement_stick,
 		"fire": fire_button,
 		"aim": aim_button,
 		"reload": reload_button,
+		"jump": jump_button,
+		"crouch": crouch_button,
 	}
 
 	hud_edit_button = _button("HUD", Vector2(245, 9), Vector2(70, 34), Control.PRESET_TOP_LEFT, Color("526b68"))
@@ -308,6 +329,8 @@ func _apply_default_hud_layout() -> void:
 	_set_control_rect("fire", Vector2(screen.x - 176, screen.y - 242), Vector2(148, 148))
 	_set_control_rect("aim", Vector2(screen.x - 452, screen.y - 144), Vector2(128, 58))
 	_set_control_rect("reload", Vector2(screen.x - 310, screen.y - 144), Vector2(128, 58))
+	_set_control_rect("jump", Vector2(screen.x - 306, screen.y - 238), Vector2(104, 72))
+	_set_control_rect("crouch", Vector2(screen.x - 434, screen.y - 232), Vector2(112, 62))
 
 func _set_control_rect(key: String, position_value: Vector2, size_value: Vector2) -> void:
 	var control := adjustable_controls.get(key) as Control
