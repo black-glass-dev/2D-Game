@@ -22,6 +22,7 @@ var look_touch := -1
 var move_touch_origin := Vector2.ZERO
 var look_touch_last := Vector2.ZERO
 var touch_move := Vector2.ZERO
+var movement_touch_region := Rect2()
 var mouse_sensitivity := 0.0028
 var can_control := true
 
@@ -75,11 +76,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		_handle_touch_drag(event)
 
 func _handle_touch_press(event: InputEventScreenTouch) -> void:
-	var viewport_size := get_viewport().get_visible_rect().size
 	if event.pressed:
-		# Reserve the lower-left quarter for movement. GUI buttons consume their own
-		# touches, so a touch on FIRE can never become a look or movement drag.
-		if event.position.x < viewport_size.x * 0.48 and event.position.y > viewport_size.y * 0.42 and move_touch == -1:
+		# The region follows the visible joystick, including a user-customized HUD
+		# layout. GUI buttons consume their own touches before this handler runs.
+		if movement_touch_region.has_point(event.position) and move_touch == -1:
 			move_touch = event.index
 			move_touch_origin = event.position
 			_set_touch_move(Vector2.ZERO)
@@ -99,6 +99,9 @@ func _handle_touch_drag(event: InputEventScreenDrag) -> void:
 	elif event.index == look_touch:
 		_rotate_look((event.position - look_touch_last) * 0.0055)
 		look_touch_last = event.position
+
+func set_movement_touch_region(region: Rect2) -> void:
+	movement_touch_region = region
 
 func _set_touch_move(value: Vector2) -> void:
 	touch_move = value.limit_length(1.0)
