@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-10
 
-**Current candidate:** [Operation Redline debug APK candidate #11](https://github.com/islamyousuf032-glitch/2D-Game/releases/tag/apk-candidate-11) (`OperationRedline-debug.apk`)
+**Current candidate:** [Operation Redline debug APK candidate #12](https://github.com/islamyousuf032-glitch/2D-Game/releases/tag/apk-candidate-12) (`OperationRedline-debug.apk`)
 
 **Status:** **Build, signature, source checks and headless gameplay startup passed. The latest APK is a downloadable debug candidate; Android emulator boot infrastructure did not complete, so it is not labelled as a fully tested final release.**
 
@@ -23,8 +23,8 @@
 
 ## Current APK and test evidence
 
-- Downloadable candidate #11: [`OperationRedline-debug.apk`](https://github.com/islamyousuf032-glitch/2D-Game/releases/download/apk-candidate-11/OperationRedline-debug.apk)
-- Candidate #11 contains the landscape lock, visible virtual joystick, mobile-only fire guard, lower-resolution pixel viewport, throttled enemy line-of-sight checks and visual palette improvements.
+- Downloadable candidate #12: [`OperationRedline-debug.apk`](https://github.com/islamyousuf032-glitch/2D-Game/releases/download/apk-candidate-12/OperationRedline-debug.apk)
+- Candidate #12 contains the landscape lock, visible virtual joystick, mobile-only fire guard, lower-resolution pixel viewport, throttled enemy line-of-sight checks, visual palette improvements and corrected outpost sign orientation.
 - The GitHub Actions workflow also stores APK/log artifacts for each build run.
 
 ## Outstanding gate
