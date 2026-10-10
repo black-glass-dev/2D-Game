@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-10
 
-**Current candidate:** [Operation Redline debug APK candidate #13](https://github.com/islamyousuf032-glitch/2D-Game/releases/tag/apk-candidate-13) (`OperationRedline-debug.apk`)
+**Current candidate:** [Operation Redline debug APK candidate #14](https://github.com/islamyousuf032-glitch/2D-Game/releases/tag/apk-candidate-14) (`OperationRedline-debug.apk`)
 
 **Status:** **Build, signature, source checks and headless gameplay startup passed. The latest APK is a downloadable debug candidate; Android emulator boot infrastructure did not complete, so it is not labelled as a fully tested final release.**
 
@@ -23,9 +23,9 @@
 
 ## Current APK and test evidence
 
-- Downloadable candidate #13: [`OperationRedline-debug.apk`](https://github.com/islamyousuf032-glitch/2D-Game/releases/download/apk-candidate-13/OperationRedline-debug.apk)
-- Candidate #13 contains the landscape lock, larger default touch controls, persistent in-game HUD move/resize editing, joystick-region-aware movement routing, the expanded multi-zone outpost, lower-resolution pixel viewport, performance pacing and the corrected outpost sign orientation.
-- Candidate #13 completed the source, Android-export, APK/signature and headless-scene gates in GitHub Actions run [`38033619893`](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/38033619893). The workflow also stores APK/log artifacts for each build run.
+- Downloadable candidate #14: [`OperationRedline-debug.apk`](https://github.com/islamyousuf032-glitch/2D-Game/releases/download/apk-candidate-14/OperationRedline-debug.apk)
+- Candidate #14 contains the landscape lock, larger and raised default touch controls, persistent in-game HUD move/resize editing, joystick-region-aware movement routing, the expanded multi-zone outpost, lower-resolution pixel viewport, performance pacing and the corrected outpost sign orientation.
+- Candidate #14 completed the source, Android-export, APK/signature and headless-scene gates in GitHub Actions run [`38034400509`](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/38034400509). The workflow also stores APK/log artifacts for each build run.
 
 ## Outstanding gate
 
