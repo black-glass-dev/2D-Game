@@ -23,15 +23,16 @@ permissions:
 jobs:
   build-and-smoke-test:
     name: Android APK and emulator smoke test
-    runs-on: ubuntu-latest
+    # Android x86_64 emulation is stable on this image with hardware acceleration.
+    runs-on: ubuntu-22.04
     timeout-minutes: 35
 
     steps:
       - name: Check out source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Node for GDScript static analysis
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -152,7 +153,7 @@ jobs:
 
       - name: Upload tested build evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: operation-redline-android-debug
           if-no-files-found: warn
