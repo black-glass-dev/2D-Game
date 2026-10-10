@@ -5,6 +5,7 @@ signal ammo_changed(in_magazine: int, reserve: int)
 signal weapon_message(text: String)
 signal shot_resolved(hit: bool, target_name: String)
 signal shot_feedback(headshot: bool, eliminated: bool, target_name: String)
+signal weapon_fired(origin: Vector3)
 
 const MAGAZINE_SIZE := 24
 const STARTING_RESERVE := 144
@@ -86,6 +87,7 @@ func try_fire(camera: Camera3D) -> bool:
 	_play_sound(shot_audio)
 
 	var origin: Vector3 = camera.global_position
+	weapon_fired.emit(origin)
 	var direction := _apply_aim_assist(camera, _shot_direction(camera))
 	var destination := origin + direction * RANGE
 	var impact_normal := Vector3.UP

@@ -75,6 +75,7 @@ func _ready() -> void:
 	rifle.weapon_message.connect(_set_status)
 	rifle.shot_resolved.connect(_on_shot_resolved)
 	rifle.shot_feedback.connect(_on_shot_feedback)
+	rifle.weapon_fired.connect(_on_weapon_fired)
 
 	director = SurvivalDirector.new()
 	add_child(director)
@@ -131,6 +132,13 @@ func _on_jump_button_up() -> void:
 func _on_crouch_button_down() -> void:
 	if player != null:
 		player.request_crouch()
+
+func _on_weapon_fired(origin: Vector3) -> void:
+	# Sound awareness is dispatched only per shot, not as a per-frame group scan.
+	for node in get_tree().get_nodes_in_group("raiders"):
+		var raider := node as Raider
+		if raider != null:
+			raider.hear_weapon_fire(origin)
 
 func _spawn_raider(serial: int) -> void:
 	if not player.can_control:

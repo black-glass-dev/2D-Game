@@ -4,7 +4,9 @@ extends CharacterBody3D
 signal eliminated(raider: Raider, score_value: int)
 
 const MAX_HEALTH := 100
-const MOVE_SPEED := 2.0
+const MOVE_SPEED := 2.35
+const MOVE_ACCELERATION := 9.5
+const MOVE_DECELERATION := 13.0
 const ATTACK_RANGE := 14.0
 const ATTACK_COOLDOWN := 1.65
 const SIGHT_CHECK_INTERVAL := 0.22
@@ -19,10 +21,15 @@ var active := true
 var body_visual: Node3D
 var hit_light: OmniLight3D
 var head_hitbox: Area3D
+var tactics := RaiderTactics.new()
+var line_of_sight := false
+var attack_serial := 0
+var walk_phase := 0.0
 var spawn_index := 0
 
 func setup(index: int) -> void:
 	spawn_index = index
+	tactics.setup(index)
 
 func _ready() -> void:
 	name = "Raider_%02d" % spawn_index
@@ -45,42 +52,37 @@ func _physics_process(delta: float) -> void:
 	radar_reveal_left = maxf(radar_reveal_left - delta, 0.0)
 	var player := get_tree().get_first_node_in_group("player") as OutpostPlayer
 	if player == null or not player.can_control:
+		_update_visual_motion(delta)
 		return
-	var target := player.global_position + Vector3(0, 0.7, 0)
-	var flat_offset := target - global_position
-	flat_offset.y = 0.0
-	var distance := flat_offset.length()
-	if distance > 0.01:
-		look_at(global_position + flat_offset, Vector3.UP, true)
-	if distance > 7.0:
-		var direction := flat_offset.normalized()
-		velocity.x = direction.x * MOVE_SPEED
-		velocity.z = direction.z * MOVE_SPEED
-	else:
-		velocity.x = move_toward(velocity.x, 0.0, MOVE_SPEED * 8.0 * delta)
-		velocity.z = move_toward(velocity.z, 0.0, MOVE_SPEED * 8.0 * delta)
-	if not is_on_floor():
-		velocity.y -= GRAVITY * delta
-	else:
-		velocity.y = -0.1
-	move_and_slide()
-	attack_timer -= delta
+	var player_target := player.global_position + Vector3(0, 0.75, 0)
+	var flat_player_offset := player_target - global_position
+	flat_player_offset.y = 0.0
+	var player_distance := flat_player_offset.length()
 	sight_timer -= delta
-	# Ray casts are deliberately throttled for mobile frame pacing. Six enemies no
-	# longer ask the physics server for line-of-sight every rendered frame.
-	if distance <= ATTACK_RANGE and attack_timer <= 0.0 and sight_timer <= 0.0:
+	if sight_timer <= 0.0:
 		sight_timer = SIGHT_CHECK_INTERVAL + float(spawn_index % 3) * 0.03
-		if _has_line_of_sight(player):
-			attack_timer = ATTACK_COOLDOWN + float(spawn_index % 3) * 0.10
-			radar_reveal_left = 1.9
-			player.take_damage(3 + (spawn_index % 3), global_position)
-			_flash_body(Color("ffb55e"))
+		line_of_sight = _has_line_of_sight(player)
+	tactics.update(delta, global_position, player.global_position, line_of_sight)
+	_move_to_goal(tactics.move_goal, delta)
+	_update_visual_motion(delta)
+
+	attack_timer -= delta
+	if player_distance <= ATTACK_RANGE and line_of_sight and tactics.can_attack() and attack_timer <= 0.0:
+		attack_timer = ATTACK_COOLDOWN + float(spawn_index % 3) * 0.12
+		radar_reveal_left = 1.9
+		_attempt_attack(player, player_distance)
+
+func hear_weapon_fire(origin: Vector3) -> void:
+	if not active:
+		return
+	tactics.hear_weapon_fire(origin, global_position)
 
 func take_damage(amount: int, was_headshot := false) -> bool:
 	if not active:
 		return false
 	health -= amount
 	radar_reveal_left = 2.4
+	tactics.receive_hit()
 	_flash_body(Color("fff2c4") if not was_headshot else Color("ffdb78"))
 	if health > 0:
 		return false
@@ -103,6 +105,44 @@ func is_radar_visible(observer_position: Vector3) -> bool:
 	var horizontal_delta := observer_position - global_position
 	horizontal_delta.y = 0.0
 	return horizontal_delta.length_squared() <= RADAR_NEAR_RANGE * RADAR_NEAR_RANGE or radar_reveal_left > 0.0
+
+func _move_to_goal(goal: Vector3, delta: float) -> void:
+	var flat_goal := goal - global_position
+	flat_goal.y = 0.0
+	var distance := flat_goal.length()
+	var target_velocity := Vector3.ZERO
+	if distance > 0.65:
+		var direction := flat_goal / distance
+		var speed := MOVE_SPEED * tactics.speed_multiplier()
+		target_velocity = direction * speed
+		var target_yaw := atan2(-direction.x, -direction.z)
+		rotation.y = lerp_angle(rotation.y, target_yaw, 1.0 - exp(-delta * 8.5))
+	var rate := MOVE_ACCELERATION if distance > 0.65 else MOVE_DECELERATION
+	velocity.x = move_toward(velocity.x, target_velocity.x, rate * delta)
+	velocity.z = move_toward(velocity.z, target_velocity.z, rate * delta)
+	if not is_on_floor():
+		velocity.y -= GRAVITY * delta
+	else:
+		velocity.y = -0.1
+	move_and_slide()
+
+func _attempt_attack(player: OutpostPlayer, distance: float) -> void:
+	attack_serial += 1
+	var range_factor := clampf(1.0 - distance / ATTACK_RANGE, 0.0, 1.0)
+	var hit_chance := lerpf(0.36, 0.68, range_factor)
+	var roll := fposmod(sin(float(spawn_index * 97 + attack_serial * 31)) * 43758.5453, 1.0)
+	_flash_body(Color("ffb55e"))
+	if roll <= hit_chance:
+		player.take_damage(3 + (spawn_index % 3), global_position)
+
+func _update_visual_motion(delta: float) -> void:
+	if body_visual == null or not active:
+		return
+	var speed := Vector2(velocity.x, velocity.z).length()
+	walk_phase += delta * (3.2 + speed * 3.8)
+	var bob := sin(walk_phase) * minf(speed * 0.018, 0.05)
+	body_visual.position.y = lerpf(body_visual.position.y, bob, 1.0 - exp(-delta * 10.0))
+	body_visual.rotation.x = lerpf(body_visual.rotation.x, sin(walk_phase * 0.5) * minf(speed * 0.035, 0.08), 1.0 - exp(-delta * 8.0))
 
 func _has_line_of_sight(player: OutpostPlayer) -> bool:
 	var eye := global_position + Vector3(0, 1.35, 0)
