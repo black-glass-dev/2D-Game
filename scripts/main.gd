@@ -28,6 +28,7 @@ var hit_marker: Label
 var kill_feed: VBoxContainer
 var minimap: TacticalRadar
 var settings := RedlineSettings.new()
+var performance_governor: PerformanceGovernor
 var settings_button: Button
 var settings_panel: Panel
 var settings_summary: Label
@@ -59,6 +60,9 @@ var respawn_last_second := -1
 func _ready() -> void:
 	settings.load_from_disk()
 	WorldBuilder.build(self)
+	performance_governor = PerformanceGovernor.new()
+	add_child(performance_governor)
+	performance_governor.configure(self)
 	player = OutpostPlayer.new()
 	player.position = PLAYER_SPAWN
 	add_child(player)
@@ -443,11 +447,13 @@ func _apply_settings() -> void:
 	if rifle != null:
 		rifle.set_aim_assist_enabled(settings.aim_assist)
 		rifle.set_effects_enabled(settings.screen_effects)
+	if performance_governor != null:
+		performance_governor.set_effects_requested(settings.screen_effects)
 	_update_settings_summary()
 
 func _update_settings_summary() -> void:
 	if settings_summary != null:
-		settings_summary.text = "LOOK  %.0f%%   •   ASSIST  %s   •   EFFECTS  %s" % [settings.look_sensitivity * 100.0, "ON" if settings.aim_assist else "OFF", "ON" if settings.screen_effects else "OFF"]
+		settings_summary.text = "LOOK  %.0f%%   •   ASSIST  %s   •   EFFECTS  %s\nAUTO 60 FPS  •  ACTIVE" % [settings.look_sensitivity * 100.0, "ON" if settings.aim_assist else "OFF", "ON" if settings.screen_effects else "OFF"]
 
 func _build_hud_editor() -> void:
 	editor_surface = Control.new()

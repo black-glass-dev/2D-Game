@@ -26,7 +26,9 @@ textures/default_filters/use_nearest_mipmap_filter=false
 textures/vram_compression/import_etc2_astc=true
 textures/canvas_textures/default_texture_filter=0
 anti_aliasing/quality/msaa_3d=0
-anti_aliasing/quality/screen_space_aa=0
+# FXAA-style screen-space smoothing preserves the low-resolution pixel look while
+# reducing harsh shimmering on 3D silhouettes at a modest mobile cost.
+anti_aliasing/quality/screen_space_aa=1
 
 [physics]
 common/enable_pause_aware_picking=true

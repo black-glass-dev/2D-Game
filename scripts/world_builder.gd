@@ -98,6 +98,18 @@ static func build(root: Node3D) -> void:
 	_add_outpost_details(root, metal, olive, crate, lamp_glow)
 	_add_sign(root)
 
+static func set_presentation_quality(root: Node3D, effects_enabled: bool, adaptive_reduced: bool) -> void:
+	var world_environment := root.get_node_or_null("Dusty sunset environment") as WorldEnvironment
+	if world_environment != null and world_environment.environment != null:
+		var environment := world_environment.environment
+		environment.glow_enabled = effects_enabled and not adaptive_reduced
+		environment.glow_intensity = 0.72 if effects_enabled else 0.0
+		environment.fog_density = 0.0048 if adaptive_reduced else 0.0065
+	var sun := root.get_node_or_null("Low desert sun") as DirectionalLight3D
+	if sun != null:
+		sun.shadow_enabled = not adaptive_reduced
+		sun.directional_shadow_max_distance = 36.0 if adaptive_reduced else 56.0
+
 static func _build_environment(root: Node3D) -> void:
 	var world_env := WorldEnvironment.new()
 	world_env.name = "Dusty sunset environment"
@@ -111,6 +123,14 @@ static func _build_environment(root: Node3D) -> void:
 	env.fog_light_color = Color("937863")
 	env.fog_light_energy = 0.48
 	env.fog_density = 0.0065
+	# Glow is subtle and limited to emissive lamps, tracers and muzzle flashes.
+	# The performance governor turns it off first if a device cannot sustain 60 FPS.
+	env.glow_enabled = true
+	env.glow_normalized = true
+	env.glow_intensity = 0.72
+	env.glow_strength = 0.86
+	env.glow_bloom = 0.10
+	env.glow_hdr_threshold = 1.25
 	world_env.environment = env
 	root.add_child(world_env)
 
@@ -120,7 +140,10 @@ static func _build_environment(root: Node3D) -> void:
 	sun.light_color = Color("ffd8ae")
 	sun.light_energy = 0.95
 	sun.shadow_enabled = true
-	sun.directional_shadow_max_distance = 46
+	sun.directional_shadow_max_distance = 56
+	sun.directional_shadow_fade_start = 0.78
+	sun.directional_shadow_blend_splits = true
+	sun.light_angular_distance = 0.45
 	root.add_child(sun)
 
 static func _box(parent: Node3D, label: String, position: Vector3, size: Vector3, material: Material, collision := true) -> Node3D:
