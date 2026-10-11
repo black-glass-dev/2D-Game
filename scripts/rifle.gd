@@ -37,6 +37,8 @@ var bloom := 0.0
 var shot_serial := 0
 var visual_recoil := 0.0
 var aim_assist_enabled := true
+var equipped := true
+var equip_blend := 1.0
 
 func _ready() -> void:
 	name = "Service Rifle"
@@ -48,6 +50,11 @@ func _ready() -> void:
 func bind_player(player_value: OutpostPlayer) -> void:
 	owner_player = player_value
 
+func set_equipped(enabled: bool) -> void:
+	equipped = enabled
+	if enabled and gun_root != null:
+		gun_root.visible = true
+
 func set_aim_assist_enabled(enabled: bool) -> void:
 	aim_assist_enabled = enabled
 
@@ -57,6 +64,7 @@ func set_effects_enabled(enabled: bool) -> void:
 
 func _process(delta: float) -> void:
 	cooldown = maxf(cooldown - delta, 0.0)
+	equip_blend = move_toward(equip_blend, 1.0 if equipped else 0.0, delta * 7.5)
 	bloom = move_toward(bloom, 0.0, delta * 0.026)
 	visual_recoil = move_toward(visual_recoil, 0.0, delta * 9.0)
 	if reload_left > 0.0:
@@ -68,9 +76,11 @@ func _process(delta: float) -> void:
 	if muzzle_light != null:
 		muzzle_light.light_energy = 2.5 if cooldown > FIRE_INTERVAL * 0.45 else 0.0
 	_update_weapon_pose(delta)
+	if gun_root != null and equip_blend <= 0.02 and not equipped:
+		gun_root.visible = false
 
 func try_fire(camera: Camera3D) -> bool:
-	if reload_left > 0.0 or cooldown > 0.0:
+	if not equipped or reload_left > 0.0 or cooldown > 0.0:
 		return false
 	if ammo <= 0:
 		start_reload()
@@ -120,7 +130,7 @@ func try_fire(camera: Camera3D) -> bool:
 	return true
 
 func start_reload() -> void:
-	if reload_left > 0.0 or ammo >= MAGAZINE_SIZE or reserve <= 0:
+	if not equipped or reload_left > 0.0 or ammo >= MAGAZINE_SIZE or reserve <= 0:
 		return
 	reload_left = RELOAD_TIME
 	weapon_message.emit("RELOADING")
@@ -192,6 +202,7 @@ func _update_weapon_pose(delta: float) -> void:
 		var reload_arc := sin(reload_progress * PI)
 		target_position += Vector3(0.08, -0.10 * reload_arc, 0.14 * reload_arc)
 		target_rotation.x += deg_to_rad(42.0 * reload_arc)
+	target_position.y -= (1.0 - equip_blend) * 0.42
 	target_position.z += visual_recoil * 0.072
 	target_rotation.x += deg_to_rad(visual_recoil * 7.0)
 	var smooth := 1.0 - exp(-delta * 16.0)

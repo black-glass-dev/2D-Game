@@ -7,10 +7,13 @@ const SPAWN_POINTS := [
 	Vector3(47, 0.15, 3), Vector3(-48, 0.15, 3)
 ]
 const HUD_LAYOUT_FILE := "user://operation_redline_hud.cfg"
-const HUD_KEYS := ["joystick", "fire", "aim", "reload", "jump", "crouch", "minimap"]
+const HUD_KEYS := ["joystick", "fire", "aim", "reload", "jump", "crouch", "swap", "minimap"]
 
 var player: OutpostPlayer
 var rifle: ServiceRifle
+var pistol: ServicePistol
+var active_weapon: Node
+var weapon_switch_left := 0.0
 var director: SurvivalDirector
 var hud: CanvasLayer
 var controls_root: Control
@@ -37,6 +40,7 @@ var reload_button: Button
 var fire_button: Button
 var jump_button: Button
 var crouch_button: Button
+var swap_button: Button
 var restart_button: Button
 var hud_edit_button: Button
 var movement_stick: TouchJoystick
@@ -67,6 +71,7 @@ func _ready() -> void:
 	player.position = PLAYER_SPAWN
 	add_child(player)
 	player.fire_requested.connect(_fire)
+	player.weapon_swap_requested.connect(_switch_weapon)
 	player.movement_touch_changed.connect(_update_movement_stick)
 	player.health_changed.connect(_on_health_changed)
 	player.damage_taken.connect(_on_player_damage)
@@ -75,11 +80,21 @@ func _ready() -> void:
 	rifle = ServiceRifle.new()
 	player.camera.add_child(rifle)
 	rifle.bind_player(player)
-	rifle.ammo_changed.connect(_on_ammo_changed)
+	pistol = ServicePistol.new()
+	player.camera.add_child(pistol)
+	pistol.bind_player(player)
+	pistol.set_equipped(false)
+	active_weapon = rifle
+	rifle.ammo_changed.connect(_on_rifle_ammo_changed)
 	rifle.weapon_message.connect(_set_status)
 	rifle.shot_resolved.connect(_on_shot_resolved)
 	rifle.shot_feedback.connect(_on_shot_feedback)
 	rifle.weapon_fired.connect(_on_weapon_fired)
+	pistol.ammo_changed.connect(_on_pistol_ammo_changed)
+	pistol.weapon_message.connect(_set_status)
+	pistol.shot_resolved.connect(_on_shot_resolved)
+	pistol.shot_feedback.connect(_on_shot_feedback)
+	pistol.weapon_fired.connect(_on_weapon_fired)
 
 	director = SurvivalDirector.new()
 	add_child(director)
@@ -89,6 +104,7 @@ func _ready() -> void:
 	director.operation_complete.connect(_on_operation_complete)
 
 	_build_hud()
+	_refresh_active_ammo()
 	_apply_settings()
 	get_viewport().size_changed.connect(_on_viewport_size_changed)
 	_set_status("SECURE THE OUTPOST")
@@ -96,6 +112,7 @@ func _ready() -> void:
 	director.start_operation()
 
 func _process(delta: float) -> void:
+	weapon_switch_left = maxf(weapon_switch_left - delta, 0.0)
 	if player != null and player.can_control:
 		# Android maps every screen press to a mouse click on some devices. Restrict
 		# desktop auto-fire to non-mobile platforms so only the FIRE control shoots.
@@ -115,9 +132,9 @@ func _process(delta: float) -> void:
 		damage_indicator.modulate.a = clampf(damage_indicator_left * 1.6, 0.0, 1.0) if settings.screen_effects else 0.0
 
 func _fire() -> void:
-	if player == null or not player.can_control or rifle == null:
+	if player == null or not player.can_control or active_weapon == null or weapon_switch_left > 0.0:
 		return
-	if rifle.try_fire(player.camera):
+	if active_weapon.has_method("try_fire") and active_weapon.try_fire(player.camera):
 		shots += 1
 		_update_accuracy()
 
@@ -136,6 +153,32 @@ func _on_jump_button_up() -> void:
 func _on_crouch_button_down() -> void:
 	if player != null:
 		player.request_crouch()
+
+func _reload_active_weapon() -> void:
+	if active_weapon != null and active_weapon.has_method("start_reload"):
+		active_weapon.start_reload()
+
+func _switch_weapon() -> void:
+	if weapon_switch_left > 0.0 or rifle == null or pistol == null:
+		return
+	weapon_switch_left = 0.30
+	if active_weapon == rifle:
+		rifle.set_equipped(false)
+		pistol.set_equipped(true)
+		active_weapon = pistol
+		_set_status("SIDEARM READY")
+	else:
+		pistol.set_equipped(false)
+		rifle.set_equipped(true)
+		active_weapon = rifle
+		_set_status("RIFLE READY")
+	_refresh_active_ammo()
+
+func _refresh_active_ammo() -> void:
+	if active_weapon == rifle and rifle != null:
+		_on_ammo_changed(rifle.ammo, rifle.reserve)
+	elif active_weapon == pistol and pistol != null:
+		_on_ammo_changed(pistol.ammo, pistol.reserve)
 
 func _on_weapon_fired(origin: Vector3) -> void:
 	# Sound awareness is dispatched only per shot, not as a per-frame group scan.
@@ -214,6 +257,14 @@ func _on_player_damage(amount: int, source_position: Vector3) -> void:
 	var screen_direction := Vector2(toward_source.dot(player.global_transform.basis.x), toward_source.dot(-player.global_transform.basis.z))
 	damage_indicator.position = screen_direction * 62.0 + Vector2(-14, -18)
 	damage_indicator.rotation = atan2(screen_direction.y, screen_direction.x) + PI * 0.5
+
+func _on_rifle_ammo_changed(in_magazine: int, reserve: int) -> void:
+	if active_weapon == rifle:
+		_on_ammo_changed(in_magazine, reserve)
+
+func _on_pistol_ammo_changed(in_magazine: int, reserve: int) -> void:
+	if active_weapon == pistol:
+		_on_ammo_changed(in_magazine, reserve)
 
 func _on_ammo_changed(in_magazine: int, reserve: int) -> void:
 	if ammo_label != null:
@@ -324,12 +375,14 @@ func _build_hud() -> void:
 	aim_button = _button("AIM", Vector2.ZERO, Vector2(128, 58), Control.PRESET_TOP_LEFT, Color("3d6661"), controls_root)
 	jump_button = _button("JUMP", Vector2.ZERO, Vector2(104, 72), Control.PRESET_TOP_LEFT, Color("4a6370"), controls_root)
 	crouch_button = _button("CROUCH", Vector2.ZERO, Vector2(112, 62), Control.PRESET_TOP_LEFT, Color("6e5f43"), controls_root)
+	swap_button = _button("SWAP", Vector2.ZERO, Vector2(92, 52), Control.PRESET_TOP_LEFT, Color("67556f"), controls_root)
 	fire_button.button_down.connect(_fire)
-	reload_button.pressed.connect(rifle.start_reload)
+	reload_button.pressed.connect(_reload_active_weapon)
 	aim_button.pressed.connect(_toggle_aim)
 	jump_button.button_down.connect(_on_jump_button_down)
 	jump_button.button_up.connect(_on_jump_button_up)
 	crouch_button.button_down.connect(_on_crouch_button_down)
+	swap_button.pressed.connect(_switch_weapon)
 	adjustable_controls = {
 		"joystick": movement_stick,
 		"fire": fire_button,
@@ -337,6 +390,7 @@ func _build_hud() -> void:
 		"reload": reload_button,
 		"jump": jump_button,
 		"crouch": crouch_button,
+		"swap": swap_button,
 		"minimap": minimap,
 	}
 
@@ -447,6 +501,9 @@ func _apply_settings() -> void:
 	if rifle != null:
 		rifle.set_aim_assist_enabled(settings.aim_assist)
 		rifle.set_effects_enabled(settings.screen_effects)
+	if pistol != null:
+		pistol.set_aim_assist_enabled(settings.aim_assist)
+		pistol.set_effects_enabled(settings.screen_effects)
 	if performance_governor != null:
 		performance_governor.set_effects_requested(settings.screen_effects)
 	_update_settings_summary()
@@ -531,6 +588,7 @@ func _apply_default_hud_layout() -> void:
 	_set_control_rect("reload", Vector2(screen.x - 310, screen.y - 144), Vector2(128, 58))
 	_set_control_rect("jump", Vector2(screen.x - 306, screen.y - 238), Vector2(104, 72))
 	_set_control_rect("crouch", Vector2(screen.x - 434, screen.y - 232), Vector2(112, 62))
+	_set_control_rect("swap", Vector2(screen.x - 550, screen.y - 144), Vector2(92, 52))
 	_set_control_rect("minimap", Vector2(screen.x - 166, 62), Vector2(148, 148))
 
 func _set_control_rect(key: String, position_value: Vector2, size_value: Vector2) -> void:

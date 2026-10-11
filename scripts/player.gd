@@ -4,6 +4,7 @@ extends CharacterBody3D
 ## Responsive first-person motor. Gameplay input stays here while the HUD only
 ## forwards button state, keeping desktop and touch play on the same movement path.
 signal fire_requested
+signal weapon_swap_requested
 signal health_changed(current: int, maximum: int)
 signal damage_taken(amount: int, source_position: Vector3)
 signal player_down
@@ -142,6 +143,8 @@ func _handle_keyboard_event(event: InputEventKey) -> void:
 		set_jump_held(event.pressed)
 	elif event.keycode == KEY_C and event.pressed and not event.echo:
 		request_crouch()
+	elif event.keycode == KEY_Q and event.pressed and not event.echo:
+		weapon_swap_requested.emit()
 
 func _handle_touch_press(event: InputEventScreenTouch) -> void:
 	if event.pressed:
