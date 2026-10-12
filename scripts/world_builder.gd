@@ -22,7 +22,7 @@ static func build(root: Node3D) -> void:
 	var rock := _pbr_material(ROCK_TEXTURE, Color("775349"), 0.94, 0.0, 2.0)
 	var dark := _flat_material(Color("17252a"), 0.62, 0.72)
 	var glass := _glass_material(Color("4c9baa"))
-	var lamp_glow := _flat_material(Color("ffd29a"), 0.28, 0.30, Color("ff8b38"), 3.6)
+	var lamp_glow := _flat_material(Color("ffd29a"), 0.28, 0.30, Color("ff8b38"), 1.75)
 
 	# The collision floor is flat, predictable and unchanged. The high-density
 	# terrain mesh above it creates dunes, tire-rutted paths and visual gullies.

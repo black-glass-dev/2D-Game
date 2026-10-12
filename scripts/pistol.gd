@@ -280,7 +280,7 @@ func _build_model() -> void:
 func _build_arm(sleeve: Material, glove: Material) -> void:
 	var arm := Node3D.new()
 	arm.name = "Pistol gloved forearm"
-	arm.position = Vector3(.09, -.37, .11)
+	arm.position = Vector3(.09, -.21, .11)
 	arm.rotation_degrees = Vector3(-17, 0, -7)
 	gun_root.add_child(arm)
 	_cylinder_part_on(arm, "Sleeve", Vector3(0, 0, .16), .09, .48, 10, sleeve)

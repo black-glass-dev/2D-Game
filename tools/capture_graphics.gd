@@ -21,28 +21,36 @@ func _initialize() -> void:
 		return
 	camera = player.camera
 	player.can_control = false
+	# A controlled, real Raider guarantees the required close/mid character
+	# comparison even before a timed wave spawner reaches its next interval.
+	var showcase_raider := Raider.new()
+	showcase_raider.setup(97)
+	showcase_raider.position = Vector3(0, .15, -2.0)
+	scene_root.add_child(showcase_raider)
+	await _frames(3)
 	var views := [
-		["01_spawn_ground", Vector3(0, 1.62, 13), Vector3(1.2, -.08, 8.0)],
+		["01_spawn_ground", Vector3(0, 2.0, 13), Vector3(1.2, -.10, 7.5)],
 		["02_main_lane", Vector3(0, 1.65, 13), Vector3(-18, 7.8, -15)],
 		["03_emissive_crates", Vector3(1.6, 1.55, 9.0), Vector3(-2, 1.0, 5.0)],
 		["04_outpost_facade", Vector3(-8.5, 1.65, 6.0), Vector3(-8.5, 3.0, -.9)],
 		["05_mesa_horizon", Vector3(2.0, 2.0, 18.0), Vector3(1.0, 7.0, -70.0)],
-		["06_raider_fifteen_m", Vector3(0, 1.62, 13), Vector3(-7.0, 1.3, 1.0)],
-		["07_rifle_idle", Vector3(0, 1.62, 13), Vector3(0, 1.5, -15)],
-		["08_ads", Vector3(-2.0, 1.62, 13), Vector3(-2.0, 1.4, -22)],
-		["09_firing", Vector3(0, 1.62, 13), Vector3(0, 1.45, -20)],
-		["10_low_hp", Vector3(0, 1.62, 13), Vector3(0, 1.45, -20)],
-		["11_reload_crouch", Vector3(0, 1.62, 13), Vector3(-2.0, 1.2, 5.0)]
+		["06_raider_fifteen_m", Vector3(0, 1.62, 13), Vector3(0, 1.35, -2.0)],
+		["07_raider_five_m", Vector3(0, 1.62, 3.0), Vector3(0, 1.35, -2.0)],
+		["08_rifle_idle", Vector3(0, 1.62, 13), Vector3(0, 1.5, -15)],
+		["09_ads", Vector3(-2.0, 1.62, 13), Vector3(-2.0, 1.4, -22)],
+		["10_firing", Vector3(0, 1.62, 13), Vector3(0, 1.45, -20)],
+		["11_low_hp", Vector3(0, 1.62, 13), Vector3(0, 1.45, -20)],
+		["12_reload_crouch", Vector3(0, 1.62, 13), Vector3(-2.0, 1.2, 5.0)]
 	]
 	for entry in views:
 		_set_view(entry[1], entry[2])
-		if entry[0] == "08_ads":
+		if entry[0] == "09_ads":
 			player.set_aim(true)
-		elif entry[0] == "09_firing":
+		elif entry[0] == "10_firing":
 			scene_root._fire()
-		elif entry[0] == "10_low_hp":
+		elif entry[0] == "11_low_hp":
 			player.take_damage(74, Vector3(-8, 1, 3))
-		elif entry[0] == "11_reload_crouch":
+		elif entry[0] == "12_reload_crouch":
 			player.request_crouch()
 			scene_root._reload_active_weapon()
 		await _frames(5)

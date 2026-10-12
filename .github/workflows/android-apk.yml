@@ -188,8 +188,8 @@ jobs:
             --output "$GITHUB_WORKSPACE/build/screenshots/after" 2>&1 | tee build/godot-after-capture.log
           git worktree remove --force /tmp/operation-redline-before
           find build/screenshots -type f -printf '%p %s bytes\n' | sort
-          test "$(find build/screenshots/before -name '*.png' | wc -l)" -eq 11
-          test "$(find build/screenshots/after -name '*.png' | wc -l)" -eq 11
+          test "$(find build/screenshots/before -name '*.png' | wc -l)" -eq 12
+          test "$(find build/screenshots/after -name '*.png' | wc -l)" -eq 12
           python3 - <<'PY'
           from pathlib import Path
           import struct
