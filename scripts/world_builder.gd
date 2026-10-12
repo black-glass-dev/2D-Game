@@ -42,10 +42,10 @@ static func build(root: Node3D) -> void:
 	_build_atmosphere_particles(root)
 
 static func set_presentation_quality(root: Node3D, effects_enabled: bool, adaptive_reduced: bool, quality_tier := "HIGH") -> void:
+	var high_quality := quality_tier == "HIGH" or quality_tier == "ULTRA"
 	var environment_node := root.get_node_or_null("Dusty sunset environment") as WorldEnvironment
 	if environment_node != null and environment_node.environment != null:
 		var environment := environment_node.environment
-		var high_quality := quality_tier == "HIGH" or quality_tier == "ULTRA"
 		environment.glow_enabled = effects_enabled and not adaptive_reduced and quality_tier != "LOW"
 		environment.glow_intensity = 0.88 if quality_tier == "ULTRA" else 0.70
 		environment.fog_density = 0.0080 if adaptive_reduced else (0.0061 if high_quality else 0.0052)
