@@ -56,8 +56,10 @@ func _set_view(position_value: Vector3, target: Vector3) -> void:
 	camera.look_at(target, Vector3.UP, true)
 
 func _capture(name: String) -> void:
+	var output_path := output_directory.path_join(name + ".png")
 	var image := root.get_texture().get_image()
-	image.save_png(output_directory.path_join(name + ".png"))
+	var result := image.save_png(output_path)
+	print("GRAPHICS_CAPTURE ", output_path, " result=", result, " size=", image.get_width(), "x", image.get_height())
 
 func _frames(count: int) -> void:
 	for _index in range(count):
