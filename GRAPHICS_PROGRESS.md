@@ -16,9 +16,9 @@ _Last updated: 2026-10-12 (Asia/Dhaka)_
 - [x] WP2 — procedural sky, sun disc, layered horizon dust, fog and wave atmosphere transitions, ambient dust/embers.
 - [x] WP3 — high-density visual terrain, PBR detail maps, pads/routes, deterministic rocks/drums scatter, stratified mesas.
 - [x] WP4 — detailed outpost kit: windows, frames, trim, roof clutter, containers, railings, ladder, fence wire, watchtower, readable sign, emissive spill.
-- [ ] WP5 — Raider procedural articulated character variants and motion polish.
-- [ ] WP6 — detailed first-person weapons/hands and presentation pass.
-- [ ] WP7 — combat/ambient VFX expansion and surface-aware impacts.
+- [x] WP5 — Raider procedural articulated character variants, tactical variants/nameplates, aim/fire/reload-like poses, hit/death and footstep dust.
+- [x] WP6 — detailed first-person weapons/hands, viewmodel fallback, breathing/sway/recoil/reload/swap presentation and muzzle lights.
+- [x] WP7 — pooled tracers, smoke, casings, surface-aware impacts/decals, ambient dust/embers and enemy footstep particles.
 - [ ] WP9 — final AAA HUD/control reskin and safe layout rules.
 - [ ] WP10 — loading/menu polish.
 - [ ] WP11 — four-tier selector, auto-detect and richer adaptive performance controls.
@@ -27,4 +27,4 @@ _Last updated: 2026-10-12 (Asia/Dhaka)_
 
 ## Next continuation point
 
-Implement WP5 in `scripts/enemy.gd`, then WP6/WP7 in `scripts/rifle.gd`, `scripts/pistol.gd`, and `scripts/weapon_effects.gd`. Re-run the static/project/native checks before every commit and use GitHub Actions for engine import/export/headless execution.
+Implement WP9 in `scripts/main.gd` and `scripts/tactical_radar.gd`, then WP10/WP11 in `scripts/main.gd`, `scripts/game_settings.gd`, `scripts/performance_governor.gd` and `project.godot`. Re-run the static/project/native checks before every commit and use GitHub Actions for engine import/export/headless execution.

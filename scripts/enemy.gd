@@ -26,6 +26,18 @@ var line_of_sight := false
 var attack_serial := 0
 var walk_phase := 0.0
 var spawn_index := 0
+var left_arm: Node3D
+var right_arm: Node3D
+var left_leg: Node3D
+var right_leg: Node3D
+var weapon_root: Node3D
+var weapon_flash: MeshInstance3D
+var weapon_muzzle_light: OmniLight3D
+var tactical_label: Label3D
+var footstep_dust: GPUParticles3D
+var muzzle_flash_left := 0.0
+var hit_react := 0.0
+var reload_motion := 0.0
 
 func setup(index: int) -> void:
 	spawn_index = index
@@ -65,6 +77,7 @@ func _physics_process(delta: float) -> void:
 	tactics.update(delta, global_position, player.global_position, line_of_sight)
 	_move_to_goal(tactics.move_goal, delta)
 	_update_visual_motion(delta)
+	_update_detail_lod(player_distance)
 
 	attack_timer -= delta
 	if player_distance <= ATTACK_RANGE and line_of_sight and tactics.can_attack() and attack_timer <= 0.0:
@@ -73,9 +86,8 @@ func _physics_process(delta: float) -> void:
 		_attempt_attack(player, player_distance)
 
 func hear_weapon_fire(origin: Vector3) -> void:
-	if not active:
-		return
-	tactics.hear_weapon_fire(origin, global_position)
+	if active:
+		tactics.hear_weapon_fire(origin, global_position)
 
 func take_damage(amount: int, was_headshot := false) -> bool:
 	if not active:
@@ -83,6 +95,8 @@ func take_damage(amount: int, was_headshot := false) -> bool:
 	health -= amount
 	radar_reveal_left = 2.4
 	tactics.receive_hit()
+	hit_react = 1.0
+	_update_nameplate()
 	_flash_body(Color("fff2c4") if not was_headshot else Color("ffdb78"))
 	if health > 0:
 		return false
@@ -91,10 +105,12 @@ func take_damage(amount: int, was_headshot := false) -> bool:
 	if head_hitbox != null:
 		head_hitbox.collision_layer = 0
 	velocity = Vector3.ZERO
+	if tactical_label != null:
+		tactical_label.visible = false
 	eliminated.emit(self, 100)
 	var tween := create_tween()
-	tween.tween_property(body_visual, "rotation:z", deg_to_rad(84), 0.18)
-	tween.parallel().tween_property(body_visual, "position:y", -0.48, 0.18)
+	tween.tween_property(body_visual, "rotation:z", deg_to_rad(84 if spawn_index % 2 == 0 else -84), 0.22)
+	tween.parallel().tween_property(body_visual, "position:y", -0.48, 0.22)
 	tween.tween_interval(2.3)
 	tween.tween_callback(queue_free)
 	return true
@@ -128,6 +144,8 @@ func _move_to_goal(goal: Vector3, delta: float) -> void:
 
 func _attempt_attack(player: OutpostPlayer, distance: float) -> void:
 	attack_serial += 1
+	reload_motion = 1.0 if attack_serial % 7 == 0 else reload_motion
+	_trigger_weapon_flash()
 	var range_factor := clampf(1.0 - distance / ATTACK_RANGE, 0.0, 1.0)
 	var hit_chance := lerpf(0.36, 0.68, range_factor)
 	var roll := fposmod(sin(float(spawn_index * 97 + attack_serial * 31)) * 43758.5453, 1.0)
@@ -140,9 +158,37 @@ func _update_visual_motion(delta: float) -> void:
 		return
 	var speed := Vector2(velocity.x, velocity.z).length()
 	walk_phase += delta * (3.2 + speed * 3.8)
-	var bob := sin(walk_phase) * minf(speed * 0.018, 0.05)
+	hit_react = maxf(hit_react - delta * 7.0, 0.0)
+	reload_motion = maxf(reload_motion - delta * 1.8, 0.0)
+	muzzle_flash_left = maxf(muzzle_flash_left - delta, 0.0)
+	var gait := sin(walk_phase) * minf(speed * 0.56, 0.52)
+	var bob := sin(walk_phase * 2.0) * minf(speed * 0.018, 0.045)
 	body_visual.position.y = lerpf(body_visual.position.y, bob, 1.0 - exp(-delta * 10.0))
-	body_visual.rotation.x = lerpf(body_visual.rotation.x, sin(walk_phase * 0.5) * minf(speed * 0.035, 0.08), 1.0 - exp(-delta * 8.0))
+	body_visual.rotation.x = lerpf(body_visual.rotation.x, sin(walk_phase * .5) * minf(speed * .035, .08) - hit_react * .09, 1.0 - exp(-delta * 8.0))
+	if left_leg != null:
+		left_leg.rotation.x = lerpf(left_leg.rotation.x, gait, 1.0 - exp(-delta * 13.0))
+	if right_leg != null:
+		right_leg.rotation.x = lerpf(right_leg.rotation.x, -gait, 1.0 - exp(-delta * 13.0))
+	var aim_pose := -.48 + sin(walk_phase) * minf(speed * .08, .06) + hit_react * .22
+	if left_arm != null:
+		left_arm.rotation.x = lerpf(left_arm.rotation.x, aim_pose + gait * .35 + reload_motion * .72, 1.0 - exp(-delta * 15.0))
+	if right_arm != null:
+		right_arm.rotation.x = lerpf(right_arm.rotation.x, aim_pose - gait * .35 - reload_motion * .25, 1.0 - exp(-delta * 15.0))
+	if weapon_root != null:
+		weapon_root.position.y = 1.20 + sin(walk_phase) * minf(speed * .012, .018)
+		weapon_root.rotation.x = reload_motion * .38
+	if weapon_flash != null:
+		weapon_flash.visible = muzzle_flash_left > 0.0
+	if weapon_muzzle_light != null:
+		weapon_muzzle_light.light_energy = 1.8 if muzzle_flash_left > 0.0 else 0.0
+	if footstep_dust != null:
+		footstep_dust.emitting = speed > 0.75
+
+func _update_detail_lod(distance: float) -> void:
+	if tactical_label != null:
+		tactical_label.visible = distance < 30.0 and active
+	if weapon_flash != null and distance > 28.0:
+		weapon_flash.visible = false
 
 func _has_line_of_sight(player: OutpostPlayer) -> bool:
 	var eye := global_position + Vector3(0, 1.35, 0)
@@ -167,35 +213,176 @@ func _build_headshot_hitbox() -> void:
 
 func _build_model() -> void:
 	body_visual = Node3D.new()
-	body_visual.name = "Low poly raider model"
+	body_visual.name = "Articulated tactical raider"
 	add_child(body_visual)
 	hit_light = OmniLight3D.new()
-	hit_light.name = "Hit feedback"
-	hit_light.position = Vector3(0, 1.2, 0)
+	hit_light.name = "Raider hit flash"
+	hit_light.position = Vector3(0, 1.25, 0)
 	hit_light.omni_range = 3.2
 	hit_light.light_energy = 0.0
 	body_visual.add_child(hit_light)
-	var uniform := _mat(Color("665842") if spawn_index % 2 == 0 else Color("504f3e"))
-	var vest := _mat(Color("273126"))
-	var skin := _mat(Color("9a654b"))
-	var rifle := _mat(Color("161b19"))
-	_part("Torso", Vector3(0, 1.12, 0), Vector3(0.58, 0.72, 0.28), uniform)
-	_part("Vest", Vector3(0, 1.15, -0.17), Vector3(0.50, 0.52, 0.08), vest)
-	_part("Head", Vector3(0, 1.72, 0), Vector3(0.38, 0.38, 0.38), skin)
-	_part("Helmet", Vector3(0, 1.94, 0), Vector3(0.43, 0.15, 0.43), vest)
-	_part("Leg left", Vector3(-0.16, 0.43, 0), Vector3(0.18, 0.72, 0.20), uniform)
-	_part("Leg right", Vector3(0.16, 0.43, 0), Vector3(0.18, 0.72, 0.20), uniform)
-	_part("Rifle", Vector3(0.29, 1.12, -0.36), Vector3(0.08, 0.09, 0.58), rifle)
+	var variant := spawn_index % 3
+	var uniform := _mat([Color("5b6151"), Color("4b5b55"), Color("68554b")][variant], .86, .0)
+	var vest := _mat(Color("1c2a2a"), .66, .15)
+	var accent := _mat([Color("a43e35"), Color("bd4c36"), Color("873632")][variant], .72, .0)
+	var skin := _mat([Color("8c5944"), Color("b07456"), Color("6f463a")][variant], .90, .0)
+	var black := _mat(Color("131d20"), .55, .48)
+	var visor := _mat(Color("1e7777"), .16, .78, Color("4de4d4"), .45)
+	_part_capsule("Torso", Vector3(0, 1.20, 0), .29, .72, uniform)
+	_part_box("Armor plates", Vector3(0, 1.20, -.235), Vector3(.52, .48, .08), vest)
+	_part_box("Faction red shoulder", Vector3(.33, 1.43, 0), Vector3(.12, .18, .26), accent)
+	_part_sphere("Head", Vector3(0, 1.78, 0), .20, skin)
+	_part_capsule("Helmet", Vector3(0, 1.89, 0), .22, .25, vest)
+	_part_box("Ballistic visor", Vector3(0, 1.80, -.19), Vector3(.29, .10, .04), visor)
+	_part_box("Back radio", Vector3(0, 1.24, .19), Vector3(.24, .33, .10), black)
+	left_arm = _limb("Left arm", Vector3(-.34, 1.45, 0), uniform, black)
+	right_arm = _limb("Right arm", Vector3(.34, 1.45, 0), uniform, black)
+	left_leg = _leg("Left leg", Vector3(-.16, .86, 0), uniform, black)
+	right_leg = _leg("Right leg", Vector3(.16, .86, 0), uniform, black)
+	_build_weapon(black, accent)
+	_build_footstep_dust()
+	_build_nameplate()
 
-func _part(part_name: String, local_position: Vector3, size: Vector3, material: Material) -> void:
-	var mesh_instance := MeshInstance3D.new()
-	mesh_instance.name = part_name
+func _limb(limb_name: String, local_position: Vector3, uniform: Material, glove: Material) -> Node3D:
+	var limb := Node3D.new()
+	limb.name = limb_name
+	limb.position = local_position
+	body_visual.add_child(limb)
+	_part_capsule_on(limb, "Upper arm", Vector3(0, -.18, -.015), .09, .36, uniform)
+	_part_capsule_on(limb, "Forearm", Vector3(0, -.42, -.07), .075, .32, uniform)
+	_part_sphere_on(limb, "Gloved hand", Vector3(0, -.60, -.14), .10, glove)
+	return limb
+
+func _leg(limb_name: String, local_position: Vector3, uniform: Material, boot: Material) -> Node3D:
+	var limb := Node3D.new()
+	limb.name = limb_name
+	limb.position = local_position
+	body_visual.add_child(limb)
+	_part_capsule_on(limb, "Trouser leg", Vector3(0, -.25, 0), .115, .52, uniform)
+	_part_box_on(limb, "Combat boot", Vector3(0, -.57, -.075), Vector3(.17, .15, .30), boot)
+	return limb
+
+func _build_weapon(black: Material, accent: Material) -> void:
+	weapon_root = Node3D.new()
+	weapon_root.name = "Raider carbine"
+	weapon_root.position = Vector3(.20, 1.20, -.34)
+	weapon_root.rotation_degrees = Vector3(-8, 0, 0)
+	body_visual.add_child(weapon_root)
+	_part_box_on(weapon_root, "Carbine receiver", Vector3(0, 0, 0), Vector3(.10, .10, .42), black)
+	_part_box_on(weapon_root, "Carbine handguard", Vector3(0, 0, -.28), Vector3(.08, .08, .25), accent)
+	_part_box_on(weapon_root, "Carbine magazine", Vector3(0, -.13, .04), Vector3(.07, .20, .10), black)
+	weapon_flash = MeshInstance3D.new()
+	weapon_flash.name = "Raider muzzle flash"
+	var flash_mesh := SphereMesh.new()
+	flash_mesh.radius = .045
+	flash_mesh.height = .09
+	weapon_flash.mesh = flash_mesh
+	weapon_flash.position = Vector3(0, 0, -.53)
+	weapon_flash.material_override = _mat(Color("fff0b0"), .2, .0, Color("ff8d28"), 4.5)
+	weapon_flash.visible = false
+	weapon_root.add_child(weapon_flash)
+	weapon_muzzle_light = OmniLight3D.new()
+	weapon_muzzle_light.name = "Raider pooled muzzle light"
+	weapon_muzzle_light.light_color = Color("ff9d42")
+	weapon_muzzle_light.light_energy = 0.0
+	weapon_muzzle_light.omni_range = 2.0
+	weapon_muzzle_light.position = Vector3(0, 0, -.48)
+	weapon_root.add_child(weapon_muzzle_light)
+
+func _build_footstep_dust() -> void:
+	footstep_dust = GPUParticles3D.new()
+	footstep_dust.name = "Raider footstep dust"
+	footstep_dust.position = Vector3(0, .06, 0)
+	footstep_dust.amount = 8
+	footstep_dust.lifetime = .52
+	footstep_dust.visibility_aabb = AABB(Vector3(-1, -1, -1), Vector3(2, 2, 2))
+	var dust_mesh := QuadMesh.new()
+	dust_mesh.size = Vector2(.18, .18)
+	var dust_material := StandardMaterial3D.new()
+	dust_material.albedo_color = Color(.80, .43, .26, .40)
+	dust_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	dust_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	dust_material.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	dust_mesh.material = dust_material
+	footstep_dust.draw_pass_1 = dust_mesh
+	var dust_process := ParticleProcessMaterial.new()
+	dust_process.direction = Vector3(0, .8, 0)
+	dust_process.spread = 65.0
+	dust_process.initial_velocity_min = .18
+	dust_process.initial_velocity_max = .38
+	dust_process.gravity = Vector3(0, -.08, 0)
+	footstep_dust.process_material = dust_process
+	footstep_dust.emitting = false
+	body_visual.add_child(footstep_dust)
+
+func _build_nameplate() -> void:
+	tactical_label = Label3D.new()
+	tactical_label.name = "Raider tactical nameplate"
+	tactical_label.position = Vector3(0, 2.42, 0)
+	tactical_label.pixel_size = .0045
+	tactical_label.font_size = 34
+	tactical_label.outline_size = 6
+	tactical_label.modulate = Color("ffe2b7")
+	tactical_label.outline_modulate = Color("251c1e")
+	tactical_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	body_visual.add_child(tactical_label)
+	_update_nameplate()
+
+func _update_nameplate() -> void:
+	if tactical_label != null:
+		tactical_label.text = "RAIDER  %03d%%" % maxi(0, health)
+
+func _trigger_weapon_flash() -> void:
+	# Reuse the character's own light/flash instead of allocating a node per shot.
+	muzzle_flash_left = .08
+
+func _part_box(part_name: String, local_position: Vector3, size: Vector3, material: Material) -> void:
+	_part_box_on(body_visual, part_name, local_position, size, material)
+
+func _part_box_on(parent: Node3D, part_name: String, local_position: Vector3, size: Vector3, material: Material) -> void:
+	var part := MeshInstance3D.new()
+	part.name = part_name
 	var mesh := BoxMesh.new()
 	mesh.size = size
-	mesh_instance.mesh = mesh
-	mesh_instance.material_override = material
-	mesh_instance.position = local_position
-	body_visual.add_child(mesh_instance)
+	part.mesh = mesh
+	part.material_override = material
+	part.position = local_position
+	part.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	parent.add_child(part)
+
+func _part_capsule(part_name: String, local_position: Vector3, radius: float, height: float, material: Material) -> void:
+	_part_capsule_on(body_visual, part_name, local_position, radius, height, material)
+
+func _part_capsule_on(parent: Node3D, part_name: String, local_position: Vector3, radius: float, height: float, material: Material) -> void:
+	var part := MeshInstance3D.new()
+	part.name = part_name
+	var mesh := CapsuleMesh.new()
+	mesh.radius = radius
+	mesh.height = height
+	mesh.radial_segments = 10
+	mesh.rings = 4
+	part.mesh = mesh
+	part.material_override = material
+	part.position = local_position
+	part.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	parent.add_child(part)
+
+func _part_sphere(part_name: String, local_position: Vector3, radius: float, material: Material) -> void:
+	_part_sphere_on(body_visual, part_name, local_position, radius, material)
+
+func _part_sphere_on(parent: Node3D, part_name: String, local_position: Vector3, radius: float, material: Material) -> void:
+	var part := MeshInstance3D.new()
+	part.name = part_name
+	var mesh := SphereMesh.new()
+	mesh.radius = radius
+	mesh.height = radius * 2.0
+	mesh.radial_segments = 12
+	mesh.rings = 6
+	part.mesh = mesh
+	part.material_override = material
+	part.position = local_position
+	part.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	parent.add_child(part)
 
 func _flash_body(color: Color) -> void:
 	if hit_light == null:
@@ -205,8 +392,13 @@ func _flash_body(color: Color) -> void:
 	var tween := create_tween()
 	tween.tween_property(hit_light, "light_energy", 0.0, 0.1)
 
-func _mat(color: Color) -> StandardMaterial3D:
+func _mat(color: Color, roughness: float, metallic := 0.0, emission := Color.TRANSPARENT, energy := 0.0) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
 	material.albedo_color = color
-	material.roughness = 0.9
+	material.roughness = roughness
+	material.metallic = metallic
+	if energy > 0.0:
+		material.emission_enabled = true
+		material.emission = emission
+		material.emission_energy_multiplier = energy
 	return material

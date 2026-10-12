@@ -39,6 +39,7 @@ var visual_recoil := 0.0
 var aim_assist_enabled := true
 var equipped := true
 var equip_blend := 1.0
+var view_time := 0.0
 
 func _ready() -> void:
 	name = "Service Rifle"
@@ -63,6 +64,7 @@ func set_effects_enabled(enabled: bool) -> void:
 		effects.set_effects_enabled(enabled)
 
 func _process(delta: float) -> void:
+	view_time += delta
 	cooldown = maxf(cooldown - delta, 0.0)
 	equip_blend = move_toward(equip_blend, 1.0 if equipped else 0.0, delta * 7.5)
 	bloom = move_toward(bloom, 0.0, delta * 0.026)
@@ -110,11 +112,13 @@ func try_fire(camera: Camera3D) -> bool:
 	var headshot := false
 	var eliminated := false
 	var target_name := ""
+	var surface_hint := "dirt"
 	if not hit.is_empty():
 		destination = hit["position"]
 		impact_normal = hit["normal"]
 		var collider: Object = hit.get("collider")
 		var target := _resolve_raider(collider)
+		surface_hint = _surface_hint(collider, target)
 		headshot = collider is Area3D and collider.name == "Headshot hitbox"
 		if target != null:
 			var damage := DAMAGE * (2 if headshot else 1)
@@ -122,7 +126,7 @@ func try_fire(camera: Camera3D) -> bool:
 			hit_target = true
 			target_name = target.name
 	if effects != null:
-		effects.emit_shot(origin, destination, impact_normal, not hit.is_empty())
+		effects.emit_shot(origin, destination, impact_normal, not hit.is_empty(), surface_hint)
 		if gun_root != null:
 			effects.emit_casing(gun_root.global_position + camera.global_transform.basis.x * 0.10, camera.global_transform.basis.x, camera.global_transform.basis.y, shot_serial)
 	shot_resolved.emit(hit_target, target_name)
@@ -162,6 +166,17 @@ func _resolve_raider(collider: Object) -> Raider:
 		return collider.get_parent() as Raider
 	return null
 
+func _surface_hint(collider: Object, target: Raider) -> String:
+	if target != null:
+		return "flesh"
+	if collider is Node:
+		var surface_name := (collider as Node).name.to_lower()
+		if "metal" in surface_name or "lamp" in surface_name or "container" in surface_name or "barrier" in surface_name:
+			return "metal"
+		if "concrete" in surface_name or "building" in surface_name or "pad" in surface_name:
+			return "concrete"
+	return "dirt"
+
 func _apply_aim_assist(camera: Camera3D, direction: Vector3) -> Vector3:
 	if not aim_assist_enabled or not OS.has_feature("mobile") or owner_player == null:
 		return direction
@@ -196,7 +211,9 @@ func _update_weapon_pose(delta: float) -> void:
 		target_rotation = Vector3(deg_to_rad(-1.2), 0.0, 0.0)
 	else:
 		var movement := owner_player.get_move_amount() if owner_player != null else 0.0
-		target_rotation = Vector3(deg_to_rad(movement * 2.0), deg_to_rad(-movement * 1.6), deg_to_rad(movement * 1.1))
+		var breathing := sin(view_time * 1.45) * 0.006
+		target_position += Vector3(sin(view_time * 0.72) * 0.004, breathing, 0.0)
+		target_rotation = Vector3(deg_to_rad(movement * 2.0 + breathing * 48.0), deg_to_rad(-movement * 1.6), deg_to_rad(movement * 1.1))
 	if reload_left > 0.0:
 		var reload_progress := 1.0 - maxf(reload_left, 0.0) / RELOAD_TIME
 		var reload_arc := sin(reload_progress * PI)
@@ -235,36 +252,72 @@ func _play_sound(player_node: AudioStreamPlayer) -> void:
 	player_node.play()
 
 func _build_model() -> void:
+	# This deliberately uses an unshaded/no-depth viewmodel material fallback in
+	# the Compatibility renderer. It provides the separate-viewmodel behaviour
+	# (never clips into world walls) without an additional mobile SubViewport.
 	gun_root = Node3D.new()
-	gun_root.name = "Rifle model"
+	gun_root.name = "Detailed first-person service rifle"
 	gun_root.position = Vector3(0.32, -0.28, -0.56)
 	add_child(gun_root)
-	var body_mat := _mat(Color("303a35"), 0.72)
-	var accent_mat := _mat(Color("626a45"), 0.85)
-	var black_mat := _mat(Color("151c1a"), 0.92)
-	_part("Receiver", Vector3(0, 0, 0), Vector3(0.18, 0.16, 0.52), body_mat)
-	_part("Handguard", Vector3(0, -0.005, -0.38), Vector3(0.14, 0.13, 0.38), accent_mat)
-	_part("Barrel", Vector3(0, 0.025, -0.70), Vector3(0.06, 0.06, 0.30), black_mat)
-	_part("Stock", Vector3(0, -0.04, 0.34), Vector3(0.15, 0.13, 0.34), black_mat)
-	_part("Magazine", Vector3(0, -0.19, 0.05), Vector3(0.10, 0.26, 0.16), black_mat)
-	_part("Sight", Vector3(0, 0.13, -0.08), Vector3(0.045, 0.06, 0.12), black_mat)
+	var gunmetal := _mat(Color("2b3838"), 0.42, 0.72)
+	var worn_metal := _mat(Color("657469"), 0.48, 0.64)
+	var polymer := _mat(Color("121b1d"), 0.88, 0.06)
+	var olive := _mat(Color("596447"), 0.72, 0.18)
+	var brass := _mat(Color("b98b48"), 0.42, 0.72)
+	var glove := _mat(Color("293534"), 0.86, 0.10)
+	var sleeve := _mat(Color("526353"), 0.92, 0.02)
+	_part("Machined upper receiver", Vector3(0, 0, 0), Vector3(.19, .17, .54), gunmetal)
+	_part("Lower receiver", Vector3(0, -.11, .02), Vector3(.17, .12, .38), worn_metal)
+	_part("Ventilated handguard", Vector3(0, -.002, -.40), Vector3(.16, .15, .42), olive)
+	_cylinder_part("Fluted barrel", Vector3(0, .025, -.73), .036, .36, 10, polymer)
+	_cylinder_part("Flash hider", Vector3(0, .025, -.94), .052, .11, 8, gunmetal)
+	_part("Adjustable stock", Vector3(0, -.045, .36), Vector3(.16, .14, .37), polymer)
+	_part("Cheek riser", Vector3(0, .065, .39), Vector3(.10, .06, .20), worn_metal)
+	_part("Curved magazine", Vector3(0, -.23, .055), Vector3(.11, .30, .18), polymer)
+	_part("Magazine witness strip", Vector3(.058, -.23, .055), Vector3(.01, .18, .12), brass)
+	_part("Rail", Vector3(0, .125, -.16), Vector3(.055, .032, .58), gunmetal)
+	_part("Holographic sight", Vector3(0, .185, -.12), Vector3(.10, .13, .17), polymer)
+	_part("Sight glass", Vector3(0, .20, -.19), Vector3(.074, .070, .012), _mat(Color("69d8d0"), .15, .42, Color("44d9c4"), .8))
+	for offset in [-.30, -.16, -.02, .12]:
+		_part("Handguard vent", Vector3(.085, -.015, offset - .30), Vector3(.014, .045, .055), polymer)
+	_build_arms(sleeve, glove)
 	muzzle_flash = MeshInstance3D.new()
-	muzzle_flash.name = "Muzzle flash"
+	muzzle_flash.name = "Layered rifle muzzle flash"
 	var flash := SphereMesh.new()
-	flash.radius = 0.07
-	flash.height = 0.14
+	flash.radius = .085
+	flash.height = .19
+	flash.radial_segments = 8
 	muzzle_flash.mesh = flash
-	muzzle_flash.position = Vector3(0, 0.025, -0.88)
-	muzzle_flash.material_override = _mat(Color("fff0c0"), 0.2, Color("ff8d25"), 5.0)
+	muzzle_flash.position = Vector3(0, .025, -.995)
+	muzzle_flash.material_override = _mat(Color("fff1c1"), .2, .0, Color("ff7d20"), 6.0)
 	muzzle_flash.visible = false
 	gun_root.add_child(muzzle_flash)
 	muzzle_light = OmniLight3D.new()
-	muzzle_light.name = "Muzzle flash light"
+	muzzle_light.name = "Rifle pooled muzzle light"
 	muzzle_light.light_color = Color("ff9e41")
 	muzzle_light.light_energy = 0.0
-	muzzle_light.omni_range = 2.3
+	muzzle_light.omni_range = 2.8
 	muzzle_light.position = muzzle_flash.position
 	gun_root.add_child(muzzle_light)
+
+func _build_arms(sleeve: Material, glove: Material) -> void:
+	for side in [-1.0, 1.0]:
+		var arm := Node3D.new()
+		arm.name = "Gloved forearm"
+		arm.position = Vector3(.20 * side, -.38, -.03 if side < 0.0 else -.28)
+		arm.rotation_degrees = Vector3(-25, 0, -13 * side)
+		gun_root.add_child(arm)
+		_cylinder_part_on(arm, "Sleeve", Vector3(0, 0, .13), .075, .38, 10, sleeve)
+		var hand := MeshInstance3D.new()
+		hand.name = "Gloved hand"
+		var hand_mesh := SphereMesh.new()
+		hand_mesh.radius = .10
+		hand_mesh.height = .16
+		hand_mesh.radial_segments = 10
+		hand.mesh = hand_mesh
+		hand.material_override = glove
+		hand.position = Vector3(0, .01, -.11)
+		arm.add_child(hand)
 
 func _part(part_name: String, position_value: Vector3, size: Vector3, material: Material) -> void:
 	var visual := MeshInstance3D.new()
@@ -274,12 +327,33 @@ func _part(part_name: String, position_value: Vector3, size: Vector3, material: 
 	visual.mesh = mesh
 	visual.material_override = material
 	visual.position = position_value
+	visual.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	gun_root.add_child(visual)
 
-func _mat(color: Color, roughness: float, emission := Color.TRANSPARENT, energy := 0.0) -> StandardMaterial3D:
+func _cylinder_part(part_name: String, position_value: Vector3, radius: float, height: float, segments: int, material: Material) -> void:
+	_cylinder_part_on(gun_root, part_name, position_value, radius, height, segments, material)
+
+func _cylinder_part_on(parent: Node3D, part_name: String, position_value: Vector3, radius: float, height: float, segments: int, material: Material) -> void:
+	var visual := MeshInstance3D.new()
+	visual.name = part_name
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = radius
+	mesh.bottom_radius = radius
+	mesh.height = height
+	mesh.radial_segments = segments
+	visual.mesh = mesh
+	visual.material_override = material
+	visual.position = position_value
+	visual.rotation_degrees.x = 90
+	visual.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(visual)
+
+func _mat(color: Color, roughness: float, metallic := 0.0, emission := Color.TRANSPARENT, energy := 0.0) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
 	material.albedo_color = color
 	material.roughness = roughness
+	material.metallic = metallic
+	material.no_depth_test = true
 	if energy > 0.0:
 		material.emission_enabled = true
 		material.emission = emission
