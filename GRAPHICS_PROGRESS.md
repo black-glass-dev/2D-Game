@@ -22,9 +22,10 @@ _Last updated: 2026-10-12 (Asia/Dhaka)_
 - [x] WP9 — glass/outlined icon HUD/control reskin, graphical vitals/ammo, dynamic reticle feedback, restyled radar and non-overlap defaults.
 - [x] WP10 — operation loading splash.
 - [x] WP11 — AUTO/LOW/MEDIUM/HIGH/ULTRA selection, first-launch auto-detect, dynamic 3D resolution and adaptive presentation governor.
-- [x] Screenshot set — genuine renderer captures are committed under `screenshots/before/` and `screenshots/after/`; the CI harness will refresh all 12 required views including 15 m and 5 m Raider comparisons on the next visual build.
+- [x] Screenshot set — genuine renderer captures are committed under `screenshots/before/` and `screenshots/after/`; the CI harness refreshes all 12 required views including explicit 15 m and 5 m Raider frames.
+- [~] Post-package visual polish — improved terrain normals/height variation, visible window frames, readable sign plaque, weathering scatter/tyre tracks, non-overlapping circular defaults and dynamic crosshair are locally validated; CI capture/export is pending this commit.
 - [ ] Final physical Android validation (the hosted emulator has an infrastructure boot timeout).
 
 ## Next continuation point
 
-All code work packages are committed. Wait for the CI import/export/headless runtime result from the latest visual code commit. Then capture real landscape before/after screenshots on a functioning renderer/device into `screenshots/before/` and `screenshots/after/`, audit the Section 8 viewpoints, update `GRAPHICS_REPORT.md`, and only then make a physical-device-final claim.
+The source is at the post-package visual-polish stage. Wait for the CI import/export/headless/capture result of the visual-polish commit. Inspect the regenerated real renderer frames in `screenshots/after/`, then update this status and `GRAPHICS_REPORT.md` with the candidate/run outcome. A physical Android playthrough remains the only gate before a physical-device-final label.

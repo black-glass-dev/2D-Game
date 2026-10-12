@@ -13,13 +13,16 @@ const DETAIL_NORMAL := "res://assets/textures/terrain_detail_normal_512.png"
 
 static func build(root: Node3D) -> void:
 	_build_environment(root)
-	var sand := _pbr_material(SAND_TEXTURE, Color("bc7751"), 0.96, 0.0, 7.5)
-	var concrete := _pbr_material(CONCRETE_TEXTURE, Color("798d88"), 0.77, 0.08, 2.0)
-	var metal := _pbr_material(METAL_TEXTURE, Color("637d78"), 0.52, 0.62, 3.0)
-	var olive := _pbr_material(METAL_TEXTURE, Color("576a55"), 0.60, 0.50, 2.0)
-	var crate := _pbr_material(WOOD_TEXTURE, Color("9f5d3f"), 0.84, 0.0, 2.0)
-	var asphalt := _pbr_material(ASPHALT_TEXTURE, Color("56615f"), 0.91, 0.0, 4.0)
-	var rock := _pbr_material(ROCK_TEXTURE, Color("775349"), 0.94, 0.0, 2.0)
+	# Texture tints stay deliberately brighter than the source maps. The maps hold
+	# the micro-detail while these values preserve readable teal/orange separation
+	# under the warm, low-angle key light.
+	var sand := _pbr_material(SAND_TEXTURE, Color("efb677"), 0.91, 0.0, 7.5)
+	var concrete := _pbr_material(CONCRETE_TEXTURE, Color("b9cac2"), 0.72, 0.08, 2.0)
+	var metal := _pbr_material(METAL_TEXTURE, Color("a4beb3"), 0.46, 0.62, 3.0)
+	var olive := _pbr_material(METAL_TEXTURE, Color("7c9270"), 0.56, 0.50, 2.0)
+	var crate := _pbr_material(WOOD_TEXTURE, Color("d39163"), 0.77, 0.0, 2.0)
+	var asphalt := _pbr_material(ASPHALT_TEXTURE, Color("849895"), 0.85, 0.0, 4.0)
+	var rock := _pbr_material(ROCK_TEXTURE, Color("ad7f68"), 0.87, 0.0, 2.0)
 	var dark := _flat_material(Color("17252a"), 0.62, 0.72)
 	var glass := _glass_material(Color("4c9baa"))
 	var lamp_glow := _flat_material(Color("ffd29a"), 0.28, 0.30, Color("ff8b38"), 1.75)
@@ -35,6 +38,7 @@ static func build(root: Node3D) -> void:
 	_build_watchtower(root, metal, olive, glass, crate, lamp_glow)
 	_build_cover_and_containers(root, crate, metal, olive, lamp_glow)
 	_build_scatter(root, rock, crate, olive)
+	_build_terrain_story_details(root, asphalt, rock, crate)
 	_build_lamps(root, metal, lamp_glow)
 	_add_distant_mountains(root, rock)
 	_add_outpost_details(root, metal, olive, crate, lamp_glow)
@@ -178,6 +182,7 @@ static func _build_visual_terrain(root: Node3D, material: Material) -> void:
 	var normals := PackedVector3Array()
 	var uvs := PackedVector2Array()
 	var indices := PackedInt32Array()
+	var normal_step := extent * 2.0 / float(resolution)
 	for z in range(resolution + 1):
 		for x in range(resolution + 1):
 			var fx := float(x) / float(resolution)
@@ -185,8 +190,12 @@ static func _build_visual_terrain(root: Node3D, material: Material) -> void:
 			var px := lerpf(-extent, extent, fx)
 			var pz := lerpf(-extent, extent, fz)
 			var height := _terrain_height(px, pz)
+			# Finite-difference normals let the broad dunes catch the warm sun and
+			# fall into cool fill; this remains a cosmetic mesh above the flat collider.
+			var slope_x := (_terrain_height(px + normal_step, pz) - _terrain_height(px - normal_step, pz)) / (normal_step * 2.0)
+			var slope_z := (_terrain_height(px, pz + normal_step) - _terrain_height(px, pz - normal_step)) / (normal_step * 2.0)
 			vertices.append(Vector3(px, height, pz))
-			normals.append(Vector3.UP)
+			normals.append(Vector3(-slope_x, 1.0, -slope_z).normalized())
 			uvs.append(Vector2(fx * 9.0, fz * 9.0))
 	for z in range(resolution):
 		for x in range(resolution):
@@ -211,10 +220,15 @@ static func _build_visual_terrain(root: Node3D, material: Material) -> void:
 	root.add_child(terrain)
 
 static func _terrain_height(x: float, z: float) -> float:
-	var broad := sin(x * 0.055) * cos(z * 0.047) * 0.22
-	var dunes := sin(x * 0.19 + z * 0.07) * 0.055
-	var road_flatten := exp(-abs(x) * 0.095) * 0.18
-	return -0.12 + broad + dunes - road_flatten
+	# Three frequencies prevent the ground from reading as a single tiled plane.
+	# The defended yard stays slightly recessed, leaving gameplay floor/collision
+	# entirely untouched while pads and routes remain visually clean.
+	var broad := sin(x * 0.049 + z * 0.012) * cos(z * 0.041) * 0.31
+	var cross_dune := sin(x * 0.118 - z * 0.073) * 0.105
+	var wind_ripples := sin(x * 0.39 + z * 0.14) * 0.018
+	var road_flatten := exp(-abs(x) * 0.12) * 0.22
+	var yard_flatten := exp(-(x * x + (z - 2.0) * (z - 2.0)) * 0.0026) * 0.24
+	return -0.17 + broad + cross_dune + wind_ripples - road_flatten - yard_flatten
 
 static func _build_ground_patches(root: Node3D, concrete: Material, asphalt: Material) -> void:
 	_box(root, "Command yard concrete pad", Vector3(0, 0.035, -4), Vector3(36, 0.07, 24), concrete, false)
@@ -339,6 +353,41 @@ static func _build_scatter(root: Node3D, rock: Material, crate: Material, olive:
 		_cylinder(root, "Oil drum", position, 0.36, 0.92, 10, olive)
 		_box(root, "Drum cap", position + Vector3(0, .48, 0), Vector3(.40, .04, .40), crate, false)
 
+static func _build_terrain_story_details(root: Node3D, asphalt: Material, rock: Material, crate: Material) -> void:
+	# Dark paired strips, gravel and small wind-bent brush break up the broad
+	# terrain read without becoming gameplay geometry or allocating at runtime.
+	for lane_x in [-2.15, 2.15]:
+		for segment in range(16):
+			var z := -44.0 + float(segment) * 5.8
+			_box(root, "Weathered tyre track", Vector3(lane_x, .048, z), Vector3(.18, .025, 3.9), asphalt, false)
+	for index in range(42):
+		var x := fposmod(float(index * 29), 92.0) - 46.0 + sin(float(index) * 1.31) * 1.7
+		var z := fposmod(float(index * 47), 88.0) - 44.0 + cos(float(index) * .81) * 1.5
+		if abs(x) < 15.0 and abs(z) < 27.0:
+			continue
+		var ground := _terrain_height(x, z)
+		var brush_root := Node3D.new()
+		brush_root.name = "Dry brush cluster"
+		brush_root.position = Vector3(x, ground + .13, z)
+		brush_root.rotation_degrees.y = float(index * 37 % 360)
+		root.add_child(brush_root)
+		for blade in range(3):
+			var blade := MeshInstance3D.new()
+			blade.name = "Dry grass blade"
+			var blade_mesh := CylinderMesh.new()
+			blade_mesh.top_radius = .012
+			blade_mesh.bottom_radius = .030
+			blade_mesh.height = .34 + float((index + blade) % 4) * .055
+			blade_mesh.radial_segments = 4
+			blade.mesh = blade_mesh
+			blade.material_override = crate if blade % 2 == 0 else rock
+			blade.position = Vector3((float(blade) - 1.0) * .07, blade_mesh.height * .45, .02 * float(blade % 2))
+			blade.rotation_degrees = Vector3(float(blade * 9 - 8), 0, float(blade * 12 - 12))
+			blade.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+			brush_root.add_child(blade)
+	for position in [Vector3(-25, .075, 26), Vector3(24, .075, 28), Vector3(-34, .075, -18), Vector3(31, .075, -14)]:
+		_box(root, "Windblown scrap decal", position, Vector3(1.45, .028, .72), asphalt, false)
+
 static func _build_lamps(root: Node3D, metal: Material, glow: Material) -> void:
 	for position in [Vector3(-13, 3.5, -14), Vector3(13, 3.5, -14), Vector3(-23, 3.5, 11), Vector3(22, 3.5, 15), Vector3(-35, 3.5, 14), Vector3(36, 3.5, -27), Vector3(0, 3.5, 36)]:
 		_lamp(root, position, metal, glow)
@@ -346,10 +395,19 @@ static func _build_lamps(root: Node3D, metal: Material, glow: Material) -> void:
 		_box(root, "Road guide light", Vector3(0, .24, z), Vector3(.24, .035, 2.6), glow, false)
 
 static func _build_building_facing(root: Node3D, origin: Vector3, width: float, height: float, glass: Material, metal: Material, glow: Material) -> void:
-	# Modular window mullions, trim and lit lintels sit on top of durable gameplay boxes.
+	# Modular glass, mullions and trim sit on top of durable gameplay boxes. The
+	# previous single solid frame hid every window; four slim rails now expose the
+	# cool reflective pane and add a convincing architectural silhouette.
 	for x in [-0.34, 0.0, 0.34]:
-		_box(root, "Reinforced window", origin + Vector3(x * width, height * 0.57, -0.025), Vector3(width * .20, height * .20, .06), glass, false)
-		_box(root, "Window frame", origin + Vector3(x * width, height * .57, .02), Vector3(width * .22, height * .24, .035), metal, false)
+		var window_width := width * .20
+		var window_height := height * .20
+		var window_center := origin + Vector3(x * width, height * .57, -0.025)
+		_box(root, "Reinforced teal window", window_center, Vector3(window_width, window_height, .06), glass, false)
+		_box(root, "Window frame top", window_center + Vector3(0, window_height * .53, .045), Vector3(window_width + .09, .055, .055), metal, false)
+		_box(root, "Window frame bottom", window_center + Vector3(0, -window_height * .53, .045), Vector3(window_width + .09, .055, .055), metal, false)
+		_box(root, "Window frame left", window_center + Vector3(-window_width * .53, 0, .045), Vector3(.055, window_height + .10, .055), metal, false)
+		_box(root, "Window frame right", window_center + Vector3(window_width * .53, 0, .045), Vector3(.055, window_height + .10, .055), metal, false)
+		_box(root, "Window mullion", window_center + Vector3(0, 0, .047), Vector3(.04, window_height, .057), metal, false)
 	_box(root, "Building lintel", origin + Vector3(0, height * .94, .03), Vector3(width + .18, .18, .14), metal, false)
 	_box(root, "Emergency strip", origin + Vector3(0, height * .12, -.045), Vector3(width * .68, .08, .035), glow, false)
 
@@ -490,6 +548,10 @@ static func _lamp(parent: Node3D, position_value: Vector3, pole_material: Materi
 	parent.add_child(light)
 
 static func _add_sign(root: Node3D) -> void:
+	# A painted metal plaque gives the 3D text a high-contrast weathered backing;
+	# billboard mode keeps the words readable through dust without using a UI label.
+	var plaque := _flat_material(Color("3b2b29"), .72, .30)
+	_box(root, "Redline Outpost painted sign plaque", Vector3(-8.4, 3.34, -0.83), Vector3(6.0, 1.72, .10), plaque, false)
 	var outpost_sign := Label3D.new()
 	outpost_sign.name = "REDLINE OUTPOST signage"
 	outpost_sign.text = "REDLINE\nOUTPOST"
@@ -498,8 +560,8 @@ static func _add_sign(root: Node3D) -> void:
 	outpost_sign.modulate = Color("fff0c7")
 	outpost_sign.outline_modulate = Color("5d2e2b")
 	outpost_sign.pixel_size = .006
-	outpost_sign.position = Vector3(-8.4, 3.4, -0.86)
-	outpost_sign.rotation_degrees = Vector3.ZERO
+	outpost_sign.position = Vector3(-8.4, 3.4, -0.90)
+	outpost_sign.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	outpost_sign.render_priority = 1
 	root.add_child(outpost_sign)
 

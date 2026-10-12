@@ -30,6 +30,7 @@ var damage_overlay: ColorRect
 var damage_edges: Array[ColorRect] = []
 var damage_indicator: Label
 var hit_marker: Label
+var reticle_segments: Array[ColorRect] = []
 var kill_feed: VBoxContainer
 var minimap: TacticalRadar
 var settings := RedlineSettings.new()
@@ -133,6 +134,7 @@ func _process(delta: float) -> void:
 		edge.color.a = effect_alpha * 0.48
 	if damage_indicator != null:
 		damage_indicator.modulate.a = clampf(damage_indicator_left * 1.6, 0.0, 1.0) if settings.screen_effects else 0.0
+	_update_dynamic_reticle()
 
 func _fire() -> void:
 	if player == null or not player.can_control or active_weapon == null or weapon_switch_left > 0.0:
@@ -334,6 +336,35 @@ func _push_kill_feed(message: String, headshot: bool) -> void:
 	tween.tween_property(entry, "modulate:a", 0.0, 0.35)
 	tween.tween_callback(entry.queue_free)
 
+func _build_dynamic_reticle() -> void:
+	var root := Control.new()
+	root.name = "Dynamic spread reticle"
+	root.set_anchors_preset(Control.PRESET_CENTER)
+	root.position = Vector2(-1, -1)
+	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud.add_child(root)
+	for index in range(4):
+		var segment := ColorRect.new()
+		segment.name = "Reticle segment"
+		segment.color = Color("fff1cf")
+		segment.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		segment.size = Vector2(10, 2) if index < 2 else Vector2(2, 10)
+		root.add_child(segment)
+		reticle_segments.append(segment)
+	_update_dynamic_reticle()
+
+func _update_dynamic_reticle() -> void:
+	if reticle_segments.size() != 4:
+		return
+	var movement := player.get_move_amount() if player != null else 0.0
+	var gap := lerpf(7.0, 18.0, movement)
+	if player != null and player.is_aiming:
+		gap = 3.5
+	reticle_segments[0].position = Vector2(-gap - 10.0, -1.0)
+	reticle_segments[1].position = Vector2(gap, -1.0)
+	reticle_segments[2].position = Vector2(-1.0, -gap - 10.0)
+	reticle_segments[3].position = Vector2(-1.0, gap)
+
 func _build_hud() -> void:
 	hud = CanvasLayer.new()
 	hud.name = "Tactical HUD"
@@ -342,14 +373,14 @@ func _build_hud() -> void:
 	top_bar.name = "Translucent tactical header"
 	top_bar.color = Color(0.018, 0.045, 0.055, 0.76)
 	top_bar.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
-	top_bar.size.y = 68
+	top_bar.offset_bottom = 68.0
 	top_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hud.add_child(top_bar)
 	var divider := ColorRect.new()
 	divider.color = Color("71d5cc")
-	divider.position = Vector2(0, 66)
-	divider.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	divider.size.y = 1
+	divider.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	divider.offset_top = 66.0
+	divider.offset_bottom = 67.0
 	divider.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hud.add_child(divider)
 
@@ -375,8 +406,7 @@ func _build_hud() -> void:
 	accuracy_label = _label("ACC  0%", Vector2(18, -43), Vector2(140, 25), 15, Color("d8f5d0"), Control.PRESET_BOTTOM_LEFT)
 	status_label = _label("SECURE THE OUTPOST", Vector2(-190, -72), Vector2(380, 22), 14, Color("f0c079"), Control.PRESET_CENTER_BOTTOM, HORIZONTAL_ALIGNMENT_CENTER)
 	alert_label = _label("", Vector2(-330, 78), Vector2(660, 42), 24, Color("fff0cc"), Control.PRESET_CENTER_TOP, HORIZONTAL_ALIGNMENT_CENTER)
-	var reticle := _label("⊹", Vector2(-18, -23), Vector2(36, 46), 34, Color("f5eccf"), Control.PRESET_CENTER, HORIZONTAL_ALIGNMENT_CENTER)
-	reticle.name = "Dynamic reticle"
+	_build_dynamic_reticle()
 	hit_marker = _label("✕", Vector2(-25, -31), Vector2(50, 50), 42, Color("ffdf9a"), Control.PRESET_CENTER, HORIZONTAL_ALIGNMENT_CENTER)
 	hit_marker.name = "HitMarker"
 	hit_marker.modulate.a = 0.0
@@ -402,12 +432,14 @@ func _build_hud() -> void:
 	minimap = TacticalRadar.new()
 	minimap.track_player(player)
 	controls_root.add_child(minimap)
-	fire_button = _button("FIRE", Vector2.ZERO, Vector2(154, 132), Control.PRESET_TOP_LEFT, Color("a94f3f"), controls_root)
-	reload_button = _button("RELOAD", Vector2.ZERO, Vector2(128, 58), Control.PRESET_TOP_LEFT, Color("596b4e"), controls_root)
-	aim_button = _button("AIM", Vector2.ZERO, Vector2(128, 58), Control.PRESET_TOP_LEFT, Color("3d6661"), controls_root)
-	jump_button = _button("JUMP", Vector2.ZERO, Vector2(104, 72), Control.PRESET_TOP_LEFT, Color("4a6370"), controls_root)
-	crouch_button = _button("CROUCH", Vector2.ZERO, Vector2(112, 62), Control.PRESET_TOP_LEFT, Color("6e5f43"), controls_root)
-	swap_button = _button("SWAP", Vector2.ZERO, Vector2(92, 52), Control.PRESET_TOP_LEFT, Color("67556f"), controls_root)
+	# First-launch action controls are compact, circular and deliberately spaced
+	# as a right-thumb cluster. Saved player layouts retain their own dimensions.
+	fire_button = _button("FIRE", Vector2.ZERO, Vector2(144, 144), Control.PRESET_TOP_LEFT, Color("a94f3f"), controls_root)
+	reload_button = _button("RELOAD", Vector2.ZERO, Vector2(84, 84), Control.PRESET_TOP_LEFT, Color("596b4e"), controls_root)
+	aim_button = _button("AIM", Vector2.ZERO, Vector2(84, 84), Control.PRESET_TOP_LEFT, Color("3d6661"), controls_root)
+	jump_button = _button("JUMP", Vector2.ZERO, Vector2(84, 84), Control.PRESET_TOP_LEFT, Color("4a6370"), controls_root)
+	crouch_button = _button("CROUCH", Vector2.ZERO, Vector2(84, 84), Control.PRESET_TOP_LEFT, Color("6e5f43"), controls_root)
+	swap_button = _button("SWAP", Vector2.ZERO, Vector2(84, 84), Control.PRESET_TOP_LEFT, Color("67556f"), controls_root)
 	fire_button.button_down.connect(_fire)
 	reload_button.pressed.connect(_reload_active_weapon)
 	aim_button.pressed.connect(_toggle_aim)
@@ -486,18 +518,25 @@ func _build_loading_splash() -> void:
 	tween.tween_callback(subtitle.queue_free)
 
 func _build_damage_edges() -> void:
-	var edge_specs := [
-		[Control.PRESET_TOP_WIDE, Vector2(0, 0), Vector2(0, 42)],
-		[Control.PRESET_BOTTOM_WIDE, Vector2(0, -42), Vector2(0, 42)],
-		[Control.PRESET_LEFT_WIDE, Vector2(0, 0), Vector2(46, 0)],
-		[Control.PRESET_RIGHT_WIDE, Vector2(-46, 0), Vector2(46, 0)]
-	]
-	for spec in edge_specs:
-		var edge := ColorRect.new()
-		edge.color = Color(0.72, 0.025, 0.01, 0.0)
-		edge.set_anchors_preset(spec[0])
-		edge.position = spec[1]
-		edge.size = spec[2]
+	# Offset-based edge strips avoid anchor/size layout overrides on narrow or
+	# ultrawide screens, while retaining a low-cost damage vignette fallback.
+	var top := ColorRect.new()
+	top.color = Color(0.76, 0.035, 0.018, 0.0)
+	top.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	top.offset_bottom = 46.0
+	var bottom := ColorRect.new()
+	bottom.color = Color(0.76, 0.035, 0.018, 0.0)
+	bottom.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+	bottom.offset_top = -46.0
+	var left := ColorRect.new()
+	left.color = Color(0.76, 0.035, 0.018, 0.0)
+	left.set_anchors_and_offsets_preset(Control.PRESET_LEFT_WIDE)
+	left.offset_right = 50.0
+	var right := ColorRect.new()
+	right.color = Color(0.76, 0.035, 0.018, 0.0)
+	right.set_anchors_and_offsets_preset(Control.PRESET_RIGHT_WIDE)
+	right.offset_left = -50.0
+	for edge in [top, bottom, left, right]:
 		edge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		hud.add_child(edge)
 		damage_edges.append(edge)
@@ -670,15 +709,16 @@ func _load_hud_layout() -> void:
 
 func _apply_default_hud_layout() -> void:
 	var screen := controls_root.size
-	# Keep the thumb zones clear of the screen edge so the first launch is
-	# comfortable even before a player opens the HUD editor.
-	_set_control_rect("joystick", Vector2(32, screen.y - 278), Vector2(196, 196))
-	_set_control_rect("fire", Vector2(screen.x - 176, screen.y - 242), Vector2(148, 148))
-	_set_control_rect("aim", Vector2(screen.x - 452, screen.y - 144), Vector2(128, 58))
-	_set_control_rect("reload", Vector2(screen.x - 310, screen.y - 144), Vector2(128, 58))
-	_set_control_rect("jump", Vector2(screen.x - 306, screen.y - 238), Vector2(104, 72))
-	_set_control_rect("crouch", Vector2(screen.x - 434, screen.y - 232), Vector2(112, 62))
-	_set_control_rect("swap", Vector2(screen.x - 550, screen.y - 144), Vector2(92, 52))
+	# The right-side controls use a collision-free 3×2 thumb cluster: every
+	# gap is at least 10 px at the 1280×720 design resolution and it expands with
+	# the device canvas. This removes the former SWAP/CROUCH ambiguity.
+	_set_control_rect("joystick", Vector2(34, screen.y - 220), Vector2(176, 176))
+	_set_control_rect("fire", Vector2(screen.x - 174, screen.y - 226), Vector2(144, 144))
+	_set_control_rect("aim", Vector2(screen.x - 378, screen.y - 112), Vector2(84, 84))
+	_set_control_rect("reload", Vector2(screen.x - 284, screen.y - 112), Vector2(84, 84))
+	_set_control_rect("jump", Vector2(screen.x - 284, screen.y - 210), Vector2(84, 84))
+	_set_control_rect("crouch", Vector2(screen.x - 378, screen.y - 210), Vector2(84, 84))
+	_set_control_rect("swap", Vector2(screen.x - 472, screen.y - 112), Vector2(84, 84))
 	_set_control_rect("minimap", Vector2(screen.x - 166, 78), Vector2(148, 148))
 
 func _set_control_rect(key: String, position_value: Vector2, size_value: Vector2) -> void:
@@ -692,6 +732,7 @@ func _set_control_rect(key: String, position_value: Vector2, size_value: Vector2
 		var side := maxf(final_size.x, final_size.y)
 		final_size = Vector2(side, side)
 	control.size = final_size
+	control.pivot_offset = final_size * 0.5
 	control.position = _clamp_control_position(position_value, final_size)
 
 func _clamp_control_position(position_value: Vector2, control_size: Vector2) -> Vector2:
@@ -882,7 +923,24 @@ func _button(text_value: String, position_offset: Vector2, control_size: Vector2
 	pressed.shadow_color = Color("ffb35e")
 	pressed.shadow_size = 9 if is_action_button else 3
 	button.add_theme_stylebox_override("pressed", pressed)
+	if is_action_button:
+		button.pivot_offset = control_size * 0.5
+		button.button_down.connect(_pulse_action_control.bind(button))
+		button.button_up.connect(_release_action_control.bind(button))
 	return button
+
+func _pulse_action_control(button: Button) -> void:
+	# A small responsive scale pulse gives touch input a tactile visual response;
+	# haptics are only requested on mobile and never gate the gameplay signal.
+	button.pivot_offset = button.size * 0.5
+	var tween := create_tween()
+	tween.tween_property(button, "scale", Vector2(.92, .92), .055)
+	if OS.has_feature("mobile"):
+		Input.vibrate_handheld(14)
+
+func _release_action_control(button: Button) -> void:
+	var tween := create_tween()
+	tween.tween_property(button, "scale", Vector2.ONE, .105).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 func _button_display_text(text_value: String) -> String:
 	match text_value:

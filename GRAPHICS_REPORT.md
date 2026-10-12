@@ -28,6 +28,18 @@ Visual terrain and cosmetic dressing are separate from collision geometry. The o
 | WP10 Load | Original operation loading splash shown while the runtime scene builds | `main.gd` |
 | WP11 Performance | AUTO/LOW/MEDIUM/HIGH/ULTRA setting, mobile auto-detect, dynamic 3D render scale, 2-second load shed, 7-second recovery, tier-based lights/shadows/SSAO/glow/particles | `game_settings.gd`, `performance_governor.gd`, `world_builder.gd`, `main.gd` |
 
+## Post-package visual polish — pending CI renderer capture
+
+A second direct presentation pass was made after reviewing the captured frames rather than treating the first asset pass as final. It preserves every gameplay node and collision body while improving the weakest visual reads:
+
+- **Terrain:** finite-difference normals now shade the cosmetic dunes correctly; three-frequency dune/ripple height, tyre-track segments, windblown scrap and dry-brush clusters add depth while the original flat collision floor remains authoritative.
+- **Architecture:** window frames were rebuilt as rails/mullions instead of opaque plates that hid the reflective glass; the outpost name now has a high-contrast metal plaque and camera-readable sign treatment.
+- **Materials:** terrain/building tint values were lifted to preserve PBR micro-detail and cool/warm separation under the low sun.
+- **HUD:** new-player defaults use a spaced circular right-thumb cluster, eliminating the old SWAP/CROUCH conflict; all previous saved layouts still load untouched. Action press scale/haptic feedback and a true movement/ADS-responsive four-segment reticle were added.
+- **Evidence:** the real capture harness now places its showcase Raider in clear gameplay lanes at explicit 15 m and 5 m distances and captures short-lived firing/low-health states on the immediate rendered frame.
+
+The source/static/project/native checks passed locally after this pass. The paragraph above intentionally does **not** assert a renderer result until the next GitHub Actions OpenGL capture completes and replaces the versioned after frames.
+
 ## Quality tiers
 
 | Tier | 3D scale | Presentation budget | Intended target |
