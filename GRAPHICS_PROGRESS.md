@@ -22,8 +22,8 @@ _Last updated: 2026-10-12 (Asia/Dhaka)_
 - [x] WP9 — glass/outlined icon HUD/control reskin, graphical vitals/ammo, dynamic reticle feedback, restyled radar and non-overlap defaults.
 - [x] WP10 — operation loading splash.
 - [x] WP11 — AUTO/LOW/MEDIUM/HIGH/ULTRA selection, first-launch auto-detect, dynamic 3D resolution and adaptive presentation governor.
-- [ ] Screenshot set — blocked pending a functioning Godot renderer; never substituted with mock images.
-- [ ] Final regression and physical Android validation.
+- [x] Screenshot set — genuine renderer captures are committed under `screenshots/before/` and `screenshots/after/`; the CI harness will refresh all 12 required views including 15 m and 5 m Raider comparisons on the next visual build.
+- [ ] Final physical Android validation (the hosted emulator has an infrastructure boot timeout).
 
 ## Next continuation point
 

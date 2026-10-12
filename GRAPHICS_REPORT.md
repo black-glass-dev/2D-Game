@@ -49,9 +49,11 @@ Local static validation after each committed package passed:
 - native three-wave core tests
 - `git diff --check`
 
-A local Godot 4.7.2 binary download was attempted twice for runtime rendering and screenshot capture, but this sandbox's release CDN connection failed (`curl: (35) SSL_ERROR_SYSCALL`; `wget` exit 4). Therefore **no before/after images are claimed or fabricated**. `screenshots/before/` and `screenshots/after/` are intentionally held for real capture only. The committed GitHub workflow is the next valid Godot import/export/headless scene gate.
+A local Godot 4.7.2 binary download was attempted twice for runtime rendering and screenshot capture, but this sandbox's release CDN connection failed (`curl: (35) SSL_ERROR_SYSCALL`; `wget` exit 4). The workflow therefore runs a real Godot/OpenGL llvmpipe capture harness under Xvfb instead. It loads the actual gameplay scene and saves viewport pixels; it does not mock or compose images. The genuine first comparison capture is committed under `screenshots/before/` and `screenshots/after/` (11 named Section 8 states). The capture harness has since been expanded to refresh **12** states, including explicit 15 m and 5 m Raider frames, on the next visual workflow run.
 
-The mandatory Android emulator smoke runner has historically timed out booting before install in this repository. That infrastructure failure must not be read as a gameplay pass or a physical device result. Export/signature/headless results and a real-device screenshot pass are still required before describing any candidate as physical-device verified.
+The generated comparison captured the pre-overhaul baseline at its former 800×450 render design and the overhaul at 1280×720. The HUD/full-screen canvas, sun/fog palette, terrain texture detail, outpost dressing, viewmodel and revised controls are visibly present in the after set. Rendering was verified on CI's Mesa llvmpipe software OpenGL implementation, not representative phone hardware; it is valid visual evidence but not a mobile FPS measurement.
+
+The mandatory Android emulator smoke runner has historically timed out booting before install in this repository. That infrastructure failure must not be read as a gameplay pass or a physical device result. Export/signature/headless results and a real-device playthrough are still required before describing any candidate as physical-device verified.
 
 ## Known renderer fallbacks
 
@@ -61,4 +63,4 @@ The mandatory Android emulator smoke runner has historically timed out booting b
 
 ## Required final visual QA
 
-Capture genuine before/after shots of the defined spawn, lane, crate, sign, horizon, Raider 15 m/5 m, rifle idle/ADS/firing, low-HP, reload and crouch viewpoints once a renderer is available. Inspect those actual frames at native landscape resolution before signing a final APK.
+The CI harness captures genuine before/after shots of the defined spawn, lane, crate, sign, horizon, Raider 15 m/5 m, rifle idle/ADS/firing, low-HP, reload and crouch viewpoints. Inspect the 1280×720 after frames and repeat this check on a physical Android device before signing a final physical-device APK.
