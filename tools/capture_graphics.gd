@@ -73,7 +73,10 @@ func _initialize() -> void:
 
 func _set_view(position_value: Vector3, target: Vector3) -> void:
 	camera.global_position = position_value
-	camera.look_at(target, Vector3.UP, true)
+	# Camera3D renders along local -Z. Do not use the +Z model-front option here:
+	# it reverses every intended Section 8 composition and points the capture away
+	# from the real Raider/outpost target.
+	camera.look_at(target, Vector3.UP)
 
 func _capture(name: String) -> void:
 	var output_path := output_directory.path_join(name + ".png")
