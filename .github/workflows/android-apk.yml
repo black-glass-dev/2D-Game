@@ -30,6 +30,9 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@v5
+        with:
+          # Screenshot comparison checks out the pre-overhaul gameplay revision.
+          fetch-depth: 0
 
       - name: Set up Node for GDScript static analysis
         uses: actions/setup-node@v5
@@ -162,6 +165,41 @@ jobs:
           export PATH="$HOME/.local/bin:$PATH"
           godot --headless --path . --quit-after 180 2>&1 | tee build/godot-runtime.log
 
+      - name: Capture genuine before and after graphics frames
+        id: graphics_capture
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.local/bin:$PATH"
+          mkdir -p build/screenshots/before build/screenshots/after
+          # Candidate #21 is the last pre-overhaul gameplay revision. A detached
+          # worktree keeps the comparison view authentic and prevents any asset
+          # from the new build leaking into the before capture.
+          git worktree add --detach /tmp/operation-redline-before bb65d01
+          godot --headless --path /tmp/operation-redline-before --editor --quit
+          timeout 100s xvfb-run --auto-servernum godot \
+            --path /tmp/operation-redline-before --rendering-driver opengl3 \
+            --script "$GITHUB_WORKSPACE/tools/capture_graphics.gd" -- \
+            --output "$GITHUB_WORKSPACE/build/screenshots/before"
+          timeout 100s xvfb-run --auto-servernum godot \
+            --path "$GITHUB_WORKSPACE" --rendering-driver opengl3 \
+            --script "$GITHUB_WORKSPACE/tools/capture_graphics.gd" -- \
+            --output "$GITHUB_WORKSPACE/build/screenshots/after"
+          git worktree remove --force /tmp/operation-redline-before
+          test "$(find build/screenshots/before -name '*.png' | wc -l)" -eq 11
+          test "$(find build/screenshots/after -name '*.png' | wc -l)" -eq 11
+          python3 - <<'PY'
+          from pathlib import Path
+          import struct
+          for path in Path("build/screenshots").rglob("*.png"):
+              header = path.read_bytes()[:24]
+              if header[:8] != b"\x89PNG\r\n\x1a\n":
+                  raise SystemExit(f"not a PNG: {path}")
+              width, height = struct.unpack(">II", header[16:24])
+              if width < 1000 or height < 500 or path.stat().st_size < 4096:
+                  raise SystemExit(f"invalid capture: {path} ({width}x{height}, {path.stat().st_size} bytes)")
+          PY
+
       - name: Commit Godot diagnostics if export fails
         if: failure()
         shell: bash
@@ -226,3 +264,4 @@ jobs:
             build/godot-import.log
             build/godot-export.log
             build/godot-runtime.log
+            build/screenshots
