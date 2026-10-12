@@ -371,20 +371,20 @@ static func _build_terrain_story_details(root: Node3D, asphalt: Material, rock: 
 		brush_root.position = Vector3(x, ground + .13, z)
 		brush_root.rotation_degrees.y = float(index * 37 % 360)
 		root.add_child(brush_root)
-		for blade in range(3):
-			var blade := MeshInstance3D.new()
-			blade.name = "Dry grass blade"
+		for blade_index in range(3):
+			var blade_visual := MeshInstance3D.new()
+			blade_visual.name = "Dry grass blade"
 			var blade_mesh := CylinderMesh.new()
 			blade_mesh.top_radius = .012
 			blade_mesh.bottom_radius = .030
-			blade_mesh.height = .34 + float((index + blade) % 4) * .055
+			blade_mesh.height = .34 + float((index + blade_index) % 4) * .055
 			blade_mesh.radial_segments = 4
-			blade.mesh = blade_mesh
-			blade.material_override = crate if blade % 2 == 0 else rock
-			blade.position = Vector3((float(blade) - 1.0) * .07, blade_mesh.height * .45, .02 * float(blade % 2))
-			blade.rotation_degrees = Vector3(float(blade * 9 - 8), 0, float(blade * 12 - 12))
-			blade.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
-			brush_root.add_child(blade)
+			blade_visual.mesh = blade_mesh
+			blade_visual.material_override = crate if blade_index % 2 == 0 else rock
+			blade_visual.position = Vector3((float(blade_index) - 1.0) * .07, blade_mesh.height * .45, .02 * float(blade_index % 2))
+			blade_visual.rotation_degrees = Vector3(float(blade_index * 9 - 8), 0, float(blade_index * 12 - 12))
+			blade_visual.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+			brush_root.add_child(blade_visual)
 	for position in [Vector3(-25, .075, 26), Vector3(24, .075, 28), Vector3(-34, .075, -18), Vector3(31, .075, -14)]:
 		_box(root, "Windblown scrap decal", position, Vector3(1.45, .028, .72), asphalt, false)
 
