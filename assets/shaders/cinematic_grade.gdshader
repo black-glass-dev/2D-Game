@@ -32,12 +32,13 @@ void fragment() {
 	vec2 uv = SCREEN_UV;
 	vec2 center_delta = uv - vec2(0.5);
 	float radius_sq = dot(center_delta, center_delta);
-	vec2 chroma_offset = center_delta * 0.0022 * chromatic_strength;
-	vec3 scene = vec3(
-		texture(scene_color, uv + chroma_offset).r,
-		texture(scene_color, uv).g,
-		texture(scene_color, uv - chroma_offset).b
-	);
+	// One scene sample is intentional. A three-tap RGB split cost more than the
+	// entire rest of this pass on low-end phones; the slight edge tint below is
+	// the tier-aware Compatibility fallback for chromatic separation.
+	vec3 scene = texture(scene_color, uv).rgb;
+	float edge_tint = smoothstep(0.12, 0.50, radius_sq) * chromatic_strength;
+	scene.r *= 1.0 + edge_tint * 0.025;
+	scene.b *= 1.0 - edge_tint * 0.018;
 
 	float luminance = dot(scene, vec3(0.2126, 0.7152, 0.0722));
 	float shadow_mask = 1.0 - smoothstep(0.08, 0.48, luminance);
