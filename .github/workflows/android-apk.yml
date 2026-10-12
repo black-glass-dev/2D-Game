@@ -177,14 +177,15 @@ jobs:
           # from the new build leaking into the before capture.
           git worktree add --detach /tmp/operation-redline-before bb65d01
           godot --headless --path /tmp/operation-redline-before --editor --quit
+          command -v xvfb-run
           timeout 100s xvfb-run --auto-servernum godot \
             --path /tmp/operation-redline-before --rendering-driver opengl3 \
             --script "$GITHUB_WORKSPACE/tools/capture_graphics.gd" -- \
-            --output "$GITHUB_WORKSPACE/build/screenshots/before"
+            --output "$GITHUB_WORKSPACE/build/screenshots/before" 2>&1 | tee build/godot-before-capture.log
           timeout 100s xvfb-run --auto-servernum godot \
             --path "$GITHUB_WORKSPACE" --rendering-driver opengl3 \
             --script "$GITHUB_WORKSPACE/tools/capture_graphics.gd" -- \
-            --output "$GITHUB_WORKSPACE/build/screenshots/after"
+            --output "$GITHUB_WORKSPACE/build/screenshots/after" 2>&1 | tee build/godot-after-capture.log
           git worktree remove --force /tmp/operation-redline-before
           test "$(find build/screenshots/before -name '*.png' | wc -l)" -eq 11
           test "$(find build/screenshots/after -name '*.png' | wc -l)" -eq 11
@@ -264,4 +265,6 @@ jobs:
             build/godot-import.log
             build/godot-export.log
             build/godot-runtime.log
+            build/godot-before-capture.log
+            build/godot-after-capture.log
             build/screenshots
