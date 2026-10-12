@@ -188,7 +188,10 @@ jobs:
             --path /tmp/operation-redline-before --rendering-driver opengl3 \
             --script "$GITHUB_WORKSPACE/tools/capture_graphics.gd" -- \
             --output "$GITHUB_WORKSPACE/build/screenshots/before" 2>&1 | tee build/godot-before-capture.log
-          timeout 100s xvfb-run --auto-servernum godot \
+          # The fully dressed 1280×720 OpenGL evidence pass can take several
+          # minutes on CI's llvmpipe software renderer. It is not a device FPS
+          # budget; allow it to finish every genuine comparison frame.
+          timeout 360s xvfb-run --auto-servernum godot \
             --path "$GITHUB_WORKSPACE" --rendering-driver opengl3 \
             --script "$GITHUB_WORKSPACE/tools/capture_graphics.gd" -- \
             --output "$GITHUB_WORKSPACE/build/screenshots/after" 2>&1 | tee build/godot-after-capture.log
