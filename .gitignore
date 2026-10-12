@@ -2,6 +2,7 @@
 .godot/
 .import/
 *.translation
+*.import
 
 # Local editor / OS files
 .vscode/

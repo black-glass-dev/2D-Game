@@ -209,6 +209,7 @@ jobs:
         run: |
           set -euo pipefail
           rm -f screenshots/before/*.png screenshots/after/*.png
+          find screenshots -name '*.import' -delete
           cp build/screenshots/before/*.png screenshots/before/
           cp build/screenshots/after/*.png screenshots/after/
           # The APK version step intentionally edits this tracked export preset.
