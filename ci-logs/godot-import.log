@@ -118,7 +118,6 @@ Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
 [   9% ] [90m[1mreimport[22m | 09_ads.png[39m[0m
 [  12% ] [90m[1mreimport[22m | 10_firing.png[39m[0m
 [  14% ] [90m[1mreimport[22m | 11_low_hp.png[39m[0m
-[  14% ] [90m[1mreimport[22m | 11_low_hp.png[39m[0m
 [  17% ] [90m[1mreimport[22m | 12_reload_crouch.png[39m[0m
 [  19% ] [90m[1mreimport[22m | 01_spawn_ground.png[39m[0m
 [  21% ] [90m[1mreimport[22m | 02_main_lane.png[39m[0m
@@ -144,6 +143,7 @@ Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
 [  70% ] [90m[1mreimport[22m | terrain_detail_normal_512.png[39m[0m
 [  73% ] [90m[1mreimport[22m | weathered_crate_512.png[39m[0m
 [  75% ] [90m[1mreimport[22m | app_icon.svg[39m[0m
+[  78% ] [90m[1mreimport[22m | 01_spawn_ground.png[39m[0m
 [  78% ] [90m[1mreimport[22m | 01_spawn_ground.png[39m[0m
 [  80% ] [90m[1mreimport[22m | 02_main_lane.png[39m[0m
 [  82% ] [90m[1mreimport[22m | 03_emissive_crates.png[39m[0m

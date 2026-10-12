@@ -17,3 +17,7 @@ ERROR: Condition "status < 0" is true. Returning: ERR_CANT_OPEN
 WARNING: All audio drivers failed, falling back to the dummy driver.
      at: initialize (servers/audio/audio_server.cpp:258)
 
+GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/after/01_spawn_ground.png result=0 size=1280x720
+GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/after/02_main_lane.png result=0 size=1280x720
+GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/after/03_emissive_crates.png result=0 size=1280x720
+GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/after/04_outpost_facade.png result=0 size=1280x720
