@@ -117,14 +117,6 @@ ADDING: kotlin/kotlin.kotlin_builtins
 ADDING: kotlin/ranges/ranges.kotlin_builtins
 ADDING: kotlin/reflect/reflect.kotlin_builtins
 [   0% ] [90m[1mexport[22m | Adding files...[39m[0m
-SCRIPT ERROR: Parse Error: Identifier "high_quality" not declared in the current scope.
-          at: GDScript::reload (res://scripts/world_builder.gd:57)
-SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
-          at: GDScript::reload (res://scripts/performance_governor.gd:0)
-SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
-          at: GDScript::reload (res://scripts/main.gd:0)
-ERROR: Failed to load script "res://scripts/main.gd" with error "Parse error".
-   at: load (modules/gdscript/gdscript_resource_format.cpp:46)
 [  97% ] [90m[1mexport[22m | Aligning APK...[39m[0m
 [  98% ] [90m[1mexport[22m | Signing debug APK...[39m[0m
 Signing binary using: 
