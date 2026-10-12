@@ -57,6 +57,17 @@ If you want to set size, change the anchors or consider using set_deferred().
          [0] _build_damage_edges (res://scripts/main.gd:500)
          [1] _build_hud (res://scripts/main.gd:444)
          [2] _ready (res://scripts/main.gd:108)
+GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/after/01_spawn_ground.png result=0 size=1280x720
+GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/after/02_main_lane.png result=0 size=1280x720
+GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/after/03_emissive_crates.png result=0 size=1280x720
+GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/after/04_outpost_facade.png result=0 size=1280x720
+GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/after/05_mesa_horizon.png result=0 size=1280x720
+GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/after/06_raider_fifteen_m.png result=0 size=1280x720
+GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/after/07_rifle_idle.png result=0 size=1280x720
+GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/after/08_ads.png result=0 size=1280x720
+GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/after/09_firing.png result=0 size=1280x720
+GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/after/10_low_hp.png result=0 size=1280x720
+GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/after/11_reload_crouch.png result=0 size=1280x720
 WARNING: 4 ObjectDB instances were leaked at exit (run with `--verbose` for details).
    at: cleanup (core/object/object.cpp:2536)
 ERROR: 1 resources still in use at exit (run with --verbose for details).
