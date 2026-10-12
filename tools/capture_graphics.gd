@@ -13,7 +13,9 @@ func _initialize() -> void:
 	DirAccess.make_dir_recursive_absolute(output_directory)
 	scene_root = load("res://scenes/Main.tscn").instantiate() as Node3D
 	root.add_child(scene_root)
-	await _frames(24)
+	# The complete runtime scene is built synchronously on add_child; a compact
+	# settle avoids spending the software-render evidence budget on idle frames.
+	await _frames(8)
 	player = get_first_node_in_group("player") as OutpostPlayer
 	if player == null:
 		push_error("Capture harness could not locate the player.")
@@ -27,7 +29,7 @@ func _initialize() -> void:
 	showcase_raider.setup(97)
 	showcase_raider.position = Vector3(0, .15, -2.0)
 	scene_root.add_child(showcase_raider)
-	await _frames(3)
+	await _frames(2)
 	var views := [
 		["01_spawn_ground", Vector3(0, 2.0, 13), Vector3(1.2, -.10, 7.5)],
 		["02_main_lane", Vector3(0, 1.65, 13), Vector3(-18, 7.8, -15)],
@@ -64,7 +66,7 @@ func _initialize() -> void:
 			player.request_crouch()
 			scene_root._reload_active_weapon()
 		# Preserve short-lived actual muzzle, tracer and damage frame states.
-		await _frames(1 if entry[0] == "10_firing" or entry[0] == "11_low_hp" else 5)
+		await _frames(1 if entry[0] == "10_firing" or entry[0] == "11_low_hp" else 2)
 		_capture(entry[0])
 		player.set_aim(false)
 	await _frames(2)

@@ -359,8 +359,10 @@ static func _build_terrain_story_details(root: Node3D, asphalt: Material, rock: 
 	for lane_x in [-2.15, 2.15]:
 		for segment in range(16):
 			var z := -44.0 + float(segment) * 5.8
-			_box(root, "Weathered tyre track", Vector3(lane_x, .048, z), Vector3(.18, .025, 3.9), asphalt, false)
-	for index in range(42):
+			_box(root, "Weathered tyre track", Vector3(lane_x, .048, z), Vector3(.18, .025, 3.9), asphalt, false, false)
+	# Keep the close-range dressing sparse and shadow-free: atmospheric detail
+	# remains readable but the low/medium mobile tiers retain their frame budget.
+	for index in range(18):
 		var x := fposmod(float(index * 29), 92.0) - 46.0 + sin(float(index) * 1.31) * 1.7
 		var z := fposmod(float(index * 47), 88.0) - 44.0 + cos(float(index) * .81) * 1.5
 		if abs(x) < 15.0 and abs(z) < 27.0:
@@ -371,7 +373,7 @@ static func _build_terrain_story_details(root: Node3D, asphalt: Material, rock: 
 		brush_root.position = Vector3(x, ground + .13, z)
 		brush_root.rotation_degrees.y = float(index * 37 % 360)
 		root.add_child(brush_root)
-		for blade_index in range(3):
+		for blade_index in range(2):
 			var blade_visual := MeshInstance3D.new()
 			blade_visual.name = "Dry grass blade"
 			var blade_mesh := CylinderMesh.new()
@@ -383,10 +385,10 @@ static func _build_terrain_story_details(root: Node3D, asphalt: Material, rock: 
 			blade_visual.material_override = crate if blade_index % 2 == 0 else rock
 			blade_visual.position = Vector3((float(blade_index) - 1.0) * .07, blade_mesh.height * .45, .02 * float(blade_index % 2))
 			blade_visual.rotation_degrees = Vector3(float(blade_index * 9 - 8), 0, float(blade_index * 12 - 12))
-			blade_visual.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+			blade_visual.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			brush_root.add_child(blade_visual)
 	for position in [Vector3(-25, .075, 26), Vector3(24, .075, 28), Vector3(-34, .075, -18), Vector3(31, .075, -14)]:
-		_box(root, "Windblown scrap decal", position, Vector3(1.45, .028, .72), asphalt, false)
+		_box(root, "Windblown scrap decal", position, Vector3(1.45, .028, .72), asphalt, false, false)
 
 static func _build_lamps(root: Node3D, metal: Material, glow: Material) -> void:
 	for position in [Vector3(-13, 3.5, -14), Vector3(13, 3.5, -14), Vector3(-23, 3.5, 11), Vector3(22, 3.5, 15), Vector3(-35, 3.5, 14), Vector3(36, 3.5, -27), Vector3(0, 3.5, 36)]:
@@ -498,7 +500,7 @@ static func _build_atmosphere_particles(root: Node3D) -> void:
 	embers.process_material = ember_process
 	root.add_child(embers)
 
-static func _box(parent: Node3D, label: String, position_value: Vector3, size: Vector3, material: Material, collision := true) -> Node3D:
+static func _box(parent: Node3D, label: String, position_value: Vector3, size: Vector3, material: Material, collision := true, casts_shadow := true) -> Node3D:
 	var holder := Node3D.new()
 	holder.name = label
 	holder.position = position_value
@@ -508,7 +510,7 @@ static func _box(parent: Node3D, label: String, position_value: Vector3, size: V
 	mesh.size = size
 	visual.mesh = mesh
 	visual.material_override = material
-	visual.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	visual.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if casts_shadow else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	holder.add_child(visual)
 	if collision:
 		var body := StaticBody3D.new()
