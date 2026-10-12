@@ -63,11 +63,12 @@ GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/after/03_em
 GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/after/04_outpost_facade.png result=0 size=1280x720
 GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/after/05_mesa_horizon.png result=0 size=1280x720
 GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/after/06_raider_fifteen_m.png result=0 size=1280x720
-GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/after/07_rifle_idle.png result=0 size=1280x720
-GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/after/08_ads.png result=0 size=1280x720
-GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/after/09_firing.png result=0 size=1280x720
-GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/after/10_low_hp.png result=0 size=1280x720
-GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/after/11_reload_crouch.png result=0 size=1280x720
+GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/after/07_raider_five_m.png result=0 size=1280x720
+GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/after/08_rifle_idle.png result=0 size=1280x720
+GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/after/09_ads.png result=0 size=1280x720
+GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/after/10_firing.png result=0 size=1280x720
+GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/after/11_low_hp.png result=0 size=1280x720
+GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/after/12_reload_crouch.png result=0 size=1280x720
 WARNING: 4 ObjectDB instances were leaked at exit (run with `--verbose` for details).
    at: cleanup (core/object/object.cpp:2536)
 ERROR: 1 resources still in use at exit (run with --verbose for details).
