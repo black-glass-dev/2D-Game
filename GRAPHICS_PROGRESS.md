@@ -19,12 +19,12 @@ _Last updated: 2026-10-12 (Asia/Dhaka)_
 - [x] WP5 — Raider procedural articulated character variants, tactical variants/nameplates, aim/fire/reload-like poses, hit/death and footstep dust.
 - [x] WP6 — detailed first-person weapons/hands, viewmodel fallback, breathing/sway/recoil/reload/swap presentation and muzzle lights.
 - [x] WP7 — pooled tracers, smoke, casings, surface-aware impacts/decals, ambient dust/embers and enemy footstep particles.
-- [ ] WP9 — final AAA HUD/control reskin and safe layout rules.
-- [ ] WP10 — loading/menu polish.
-- [ ] WP11 — four-tier selector, auto-detect and richer adaptive performance controls.
+- [x] WP9 — glass/outlined icon HUD/control reskin, graphical vitals/ammo, dynamic reticle feedback, restyled radar and non-overlap defaults.
+- [x] WP10 — operation loading splash.
+- [x] WP11 — AUTO/LOW/MEDIUM/HIGH/ULTRA selection, first-launch auto-detect, dynamic 3D resolution and adaptive presentation governor.
 - [ ] Screenshot set — blocked pending a functioning Godot renderer; never substituted with mock images.
 - [ ] Final regression and physical Android validation.
 
 ## Next continuation point
 
-Implement WP9 in `scripts/main.gd` and `scripts/tactical_radar.gd`, then WP10/WP11 in `scripts/main.gd`, `scripts/game_settings.gd`, `scripts/performance_governor.gd` and `project.godot`. Re-run the static/project/native checks before every commit and use GitHub Actions for engine import/export/headless execution.
+All code work packages are committed. Wait for the CI import/export/headless runtime result from the latest visual code commit. Then capture real landscape before/after screenshots on a functioning renderer/device into `screenshots/before/` and `screenshots/after/`, audit the Section 8 viewpoints, update `GRAPHICS_REPORT.md`, and only then make a physical-device-final claim.

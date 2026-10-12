@@ -18,7 +18,9 @@ var director: SurvivalDirector
 var hud: CanvasLayer
 var controls_root: Control
 var health_label: Label
+var health_bar_fill: ColorRect
 var ammo_label: Label
+var weapon_label: Label
 var wave_label: Label
 var score_label: Label
 var accuracy_label: Label
@@ -66,7 +68,7 @@ func _ready() -> void:
 	WorldBuilder.build(self)
 	performance_governor = PerformanceGovernor.new()
 	add_child(performance_governor)
-	performance_governor.configure(self)
+	performance_governor.configure(self, settings.resolved_quality_tier())
 	player = OutpostPlayer.new()
 	player.position = PLAYER_SPAWN
 	add_child(player)
@@ -104,6 +106,7 @@ func _ready() -> void:
 	director.operation_complete.connect(_on_operation_complete)
 
 	_build_hud()
+	_build_loading_splash()
 	_refresh_active_ammo()
 	_apply_settings()
 	get_viewport().size_changed.connect(_on_viewport_size_changed)
@@ -205,6 +208,7 @@ func _on_raider_eliminated(_enemy: Raider, points: int) -> void:
 	director.enemy_eliminated()
 
 func _on_wave_started(wave_number: int, enemy_count: int) -> void:
+	WorldBuilder.set_wave_atmosphere(self, wave_number)
 	wave_label.text = "WAVE  %d / 3   •   %d INBOUND" % [wave_number, enemy_count]
 	_show_alert("WAVE %d  —  HOLD THE LINE" % wave_number, 1.5)
 
@@ -240,9 +244,11 @@ func _update_respawn(delta: float) -> void:
 		_restart()
 
 func _on_health_changed(current: int, maximum: int) -> void:
-	if health_label == null:
-		return
-	health_label.text = "HP  %03d / %03d" % [current, maximum]
+	if health_label != null:
+		health_label.text = "VITALS  %03d / %03d" % [current, maximum]
+	if health_bar_fill != null:
+		health_bar_fill.size.x = 188.0 * clampf(float(current) / float(maximum), 0.0, 1.0)
+		health_bar_fill.color = Color("80d88a") if current > maximum * .42 else Color("ef7c62")
 
 func _on_player_damage(amount: int, source_position: Vector3) -> void:
 	damage_flash = maxf(damage_flash, clampf(float(amount) / 14.0, 0.30, 0.85))
@@ -269,6 +275,8 @@ func _on_pistol_ammo_changed(in_magazine: int, reserve: int) -> void:
 func _on_ammo_changed(in_magazine: int, reserve: int) -> void:
 	if ammo_label != null:
 		ammo_label.text = "%02d  /  %03d" % [in_magazine, reserve]
+	if weapon_label != null:
+		weapon_label.text = "CARBINE" if active_weapon == rifle else "SIDEARM"
 
 func _on_shot_resolved(hit: bool, _target_name: String) -> void:
 	if hit:
@@ -331,20 +339,44 @@ func _build_hud() -> void:
 	hud.name = "Tactical HUD"
 	add_child(hud)
 	var top_bar := ColorRect.new()
-	top_bar.color = Color(0.035, 0.055, 0.05, 0.78)
+	top_bar.name = "Translucent tactical header"
+	top_bar.color = Color(0.018, 0.045, 0.055, 0.76)
 	top_bar.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
-	top_bar.size.y = 54
+	top_bar.size.y = 68
 	top_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hud.add_child(top_bar)
+	var divider := ColorRect.new()
+	divider.color = Color("71d5cc")
+	divider.position = Vector2(0, 66)
+	divider.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	divider.size.y = 1
+	divider.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud.add_child(divider)
 
-	health_label = _label("HP  100 / 100", Vector2(18, 13), Vector2(210, 28), 19, Color("d8f5d0"))
-	wave_label = _label("WAVE  1 / 3", Vector2(0, 13), Vector2(420, 28), 18, Color("f4d8a6"), Control.PRESET_CENTER_TOP, HORIZONTAL_ALIGNMENT_CENTER)
-	score_label = _label("SCORE  00000", Vector2(-205, 13), Vector2(188, 28), 18, Color("d8f5d0"), Control.PRESET_TOP_RIGHT, HORIZONTAL_ALIGNMENT_RIGHT)
+	health_label = _label("VITALS  100 / 100", Vector2(18, 8), Vector2(220, 24), 15, Color("ddf6df"))
+	var health_back := ColorRect.new()
+	health_back.name = "Health meter frame"
+	health_back.position = Vector2(18, 35)
+	health_back.size = Vector2(190, 10)
+	health_back.color = Color(0.05, 0.11, 0.12, .92)
+	health_back.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud.add_child(health_back)
+	health_bar_fill = ColorRect.new()
+	health_bar_fill.name = "Animated health meter"
+	health_bar_fill.position = Vector2(19, 36)
+	health_bar_fill.size = Vector2(188, 8)
+	health_bar_fill.color = Color("80d88a")
+	health_bar_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud.add_child(health_bar_fill)
+	wave_label = _label("WAVE  1 / 3", Vector2(0, 10), Vector2(440, 27), 19, Color("ffe0a8"), Control.PRESET_CENTER_TOP, HORIZONTAL_ALIGNMENT_CENTER)
+	score_label = _label("SCORE  00000", Vector2(-216, 10), Vector2(198, 25), 16, Color("d8f5d0"), Control.PRESET_TOP_RIGHT, HORIZONTAL_ALIGNMENT_RIGHT)
+	weapon_label = _label("CARBINE", Vector2(-220, 33), Vector2(94, 20), 13, Color("77ddd4"), Control.PRESET_TOP_RIGHT, HORIZONTAL_ALIGNMENT_RIGHT)
+	ammo_label = _label("24  /  144", Vector2(-122, 29), Vector2(108, 30), 22, Color("fff2cf"), Control.PRESET_TOP_RIGHT, HORIZONTAL_ALIGNMENT_RIGHT)
 	accuracy_label = _label("ACC  0%", Vector2(18, -43), Vector2(140, 25), 15, Color("d8f5d0"), Control.PRESET_BOTTOM_LEFT)
-	status_label = _label("SECURE THE OUTPOST", Vector2(-170, -80), Vector2(340, 22), 14, Color("f0c079"), Control.PRESET_CENTER_BOTTOM, HORIZONTAL_ALIGNMENT_CENTER)
-	alert_label = _label("", Vector2(-300, 70), Vector2(600, 42), 24, Color("fff0cc"), Control.PRESET_CENTER_TOP, HORIZONTAL_ALIGNMENT_CENTER)
-	var reticle := _label("+", Vector2(-14, -18), Vector2(28, 36), 30, Color("f5eccf"), Control.PRESET_CENTER, HORIZONTAL_ALIGNMENT_CENTER)
-	reticle.name = "Reticle"
+	status_label = _label("SECURE THE OUTPOST", Vector2(-190, -72), Vector2(380, 22), 14, Color("f0c079"), Control.PRESET_CENTER_BOTTOM, HORIZONTAL_ALIGNMENT_CENTER)
+	alert_label = _label("", Vector2(-330, 78), Vector2(660, 42), 24, Color("fff0cc"), Control.PRESET_CENTER_TOP, HORIZONTAL_ALIGNMENT_CENTER)
+	var reticle := _label("⊹", Vector2(-18, -23), Vector2(36, 46), 34, Color("f5eccf"), Control.PRESET_CENTER, HORIZONTAL_ALIGNMENT_CENTER)
+	reticle.name = "Dynamic reticle"
 	hit_marker = _label("✕", Vector2(-25, -31), Vector2(50, 50), 42, Color("ffdf9a"), Control.PRESET_CENTER, HORIZONTAL_ALIGNMENT_CENTER)
 	hit_marker.name = "HitMarker"
 	hit_marker.modulate.a = 0.0
@@ -352,9 +384,9 @@ func _build_hud() -> void:
 	damage_indicator.name = "Damage direction indicator"
 	damage_indicator.modulate.a = 0.0
 	kill_feed = VBoxContainer.new()
-	kill_feed.name = "Kill feed"
-	kill_feed.position = Vector2(16, 62)
-	kill_feed.size = Vector2(300, 130)
+	kill_feed.name = "Tactical kill feed"
+	kill_feed.position = Vector2(16, 78)
+	kill_feed.size = Vector2(330, 130)
 	kill_feed.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hud.add_child(kill_feed)
 
@@ -412,6 +444,47 @@ func _build_hud() -> void:
 	_build_damage_edges()
 	call_deferred("_load_hud_layout")
 
+func _build_loading_splash() -> void:
+	# There is no separate menu scene in this survival build, so an in-engine
+	# tactical splash gives asset import/world construction a polished first frame.
+	var splash := ColorRect.new()
+	splash.name = "Operation Redline loading splash"
+	splash.color = Color("071317")
+	splash.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	splash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud.add_child(splash)
+	var title := Label.new()
+	title.text = "OPERATION\nREDLINE"
+	title.position = Vector2(-320, -95)
+	title.size = Vector2(640, 120)
+	title.set_anchors_preset(Control.PRESET_CENTER)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 42)
+	title.add_theme_color_override("font_color", Color("ffca84"))
+	title.add_theme_color_override("font_outline_color", Color("172c2e"))
+	title.add_theme_constant_override("outline_size", 8)
+	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud.add_child(title)
+	var subtitle := Label.new()
+	subtitle.text = "REDLINE OUTPOST  •  SECURING THE PERIMETER"
+	subtitle.position = Vector2(-300, 36)
+	subtitle.size = Vector2(600, 30)
+	subtitle.set_anchors_preset(Control.PRESET_CENTER)
+	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	subtitle.add_theme_font_size_override("font_size", 15)
+	subtitle.add_theme_color_override("font_color", Color("7bd9d1"))
+	subtitle.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud.add_child(subtitle)
+	var tween := create_tween()
+	tween.tween_interval(.85)
+	tween.tween_property(splash, "modulate:a", 0.0, .42)
+	tween.parallel().tween_property(title, "modulate:a", 0.0, .30)
+	tween.parallel().tween_property(subtitle, "modulate:a", 0.0, .30)
+	tween.tween_callback(splash.queue_free)
+	tween.tween_callback(title.queue_free)
+	tween.tween_callback(subtitle.queue_free)
+
 func _build_damage_edges() -> void:
 	var edge_specs := [
 		[Control.PRESET_TOP_WIDE, Vector2(0, 0), Vector2(0, 42)],
@@ -433,8 +506,8 @@ func _build_settings_panel() -> void:
 	settings_panel = Panel.new()
 	settings_panel.name = "Settings panel"
 	settings_panel.set_anchors_preset(Control.PRESET_CENTER)
-	settings_panel.position = Vector2(-230, -108)
-	settings_panel.size = Vector2(460, 216)
+	settings_panel.position = Vector2(-230, -138)
+	settings_panel.size = Vector2(460, 276)
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.035, 0.07, 0.065, 0.96)
 	style.border_color = Color("8bc5b3")
@@ -467,10 +540,21 @@ func _build_settings_panel() -> void:
 	more.pressed.connect(_adjust_sensitivity.bind(0.10))
 	var assist := _button("AIM ASSIST", Vector2(268, 102), Vector2(168, 44), Control.PRESET_TOP_LEFT, Color("665849"), settings_panel)
 	assist.pressed.connect(_toggle_aim_assist)
-	var effects := _button("EFFECTS", Vector2(88, 158), Vector2(130, 42), Control.PRESET_TOP_LEFT, Color("5d684a"), settings_panel)
+	var effects := _button("EFFECTS", Vector2(24, 158), Vector2(128, 42), Control.PRESET_TOP_LEFT, Color("5d684a"), settings_panel)
 	effects.pressed.connect(_toggle_screen_effects)
-	var close := _button("CLOSE", Vector2(242, 158), Vector2(130, 42), Control.PRESET_TOP_LEFT, Color("54734f"), settings_panel)
+	var quality := _button("QUALITY", Vector2(166, 158), Vector2(128, 42), Control.PRESET_TOP_LEFT, Color("486e72"), settings_panel)
+	quality.pressed.connect(_cycle_quality_tier)
+	var close := _button("CLOSE", Vector2(308, 158), Vector2(128, 42), Control.PRESET_TOP_LEFT, Color("54734f"), settings_panel)
 	close.pressed.connect(_close_settings)
+	var tier_note := Label.new()
+	tier_note.text = "QUALITY controls lighting, shadows, particles and dynamic 3D resolution. Gameplay is never reduced."
+	tier_note.position = Vector2(24, 215)
+	tier_note.size = Vector2(412, 38)
+	tier_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	tier_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	tier_note.add_theme_font_size_override("font_size", 12)
+	tier_note.add_theme_color_override("font_color", Color("a7cac5"))
+	settings_panel.add_child(tier_note)
 
 func _open_settings() -> void:
 	settings_panel.visible = true
@@ -495,6 +579,10 @@ func _toggle_screen_effects() -> void:
 	settings.screen_effects = not settings.screen_effects
 	_apply_settings()
 
+func _cycle_quality_tier() -> void:
+	settings.cycle_quality_tier()
+	_apply_settings()
+
 func _apply_settings() -> void:
 	if player != null:
 		player.set_look_sensitivity(settings.look_sensitivity)
@@ -506,11 +594,13 @@ func _apply_settings() -> void:
 		pistol.set_effects_enabled(settings.screen_effects)
 	if performance_governor != null:
 		performance_governor.set_effects_requested(settings.screen_effects)
+		performance_governor.set_quality_tier(settings.resolved_quality_tier())
 	_update_settings_summary()
 
 func _update_settings_summary() -> void:
 	if settings_summary != null:
-		settings_summary.text = "LOOK  %.0f%%   •   ASSIST  %s   •   EFFECTS  %s\nAUTO 60 FPS  •  ACTIVE" % [settings.look_sensitivity * 100.0, "ON" if settings.aim_assist else "OFF", "ON" if settings.screen_effects else "OFF"]
+		var active_tier := performance_governor.display_tier() if performance_governor != null else settings.resolved_quality_tier()
+		settings_summary.text = "LOOK  %.0f%%   •   ASSIST  %s   •   EFFECTS  %s\nQUALITY  %s → %s" % [settings.look_sensitivity * 100.0, "ON" if settings.aim_assist else "OFF", "ON" if settings.screen_effects else "OFF", settings.quality_tier, active_tier]
 
 func _build_hud_editor() -> void:
 	editor_surface = Control.new()
@@ -589,7 +679,7 @@ func _apply_default_hud_layout() -> void:
 	_set_control_rect("jump", Vector2(screen.x - 306, screen.y - 238), Vector2(104, 72))
 	_set_control_rect("crouch", Vector2(screen.x - 434, screen.y - 232), Vector2(112, 62))
 	_set_control_rect("swap", Vector2(screen.x - 550, screen.y - 144), Vector2(92, 52))
-	_set_control_rect("minimap", Vector2(screen.x - 166, 62), Vector2(148, 148))
+	_set_control_rect("minimap", Vector2(screen.x - 166, 78), Vector2(148, 148))
 
 func _set_control_rect(key: String, position_value: Vector2, size_value: Vector2) -> void:
 	var control := adjustable_controls.get(key) as Control
@@ -732,7 +822,7 @@ func _restart() -> void:
 func _toggle_aim() -> void:
 	touch_aim = not touch_aim
 	if aim_button != null:
-		aim_button.text = "AIM ✓" if touch_aim else "AIM"
+		aim_button.text = "◉\nAIM" if touch_aim else _button_display_text("AIM")
 
 func _label(text_value: String, position_offset: Vector2, control_size: Vector2, font_size: int, color: Color, preset := Control.PRESET_TOP_LEFT, alignment := HORIZONTAL_ALIGNMENT_LEFT) -> Label:
 	var label := Label.new()
@@ -749,7 +839,7 @@ func _label(text_value: String, position_offset: Vector2, control_size: Vector2,
 
 func _button(text_value: String, position_offset: Vector2, control_size: Vector2, preset: int, color: Color, parent: Control = null) -> Button:
 	var button := Button.new()
-	button.text = text_value
+	button.text = _button_display_text(text_value)
 	button.size = control_size
 	if parent == null:
 		button.position = position_offset
@@ -759,30 +849,54 @@ func _button(text_value: String, position_offset: Vector2, control_size: Vector2
 		button.position = position_offset
 		parent.add_child(button)
 	var is_primary_fire := text_value == "FIRE"
-	var corner_radius := 66 if is_primary_fire else 12
-	button.add_theme_font_size_override("font_size", 22 if is_primary_fire else 18)
-	button.add_theme_color_override("font_color", Color("fff6d4"))
-	button.add_theme_color_override("font_outline_color", Color("18201c"))
-	button.add_theme_constant_override("outline_size", 4)
+	var is_action_button := parent == controls_root
+	var corner_radius := int(minf(control_size.x, control_size.y) * (0.48 if is_action_button else 0.22))
+	button.add_theme_font_size_override("font_size", 19 if is_primary_fire else (15 if is_action_button else 16))
+	button.add_theme_color_override("font_color", Color("f6fff4"))
+	button.add_theme_color_override("font_outline_color", Color("07161a"))
+	button.add_theme_constant_override("outline_size", 3)
+	button.add_theme_constant_override("line_spacing", -2)
 	var normal := StyleBoxFlat.new()
-	normal.bg_color = Color(color.r, color.g, color.b, 0.91 if is_primary_fire else 0.84)
-	normal.border_color = Color("ffd88b") if is_primary_fire else Color("f4d39a")
-	normal.set_border_width_all(3 if is_primary_fire else 2)
+	normal.bg_color = Color(color.r, color.g, color.b, .54 if is_action_button else .82)
+	normal.border_color = Color("ffcf82") if is_primary_fire else Color("7bd9d1")
+	normal.set_border_width_all(3 if is_primary_fire else (2 if is_action_button else 2))
 	normal.corner_radius_top_left = corner_radius
 	normal.corner_radius_top_right = corner_radius
 	normal.corner_radius_bottom_left = corner_radius
 	normal.corner_radius_bottom_right = corner_radius
-	normal.shadow_color = Color(0.03, 0.02, 0.01, 0.48)
-	normal.shadow_size = 8 if is_primary_fire else 3
+	normal.shadow_color = Color(.0, .08, .10, .58)
+	normal.shadow_size = 7 if is_action_button else 3
 	normal.shadow_offset = Vector2(0, 3)
 	button.add_theme_stylebox_override("normal", normal)
+	var hover := normal.duplicate()
+	hover.bg_color = Color(color.r * 1.15, color.g * 1.15, color.b * 1.15, .68 if is_action_button else .92)
+	button.add_theme_stylebox_override("hover", hover)
 	var pressed := StyleBoxFlat.new()
-	pressed.bg_color = Color("e5a45b")
-	pressed.border_color = Color("fff0c4")
+	pressed.bg_color = Color("e7a75d")
+	pressed.border_color = Color("fff4ce")
 	pressed.set_border_width_all(3 if is_primary_fire else 2)
 	pressed.corner_radius_top_left = corner_radius
 	pressed.corner_radius_top_right = corner_radius
 	pressed.corner_radius_bottom_left = corner_radius
 	pressed.corner_radius_bottom_right = corner_radius
+	pressed.shadow_color = Color("ffb35e")
+	pressed.shadow_size = 9 if is_action_button else 3
 	button.add_theme_stylebox_override("pressed", pressed)
 	return button
+
+func _button_display_text(text_value: String) -> String:
+	match text_value:
+		"FIRE":
+			return "◎\nFIRE"
+		"AIM":
+			return "⌾\nAIM"
+		"RELOAD":
+			return "↻\nRELOAD"
+		"JUMP":
+			return "↑\nJUMP"
+		"CROUCH":
+			return "↓\nCROUCH"
+		"SWAP":
+			return "⇄\nSWAP"
+		_:
+			return text_value
