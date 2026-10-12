@@ -36,8 +36,8 @@ func _initialize() -> void:
 		["03_emissive_crates", Vector3(1.6, 1.55, 9.0), Vector3(-2, 1.0, 5.0)],
 		["04_outpost_facade", Vector3(-8.5, 1.65, 6.0), Vector3(-8.5, 3.0, -.9)],
 		["05_mesa_horizon", Vector3(2.0, 2.0, 18.0), Vector3(1.0, 7.0, -70.0)],
-		["06_raider_fifteen_m", Vector3(0, 1.62, 13), Vector3(4.0, 1.35, .3)],
-		["07_raider_five_m", Vector3(1.5, 1.62, 7.8), Vector3(1.5, 1.35, 2.8)],
+		["06_raider_fifteen_m", Vector3(32.0, 1.62, 39.0), Vector3(32.0, 1.35, 24.0)],
+		["07_raider_five_m", Vector3(32.0, 1.62, 29.0), Vector3(32.0, 1.35, 24.0)],
 		["08_rifle_idle", Vector3(0, 1.62, 13), Vector3(0, 1.5, -15)],
 		["09_ads", Vector3(-2.0, 1.62, 13), Vector3(-2.0, 1.4, -22)],
 		["10_firing", Vector3(0, 1.62, 13), Vector3(0, 1.45, -20)],
@@ -49,11 +49,10 @@ func _initialize() -> void:
 		# lane only for the two mandated distance checks. Other frames keep the
 		# ambient wave scene uncluttered.
 		showcase_raider.visible = false
-		if entry[0] == "06_raider_fifteen_m":
-			showcase_raider.global_position = Vector3(4.0, .15, .3)
-			showcase_raider.visible = true
-		elif entry[0] == "07_raider_five_m":
-			showcase_raider.global_position = Vector3(1.5, .15, 2.8)
+		if entry[0] == "06_raider_fifteen_m" or entry[0] == "07_raider_five_m":
+			# The east-south service yard is deliberately open visual ground; it
+			# gives the same real Raider a clear silhouette at both mandated ranges.
+			showcase_raider.global_position = Vector3(32.0, .15, 24.0)
 			showcase_raider.visible = true
 		_set_view(entry[1], entry[2])
 		if entry[0] == "09_ads":
