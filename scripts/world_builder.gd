@@ -10,9 +10,11 @@ const WOOD_TEXTURE := "res://assets/textures/weathered_crate_512.png"
 const ROCK_TEXTURE := "res://assets/textures/rock_strata_512.png"
 const ASPHALT_TEXTURE := "res://assets/textures/asphalt_512.png"
 const DETAIL_NORMAL := "res://assets/textures/terrain_detail_normal_512.png"
+const CINEMATIC_GRADE_SHADER := "res://assets/shaders/cinematic_grade.gdshader"
 
 static func build(root: Node3D) -> void:
 	_build_environment(root)
+	_build_cinematic_presentation(root)
 	# Texture tints stay deliberately brighter than the source maps. The maps hold
 	# the micro-detail while these values preserve readable teal/orange separation
 	# under the warm, low-angle key light.
@@ -62,6 +64,7 @@ static func set_presentation_quality(root: Node3D, effects_enabled: bool, adapti
 	var dust := root.get_node_or_null("Ambient dust motes") as GPUParticles3D
 	if dust != null:
 		dust.emitting = effects_enabled and quality_tier != "LOW"
+	_apply_cinematic_quality(root, effects_enabled, adaptive_reduced, quality_tier)
 
 static func set_wave_atmosphere(root: Node3D, wave_number: int) -> void:
 	var env_node := root.get_node_or_null("Dusty sunset environment") as WorldEnvironment
@@ -84,6 +87,47 @@ static func set_wave_atmosphere(root: Node3D, wave_number: int) -> void:
 	if embers != null:
 		embers.emitting = wave >= 2
 		embers.amount = 18 * wave
+
+static func _build_cinematic_presentation(root: Node3D) -> void:
+	# Layer zero grades only the rendered world. The layer-one tactical HUD stays
+	# crisp, readable and fully interactive above this post pass.
+	var presentation_layer := CanvasLayer.new()
+	presentation_layer.name = "Cinematic presentation"
+	presentation_layer.layer = 0
+	root.add_child(presentation_layer)
+	var grade := ColorRect.new()
+	grade.name = "Cinematic grade overlay"
+	grade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	grade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var shader_material := ShaderMaterial.new()
+	shader_material.shader = load(CINEMATIC_GRADE_SHADER)
+	shader_material.set_shader_parameter("grade_strength", 0.72)
+	shader_material.set_shader_parameter("vignette_strength", 0.24)
+	shader_material.set_shader_parameter("grain_strength", 0.022)
+	shader_material.set_shader_parameter("chromatic_strength", 0.22)
+	grade.material = shader_material
+	presentation_layer.add_child(grade)
+
+static func _apply_cinematic_quality(root: Node3D, effects_enabled: bool, adaptive_reduced: bool, quality_tier: String) -> void:
+	var grade := root.get_node_or_null("Cinematic presentation/Cinematic grade overlay") as ColorRect
+	if grade == null or not (grade.material is ShaderMaterial):
+		return
+	var material := grade.material as ShaderMaterial
+	var tier_strength := {
+		"LOW": 0.34,
+		"MEDIUM": 0.52,
+		"HIGH": 0.72,
+		"ULTRA": 0.86,
+	}
+	var strength := float(tier_strength.get(quality_tier, 0.72))
+	if not effects_enabled:
+		strength *= 0.56
+	if adaptive_reduced:
+		strength *= 0.72
+	material.set_shader_parameter("grade_strength", strength)
+	material.set_shader_parameter("vignette_strength", 0.10 if quality_tier == "LOW" else (0.18 if adaptive_reduced else 0.24))
+	material.set_shader_parameter("grain_strength", 0.004 if quality_tier == "LOW" else (0.011 if adaptive_reduced else 0.022))
+	material.set_shader_parameter("chromatic_strength", 0.0 if quality_tier in ["LOW", "MEDIUM"] else (0.10 if adaptive_reduced else 0.22))
 
 static func _build_environment(root: Node3D) -> void:
 	var world_env := WorldEnvironment.new()
