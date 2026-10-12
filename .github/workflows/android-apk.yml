@@ -20,6 +20,12 @@ on:
 permissions:
   contents: write
 
+# The capture step writes evidence back to this branch. Serialize workflow runs
+# so two valid screenshot sets can never race while rebasing their binary files.
+concurrency:
+  group: operation-redline-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-and-smoke-test:
     name: Android APK and emulator smoke test
