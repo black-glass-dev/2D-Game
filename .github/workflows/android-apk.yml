@@ -211,6 +211,9 @@ jobs:
           rm -f screenshots/before/*.png screenshots/after/*.png
           cp build/screenshots/before/*.png screenshots/before/
           cp build/screenshots/after/*.png screenshots/after/
+          # The APK version step intentionally edits this tracked export preset.
+          # Do not let that ephemeral CI-only version block a screenshot rebase.
+          git restore export_presets.cfg
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add screenshots
