@@ -17,53 +17,7 @@ ERROR: Condition "status < 0" is true. Returning: ERR_CANT_OPEN
 WARNING: All audio drivers failed, falling back to the dummy driver.
      at: initialize (servers/audio/audio_server.cpp:258)
 
-WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
-If you want to set size, change the anchors or consider using set_deferred().
-     at: _set_size (scene/gui/control.cpp:1519)
-     GDScript backtrace (most recent call first):
-         [0] _build_hud (res://scripts/main.gd:336)
-         [1] _ready (res://scripts/main.gd:106)
-WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
-If you want to set size, change the anchors or consider using set_deferred().
-     at: _set_size (scene/gui/control.cpp:1519)
-     GDScript backtrace (most recent call first):
-         [0] _build_damage_edges (res://scripts/main.gd:427)
-         [1] _build_hud (res://scripts/main.gd:412)
-         [2] _ready (res://scripts/main.gd:106)
-WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
-If you want to set size, change the anchors or consider using set_deferred().
-     at: _set_size (scene/gui/control.cpp:1519)
-     GDScript backtrace (most recent call first):
-         [0] _build_damage_edges (res://scripts/main.gd:427)
-         [1] _build_hud (res://scripts/main.gd:412)
-         [2] _ready (res://scripts/main.gd:106)
-WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
-If you want to set size, change the anchors or consider using set_deferred().
-     at: _set_size (scene/gui/control.cpp:1519)
-     GDScript backtrace (most recent call first):
-         [0] _build_damage_edges (res://scripts/main.gd:427)
-         [1] _build_hud (res://scripts/main.gd:412)
-         [2] _ready (res://scripts/main.gd:106)
-WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
-If you want to set size, change the anchors or consider using set_deferred().
-     at: _set_size (scene/gui/control.cpp:1519)
-     GDScript backtrace (most recent call first):
-         [0] _build_damage_edges (res://scripts/main.gd:427)
-         [1] _build_hud (res://scripts/main.gd:412)
-         [2] _ready (res://scripts/main.gd:106)
-GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/before/01_spawn_ground.png result=0 size=800x450
-GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/before/02_main_lane.png result=0 size=800x450
-GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/before/03_emissive_crates.png result=0 size=800x450
-GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/before/04_outpost_facade.png result=0 size=800x450
-GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/before/05_mesa_horizon.png result=0 size=800x450
-GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/before/06_raider_fifteen_m.png result=0 size=800x450
-GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/before/07_raider_five_m.png result=0 size=800x450
-GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/before/08_rifle_idle.png result=0 size=800x450
-GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/before/09_ads.png result=0 size=800x450
-GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/before/10_firing.png result=0 size=800x450
-GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/before/11_low_hp.png result=0 size=800x450
-GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/before/12_reload_crouch.png result=0 size=800x450
-WARNING: 4 ObjectDB instances were leaked at exit (run with `--verbose` for details).
-   at: cleanup (core/object/object.cpp:2536)
-ERROR: 1 resources still in use at exit (run with --verbose for details).
-   at: clear (core/io/resource.cpp:822)
+SCRIPT ERROR: Parse Error: Cannot find member "CARBINE_ADS_FOV" in base "OutpostPlayer".
+          at: GDScript::reload (/home/runner/work/2D-Game/2D-Game/tools/capture_graphics.gd:63)
+ERROR: Failed to load script "/home/runner/work/2D-Game/2D-Game/tools/capture_graphics.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript_resource_format.cpp:46)
