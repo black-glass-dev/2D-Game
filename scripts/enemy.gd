@@ -169,7 +169,11 @@ func _update_visual_motion(delta: float) -> void:
 		left_leg.rotation.x = lerpf(left_leg.rotation.x, gait, 1.0 - exp(-delta * 13.0))
 	if right_leg != null:
 		right_leg.rotation.x = lerpf(right_leg.rotation.x, -gait, 1.0 - exp(-delta * 13.0))
-	var aim_pose := -.48 + sin(walk_phase) * minf(speed * .08, .06) + hit_react * .22
+	# The arm roots begin at the shoulders. A proper shouldered-carbine pose must
+	# rotate them decisively forward rather than leaving the old mannequin-like
+	# vertical silhouette. The compact procedural rig still blends walk, hit and
+	# reload movement without a per-Raider AnimationPlayer allocation.
+	var aim_pose := -1.12 + sin(walk_phase) * minf(speed * .08, .06) + hit_react * .22
 	if left_arm != null:
 		left_arm.rotation.x = lerpf(left_arm.rotation.x, aim_pose + gait * .35 + reload_motion * .72, 1.0 - exp(-delta * 15.0))
 	if right_arm != null:
@@ -222,19 +226,31 @@ func _build_model() -> void:
 	hit_light.light_energy = 0.0
 	body_visual.add_child(hit_light)
 	var variant := spawn_index % 3
-	var uniform := _mat([Color("5b6151"), Color("4b5b55"), Color("68554b")][variant], .86, .0)
-	var vest := _mat(Color("1c2a2a"), .66, .15)
-	var accent := _mat([Color("a43e35"), Color("bd4c36"), Color("873632")][variant], .72, .0)
-	var skin := _mat([Color("8c5944"), Color("b07456"), Color("6f463a")][variant], .90, .0)
-	var black := _mat(Color("131d20"), .55, .48)
-	var visor := _mat(Color("1e7777"), .16, .78, Color("4de4d4"), .45)
-	_part_capsule("Torso", Vector3(0, 1.20, 0), .29, .72, uniform)
-	_part_box("Armor plates", Vector3(0, 1.20, -.235), Vector3(.52, .48, .08), vest)
-	_part_box("Faction red shoulder", Vector3(.33, 1.43, 0), Vector3(.12, .18, .26), accent)
-	_part_sphere("Head", Vector3(0, 1.78, 0), .20, skin)
-	_part_capsule("Helmet", Vector3(0, 1.89, 0), .22, .25, vest)
-	_part_box("Ballistic visor", Vector3(0, 1.80, -.19), Vector3(.29, .10, .04), visor)
+	# Dark tactical values maintain a readable Raider silhouette against the
+	# sunlit sand. Each variation retains the same restrained hostile-red accent,
+	# so gameplay readability survives dust and fog without a glowing outline.
+	var uniform := _mat([Color("283a38"), Color("34433c"), Color("423a35")][variant], .82, .0)
+	var vest := _mat(Color("111d20"), .58, .22)
+	var accent := _mat([Color("a4342d"), Color("c14431"), Color("802d30")][variant], .68, .05)
+	var face_wrap := _mat([Color("2c2927"), Color("27312e"), Color("382923")][variant], .94, .0)
+	var black := _mat(Color("0b1215"), .50, .58)
+	var visor := _mat(Color("164d52"), .12, .82, Color("46d7cc"), .55)
+	var plate_edge := _mat(Color("486560"), .50, .34)
+	_part_capsule("Tactical uniform torso", Vector3(0, 1.20, 0), .29, .72, uniform)
+	_part_box("Plate carrier", Vector3(0, 1.20, -.238), Vector3(.54, .50, .09), vest)
+	_part_box("Carrier upper plate", Vector3(0, 1.38, -.292), Vector3(.38, .13, .035), plate_edge)
+	_part_box("Carrier lower plate", Vector3(0, 1.04, -.292), Vector3(.40, .10, .035), plate_edge)
+	for pouch_x in [-.17, 0.0, .17]:
+		_part_box("Front magazine pouch", Vector3(pouch_x, 1.13, -.305), Vector3(.13, .20, .07), black)
+	_part_box("Faction red shoulder", Vector3(.34, 1.46, 0), Vector3(.13, .19, .28), accent)
+	_part_box("Faction red armband", Vector3(-.35, 1.34, -.015), Vector3(.14, .10, .27), accent)
+	_part_capsule("Balaclava head", Vector3(0, 1.79, 0), .205, .40, face_wrap)
+	_part_capsule("Armoured helmet", Vector3(0, 1.91, .01), .235, .27, vest)
+	_part_box("Helmet crown", Vector3(0, 2.03, .01), Vector3(.34, .10, .31), black)
+	_part_box("Ballistic visor", Vector3(0, 1.83, -.205), Vector3(.31, .105, .045), visor)
+	_part_box("Breather mask", Vector3(0, 1.70, -.205), Vector3(.24, .115, .08), black)
 	_part_box("Back radio", Vector3(0, 1.24, .19), Vector3(.24, .33, .10), black)
+	_part_box("Utility belt", Vector3(0, .94, -.01), Vector3(.48, .10, .27), black)
 	left_arm = _limb("Left arm", Vector3(-.34, 1.45, 0), uniform, black)
 	right_arm = _limb("Right arm", Vector3(.34, 1.45, 0), uniform, black)
 	left_leg = _leg("Left leg", Vector3(-.16, .86, 0), uniform, black)
@@ -248,9 +264,10 @@ func _limb(limb_name: String, local_position: Vector3, uniform: Material, glove:
 	limb.name = limb_name
 	limb.position = local_position
 	body_visual.add_child(limb)
-	_part_capsule_on(limb, "Upper arm", Vector3(0, -.18, -.015), .09, .36, uniform)
-	_part_capsule_on(limb, "Forearm", Vector3(0, -.42, -.07), .075, .32, uniform)
-	_part_sphere_on(limb, "Gloved hand", Vector3(0, -.60, -.14), .10, glove)
+	_part_capsule_on(limb, "Uniform upper arm", Vector3(0, -.18, -.015), .09, .36, uniform)
+	_part_sphere_on(limb, "Elbow pad", Vector3(0, -.34, -.04), .098, glove)
+	_part_capsule_on(limb, "Gloved forearm", Vector3(0, -.43, -.07), .075, .32, glove)
+	_part_sphere_on(limb, "Articulated gloved hand", Vector3(0, -.60, -.14), .10, glove)
 	return limb
 
 func _leg(limb_name: String, local_position: Vector3, uniform: Material, boot: Material) -> Node3D:
@@ -259,18 +276,23 @@ func _leg(limb_name: String, local_position: Vector3, uniform: Material, boot: M
 	limb.position = local_position
 	body_visual.add_child(limb)
 	_part_capsule_on(limb, "Trouser leg", Vector3(0, -.25, 0), .115, .52, uniform)
+	_part_sphere_on(limb, "Armoured knee pad", Vector3(0, -.40, -.095), .11, boot)
 	_part_box_on(limb, "Combat boot", Vector3(0, -.57, -.075), Vector3(.17, .15, .30), boot)
 	return limb
 
 func _build_weapon(black: Material, accent: Material) -> void:
 	weapon_root = Node3D.new()
-	weapon_root.name = "Raider carbine"
-	weapon_root.position = Vector3(.20, 1.20, -.34)
+	weapon_root.name = "Raider shouldered carbine"
+	weapon_root.position = Vector3(.20, 1.25, -.37)
 	weapon_root.rotation_degrees = Vector3(-8, 0, 0)
 	body_visual.add_child(weapon_root)
-	_part_box_on(weapon_root, "Carbine receiver", Vector3(0, 0, 0), Vector3(.10, .10, .42), black)
-	_part_box_on(weapon_root, "Carbine handguard", Vector3(0, 0, -.28), Vector3(.08, .08, .25), accent)
-	_part_box_on(weapon_root, "Carbine magazine", Vector3(0, -.13, .04), Vector3(.07, .20, .10), black)
+	_part_box_on(weapon_root, "Carbine stock", Vector3(0, -.01, .24), Vector3(.11, .10, .22), black)
+	_part_box_on(weapon_root, "Carbine receiver", Vector3(0, 0, 0), Vector3(.12, .12, .38), black)
+	_part_box_on(weapon_root, "Carbine red handguard", Vector3(0, 0, -.28), Vector3(.10, .095, .28), accent)
+	_part_box_on(weapon_root, "Carbine top rail", Vector3(0, .08, -.12), Vector3(.045, .025, .48), black)
+	_part_box_on(weapon_root, "Carbine sight", Vector3(0, .13, -.12), Vector3(.08, .08, .11), black)
+	_part_box_on(weapon_root, "Carbine magazine", Vector3(0, -.14, .04), Vector3(.085, .22, .12), black)
+	_part_box_on(weapon_root, "Carbine barrel", Vector3(0, .005, -.53), Vector3(.055, .055, .28), black)
 	weapon_flash = MeshInstance3D.new()
 	weapon_flash.name = "Raider muzzle flash"
 	var flash_mesh := SphereMesh.new()
