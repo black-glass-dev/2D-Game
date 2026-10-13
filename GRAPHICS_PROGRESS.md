@@ -24,8 +24,9 @@ _Last updated: 2026-10-13 (Asia/Dhaka)_
 - [x] WP11 — AUTO/LOW/MEDIUM/HIGH/ULTRA selection, first-launch auto-detect, dynamic 3D resolution and adaptive presentation governor.
 - [x] Screenshot set — genuine renderer captures are committed under `screenshots/before/` and `screenshots/after/`; the CI harness refreshes all 12 required views including explicit 15 m and 5 m Raider frames.
 - [x] Post-package visual polish — terrain normals/height variation, visible window frames, readable sign plaque, weathering scatter/tyre tracks, non-overlapping circular defaults, dynamic crosshair, layered weapon flash, and a more readable Raider tactical front/shouldered-carbine silhouette are rendered in the refreshed genuine after set.
+- [x] Priority ADS repair — the carbine now uses main-camera 75→40° FOV ADS, 0.16-second cubic transitions, 0.45× saved-look multiplier, transparent glass/vignette and an open reflex frame seated below the reticle. No scope SubViewport, opaque panel or filled black lens exists in the mobile aim route; sidearm uses the same safe route at 55°.
 - [ ] Final physical Android validation (the hosted emulator has an infrastructure boot timeout).
 
 ## Next continuation point
 
-The complete source/render work is committed and CI-rendered. The latest full visual candidate is #48 from commit `b6db62c`; its source, Android export, headless startup and all 12 real before/after renderer captures passed. The hosted Android emulator timed out while booting, so a physical Android playthrough is the only remaining gate before a physical-device-final label.
+The complete source/render work is committed and CI-rendered. The latest full visual candidate is #51 from commit `51ba56d`; its source, Android export, headless startup and all 12 real before/after renderer captures passed, including the repaired ADS frame. The hosted Android emulator timed out while booting, so a physical Android playthrough is the only remaining gate before a physical-device-final label.

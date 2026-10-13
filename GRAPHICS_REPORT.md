@@ -41,6 +41,19 @@ A second direct presentation pass was made after reviewing the captured frames r
 
 The source/static/project/native checks, Android export, headless startup and refreshed OpenGL before/after capture all passed in [GitHub Actions run 38355410579](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/38355410579). It generated candidate #48 and refreshed all 12 after frames.
 
+## Priority ADS repair — black-scope fallback eliminated
+
+The black optic failure was traced to the carbine viewmodel's former opaque sight block, not a required second-camera rendering feature. The mobile path now keeps the primary `PlayerCamera` as the only world renderer:
+
+- Carbine ADS uses a `75° → 40°` and back FOV tween (`TRANS_CUBIC`, `EASE_OUT`, `0.16 s`). Sidearm uses `55°` through the same controller.
+- ADS multiplies the saved look sensitivity by `0.45`; it does not overwrite the player's LOOK setting.
+- `assets/shaders/ads_glass.gdshader` is a mouse-ignoring transparent CanvasLayer treatment: a low-alpha glass tint, soft peripheral vignette and non-intercepting plus/ghost-ring reticle. Its center stays transparent and cannot display a second black render target.
+- The old filled holographic box is replaced by an open reflex housing made of two rails, base/brow and a transparent emissive cyan lens. The carbine ADS pose seats this physical frame below the reticle, leaving the actual main-camera world visible at screen centre.
+- Hip reticle is hidden during ADS and restored on release. Reload and weapon swap cancel ADS before their existing actions. Raider nameplates hide only while the player is aiming so labels never cross the reticle.
+- There is intentionally no mobile `SubViewport`, `ViewportTexture`, opaque scope `ColorRect`, or lens watchdog needed on this route. This avoids the former second-render black frame and its fill-rate cost at MEDIUM, HIGH and ULTRA.
+
+The real capture harness performs the same FOV/ADS call used by gameplay and waits for its 0.16-second transition before writing `screenshots/after/09_ads.png`. GitHub Actions run [38379198434](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/38379198434) passed source, Android export, headless startup and all 12 genuine renderer captures for this repair.
+
 ## Quality tiers
 
 | Tier | 3D scale | Presentation budget | Intended target |
