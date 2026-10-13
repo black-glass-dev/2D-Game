@@ -597,16 +597,19 @@ static func _add_sign(root: Node3D) -> void:
 	# A painted metal plaque gives the 3D text a high-contrast weathered backing;
 	# billboard mode keeps the words readable through dust without using a UI label.
 	var plaque := _flat_material(Color("3b2b29"), .72, .30)
-	_box(root, "Redline Outpost painted sign plaque", Vector3(-8.4, 3.34, -0.83), Vector3(6.0, 1.72, .10), plaque, false)
+	# The plaque and text deliberately sit in front of the facade's lintel. This
+	# prevents its trim from clipping letters at oblique gameplay-camera angles.
+	_box(root, "Redline Outpost painted sign plaque", Vector3(-8.4, 3.34, -0.69), Vector3(7.15, 1.72, .10), plaque, false)
 	var outpost_sign := Label3D.new()
 	outpost_sign.name = "REDLINE OUTPOST signage"
-	outpost_sign.text = "REDLINE\nOUTPOST"
-	outpost_sign.font_size = 96
-	outpost_sign.outline_size = 18
+	outpost_sign.text = "REDLINE  OUTPOST"
+	outpost_sign.font_size = 70
+	outpost_sign.outline_size = 12
 	outpost_sign.modulate = Color("fff0c7")
 	outpost_sign.outline_modulate = Color("5d2e2b")
 	outpost_sign.pixel_size = .006
-	outpost_sign.position = Vector3(-8.4, 3.4, -0.90)
+	outpost_sign.position = Vector3(-8.4, 3.38, -0.61)
+	outpost_sign.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	outpost_sign.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	outpost_sign.render_priority = 1
 	root.add_child(outpost_sign)
