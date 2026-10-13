@@ -247,12 +247,13 @@ func _build_model() -> void:
 	_part_box("Faction red shoulder", Vector3(.34, 1.46, 0), Vector3(.13, .19, .28), accent)
 	_part_box("Faction red armband", Vector3(-.35, 1.34, -.015), Vector3(.14, .10, .27), accent)
 	# A compact head stack avoids a floating helmet silhouette at close range:
-	# neck → balaclava → flattened helmet dome → front visor/mask.
-	_part_capsule("Balaclava head", Vector3(0, 1.78, 0), .185, .34, face_wrap)
-	_part_sphere("Armoured helmet dome", Vector3(0, 1.90, .015), .235, vest)
-	_part_box("Helmet crown", Vector3(0, 1.985, .015), Vector3(.33, .075, .30), black)
-	_part_box("Ballistic visor", Vector3(0, 1.83, -.214), Vector3(.31, .105, .045), visor)
-	_part_box("Breather mask", Vector3(0, 1.70, -.205), Vector3(.24, .115, .08), black)
+	# neck → balaclava → low-profile helmet shell → front visor/mask. A shallow
+	# hard shell reads better than a large spherical dome on the mobile camera.
+	_part_sphere("Balaclava head", Vector3(0, 1.78, 0), .17, face_wrap)
+	_part_box("Armoured helmet shell", Vector3(0, 1.915, .018), Vector3(.38, .19, .32), vest)
+	_part_box("Helmet crown", Vector3(0, 2.025, .018), Vector3(.32, .045, .27), black)
+	_part_box("Ballistic visor", Vector3(0, 1.83, -.194), Vector3(.30, .10, .045), visor)
+	_part_box("Breather mask", Vector3(0, 1.70, -.185), Vector3(.24, .115, .08), black)
 	_part_box("Back radio", Vector3(0, 1.24, .19), Vector3(.24, .33, .10), black)
 	_part_box("Utility belt", Vector3(0, .94, -.01), Vector3(.48, .10, .27), black)
 	left_arm = _limb("Left arm", Vector3(-.34, 1.45, 0), uniform, black)

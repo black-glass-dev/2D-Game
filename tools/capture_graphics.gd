@@ -28,6 +28,10 @@ func _initialize() -> void:
 	var showcase_raider := Raider.new()
 	showcase_raider.setup(97)
 	showcase_raider.position = Vector3(0, .15, -2.0)
+	# Capture the Raider's tactical front, exactly as it faces a player during an
+	# encounter. Gameplay normally supplies this yaw through RaiderTactics, but
+	# this deterministic visual harness freezes input before the AI can turn.
+	showcase_raider.rotation_degrees.y = 180.0
 	scene_root.add_child(showcase_raider)
 	await _frames(2)
 	var views := [
