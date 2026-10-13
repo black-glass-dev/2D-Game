@@ -48,23 +48,63 @@ static func build(root: Node3D) -> void:
 	_build_atmosphere_particles(root)
 
 static func set_presentation_quality(root: Node3D, effects_enabled: bool, adaptive_reduced: bool, quality_tier := "HIGH") -> void:
-	var high_quality := quality_tier == "HIGH" or quality_tier == "ULTRA"
+	# A manual tier is a direct visual contract, not an alias for adaptive mode.
+	# AUTO may call this again with adaptive_reduced=true; LOW/MEDIUM/HIGH/ULTRA
+	# always retain the exact budget selected in the settings panel.
+	var tier := quality_tier.to_upper()
+	var high_quality := tier == "HIGH" or tier == "ULTRA"
+	var ultra_quality := tier == "ULTRA"
+	var medium_or_better := tier != "LOW"
+	root.set_meta("redline_quality_tier", tier)
+	root.set_meta("redline_effects_enabled", effects_enabled)
+	root.set_meta("redline_adaptive_reduced", adaptive_reduced)
 	var environment_node := root.get_node_or_null("Dusty sunset environment") as WorldEnvironment
 	if environment_node != null and environment_node.environment != null:
 		var environment := environment_node.environment
-		environment.glow_enabled = effects_enabled and not adaptive_reduced and quality_tier != "LOW"
-		environment.glow_intensity = 0.88 if quality_tier == "ULTRA" else 0.70
-		environment.fog_density = 0.0080 if adaptive_reduced else (0.0061 if high_quality else 0.0052)
-		environment.ssao_enabled = high_quality and not adaptive_reduced
+		environment.glow_enabled = effects_enabled and high_quality and not adaptive_reduced
+		environment.glow_intensity = 0.90 if ultra_quality else 0.66
+		environment.glow_strength = 1.02 if ultra_quality else 0.78
+		environment.ssao_enabled = effects_enabled and high_quality and not adaptive_reduced
+		environment.ssao_radius = 1.65 if ultra_quality else 1.25
+		environment.ssao_intensity = 1.7 if ultra_quality else 1.32
+		var fog_by_tier := {"LOW": 0.0046, "MEDIUM": 0.0052, "HIGH": 0.0061, "ULTRA": 0.0066}
+		environment.fog_density = 0.0080 if adaptive_reduced else float(fog_by_tier.get(tier, 0.0061))
 		environment.adjustment_saturation = 1.06 if effects_enabled else 1.0
 	var sun := root.get_node_or_null("Low desert sun") as DirectionalLight3D
 	if sun != null:
-		sun.shadow_enabled = quality_tier != "LOW" and not adaptive_reduced
-		sun.directional_shadow_max_distance = 72.0 if quality_tier == "ULTRA" else (52.0 if high_quality else 32.0)
+		sun.shadow_enabled = medium_or_better and not adaptive_reduced
+		sun.directional_shadow_max_distance = 70.0 if ultra_quality else (48.0 if high_quality else 28.0)
+		sun.light_angular_distance = 0.85 if ultra_quality else 1.15
 	var dust := root.get_node_or_null("Ambient dust motes") as GPUParticles3D
 	if dust != null:
-		dust.emitting = effects_enabled and quality_tier != "LOW"
-	_apply_cinematic_quality(root, effects_enabled, adaptive_reduced, quality_tier)
+		var dust_amounts := {"LOW": 0, "MEDIUM": 72, "HIGH": 170, "ULTRA": 250}
+		dust.amount = int(dust_amounts.get(tier, 170))
+		dust.emitting = effects_enabled and tier != "LOW" and not adaptive_reduced
+	var embers := root.get_node_or_null("Distant embers") as GPUParticles3D
+	if embers != null and (tier == "LOW" or adaptive_reduced or not effects_enabled):
+		embers.emitting = false
+	_apply_lamp_budget(root, tier, effects_enabled, adaptive_reduced)
+	_apply_scatter_budget(root, tier, adaptive_reduced)
+	_apply_cinematic_quality(root, effects_enabled, adaptive_reduced, tier)
+
+static func _apply_lamp_budget(root: Node3D, tier: String, effects_enabled: bool, adaptive_reduced: bool) -> void:
+	var budget_by_tier := {"LOW": 0, "MEDIUM": 3, "HIGH": 5, "ULTRA": 6}
+	var budget := 0 if adaptive_reduced or not effects_enabled else int(budget_by_tier.get(tier, 5))
+	for lamp_node in root.get_tree().get_nodes_in_group("redline_quality_lamps"):
+		var lamp := lamp_node as OmniLight3D
+		if lamp == null:
+			continue
+		var rank := int(lamp.get_meta("quality_rank", 0))
+		lamp.light_energy = float(lamp.get_meta("base_energy", 1.35)) if rank < budget else 0.0
+
+static func _apply_scatter_budget(root: Node3D, tier: String, adaptive_reduced: bool) -> void:
+	var budget_by_tier := {"LOW": 24, "MEDIUM": 52, "HIGH": 86, "ULTRA": 112}
+	var budget := 18 if adaptive_reduced else int(budget_by_tier.get(tier, 86))
+	for scatter_node in root.get_tree().get_nodes_in_group("redline_quality_scatter"):
+		var mesh := scatter_node as MeshInstance3D
+		if mesh == null:
+			continue
+		mesh.visible = int(mesh.get_meta("quality_rank", 0)) < budget
 
 static func set_wave_atmosphere(root: Node3D, wave_number: int) -> void:
 	var env_node := root.get_node_or_null("Dusty sunset environment") as WorldEnvironment
@@ -80,13 +120,19 @@ static func set_wave_atmosphere(root: Node3D, wave_number: int) -> void:
 	tween.tween_property(env, "fog_density", fog_targets[wave - 1], 2.2)
 	tween.tween_property(env, "fog_light_color", colors[wave - 1], 2.2)
 	tween.tween_property(env, "tonemap_exposure", exposure_targets[wave - 1], 2.2)
+	var tier := str(root.get_meta("redline_quality_tier", "HIGH"))
+	var effects_enabled := bool(root.get_meta("redline_effects_enabled", true))
+	var adaptive_reduced := bool(root.get_meta("redline_adaptive_reduced", false))
+	var particle_multiplier := {"LOW": 0.0, "MEDIUM": .42, "HIGH": .78, "ULTRA": 1.0}
+	var multiplier := float(particle_multiplier.get(tier, .78)) * (.32 if adaptive_reduced else 1.0)
 	var dust := root.get_node_or_null("Ambient dust motes") as GPUParticles3D
 	if dust != null:
-		dust.amount = 120 + wave * 70
+		dust.amount = int((120 + wave * 70) * multiplier)
+		dust.emitting = effects_enabled and tier != "LOW" and not adaptive_reduced
 	var embers := root.get_node_or_null("Distant embers") as GPUParticles3D
 	if embers != null:
-		embers.emitting = wave >= 2
-		embers.amount = 18 * wave
+		embers.emitting = effects_enabled and tier != "LOW" and not adaptive_reduced and wave >= 2
+		embers.amount = int(18 * wave * multiplier)
 
 static func _build_cinematic_presentation(root: Node3D) -> void:
 	# Layer zero grades only the rendered world. The layer-one tactical HUD stays
@@ -392,6 +438,8 @@ static func _build_scatter(root: Node3D, rock: Material, crate: Material, olive:
 		stone.material_override = rock
 		stone.position = Vector3(x, _terrain_height(x, z) + scale * 0.25, z)
 		stone.rotation_degrees = Vector3(0, float(index * 31 % 360), float(index * 17 % 18) - 9.0)
+		stone.add_to_group("redline_quality_scatter")
+		stone.set_meta("quality_rank", index)
 		root.add_child(stone)
 	for position in [Vector3(-43, .48, 8), Vector3(-42, .48, 19), Vector3(31, .48, -20), Vector3(37, .48, -35), Vector3(6, .48, 39)]:
 		_cylinder(root, "Oil drum", position, 0.36, 0.92, 10, olive)
@@ -435,8 +483,9 @@ static func _build_terrain_story_details(root: Node3D, asphalt: Material, rock: 
 		_box(root, "Windblown scrap decal", position, Vector3(1.45, .028, .72), asphalt, false, false)
 
 static func _build_lamps(root: Node3D, metal: Material, glow: Material) -> void:
-	for position in [Vector3(-13, 3.5, -14), Vector3(13, 3.5, -14), Vector3(-23, 3.5, 11), Vector3(22, 3.5, 15), Vector3(-35, 3.5, 14), Vector3(36, 3.5, -27), Vector3(0, 3.5, 36)]:
-		_lamp(root, position, metal, glow)
+	var lamp_positions := [Vector3(-13, 3.5, -14), Vector3(13, 3.5, -14), Vector3(-23, 3.5, 11), Vector3(22, 3.5, 15), Vector3(-35, 3.5, 14), Vector3(36, 3.5, -27), Vector3(0, 3.5, 36)]
+	for index in range(lamp_positions.size()):
+		_lamp(root, lamp_positions[index], metal, glow, index)
 	for z in range(-45, 48, 7):
 		_box(root, "Road guide light", Vector3(0, .24, z), Vector3(.24, .035, 2.6), glow, false)
 
@@ -581,7 +630,7 @@ static func _cylinder(parent: Node3D, label: String, position_value: Vector3, ra
 	visual.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	parent.add_child(visual)
 
-static func _lamp(parent: Node3D, position_value: Vector3, pole_material: Material, glow_material: Material) -> void:
+static func _lamp(parent: Node3D, position_value: Vector3, pole_material: Material, glow_material: Material, quality_rank: int) -> void:
 	_box(parent, "Lamp pole", position_value + Vector3(0, -1.6, 0), Vector3(.16, 3.3, .16), pole_material)
 	_box(parent, "Lamp fixture", position_value, Vector3(.9, .20, .9), glow_material, false)
 	var light := OmniLight3D.new()
@@ -591,6 +640,9 @@ static func _lamp(parent: Node3D, position_value: Vector3, pole_material: Materi
 	light.light_energy = 1.35
 	light.omni_range = 7.5
 	light.omni_attenuation = 1.8
+	light.add_to_group("redline_quality_lamps")
+	light.set_meta("quality_rank", quality_rank)
+	light.set_meta("base_energy", 1.35)
 	parent.add_child(light)
 
 static func _add_sign(root: Node3D) -> void:

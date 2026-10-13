@@ -7,7 +7,7 @@ const SPAWN_POINTS := [
 	Vector3(47, 0.15, 3), Vector3(-48, 0.15, 3)
 ]
 const HUD_LAYOUT_FILE := "user://operation_redline_hud.cfg"
-const HUD_KEYS := ["joystick", "fire", "aim", "reload", "jump", "crouch", "swap", "minimap"]
+const HUD_KEYS := ["joystick", "fire", "fire_mode", "aim", "reload", "jump", "crouch", "swap", "minimap"]
 const ADS_GLASS_SHADER := preload("res://assets/shaders/ads_glass.gdshader")
 
 var player: OutpostPlayer
@@ -45,6 +45,8 @@ var settings_summary: Label
 var aim_button: Button
 var reload_button: Button
 var fire_button: Button
+var fire_mode_button: Button
+var mobile_fire_held := false
 var jump_button: Button
 var crouch_button: Button
 var swap_button: Button
@@ -73,7 +75,7 @@ func _ready() -> void:
 	WorldBuilder.build(self)
 	performance_governor = PerformanceGovernor.new()
 	add_child(performance_governor)
-	performance_governor.configure(self, settings.resolved_quality_tier())
+	performance_governor.configure(self, settings.resolved_quality_tier(), settings.uses_adaptive_quality())
 	player = OutpostPlayer.new()
 	player.position = PLAYER_SPAWN
 	add_child(player)
@@ -125,7 +127,10 @@ func _process(delta: float) -> void:
 		# Android maps every screen press to a mouse click on some devices. Restrict
 		# desktop auto-fire to non-mobile platforms so only the FIRE control shoots.
 		var desktop_mouse := not OS.has_feature("mobile")
-		if desktop_mouse and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		# Desktop retains its existing held-mouse automatic path. On mobile, the
+		# default SINGLE mode fires once per tap; AUTO samples the same held FIRE
+		# button every frame and weapon cooldowns remain the rate authority.
+		if (desktop_mouse and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)) or (settings.fire_mode == "AUTO" and mobile_fire_held):
 			_fire()
 		_set_aim_state(touch_aim or (desktop_mouse and Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)))
 	_update_respawn(delta)
@@ -174,6 +179,23 @@ func _fire() -> void:
 	if active_weapon.has_method("try_fire") and active_weapon.try_fire(player.camera):
 		shots += 1
 		_update_accuracy()
+
+func _on_mobile_fire_down() -> void:
+	mobile_fire_held = true
+	# Both modes answer immediately. AUTO continues on _process while the touch
+	# remains held; SINGLE deliberately stops after this one existing shot.
+	_fire()
+
+func _on_mobile_fire_up() -> void:
+	mobile_fire_held = false
+
+func _toggle_fire_mode() -> void:
+	settings.toggle_fire_mode()
+	mobile_fire_held = false
+	if fire_mode_button != null:
+		fire_mode_button.text = _button_display_text(settings.fire_mode)
+	_set_status("AUTO FIRE" if settings.fire_mode == "AUTO" else "SINGLE FIRE")
+	settings.save_to_disk()
 
 func _update_movement_stick(direction: Vector2, active: bool) -> void:
 	if movement_stick != null:
@@ -503,12 +525,16 @@ func _build_hud() -> void:
 	# First-launch action controls are compact, circular and deliberately spaced
 	# as a right-thumb cluster. Saved player layouts retain their own dimensions.
 	fire_button = _button("FIRE", Vector2.ZERO, Vector2(144, 144), Control.PRESET_TOP_LEFT, Color("a94f3f"), controls_root)
+	fire_mode_button = _button(settings.fire_mode, Vector2.ZERO, Vector2(76, 54), Control.PRESET_TOP_LEFT, Color("45616a"), controls_root)
+	fire_mode_button.name = "Fire mode selector"
 	reload_button = _button("RELOAD", Vector2.ZERO, Vector2(84, 84), Control.PRESET_TOP_LEFT, Color("596b4e"), controls_root)
 	aim_button = _button("AIM", Vector2.ZERO, Vector2(84, 84), Control.PRESET_TOP_LEFT, Color("3d6661"), controls_root)
 	jump_button = _button("JUMP", Vector2.ZERO, Vector2(84, 84), Control.PRESET_TOP_LEFT, Color("4a6370"), controls_root)
 	crouch_button = _button("CROUCH", Vector2.ZERO, Vector2(84, 84), Control.PRESET_TOP_LEFT, Color("6e5f43"), controls_root)
 	swap_button = _button("SWAP", Vector2.ZERO, Vector2(84, 84), Control.PRESET_TOP_LEFT, Color("67556f"), controls_root)
-	fire_button.button_down.connect(_fire)
+	fire_button.button_down.connect(_on_mobile_fire_down)
+	fire_button.button_up.connect(_on_mobile_fire_up)
+	fire_mode_button.pressed.connect(_toggle_fire_mode)
 	reload_button.pressed.connect(_reload_active_weapon)
 	aim_button.pressed.connect(_toggle_aim)
 	jump_button.button_down.connect(_on_jump_button_down)
@@ -518,6 +544,7 @@ func _build_hud() -> void:
 	adjustable_controls = {
 		"joystick": movement_stick,
 		"fire": fire_button,
+		"fire_mode": fire_mode_button,
 		"aim": aim_button,
 		"reload": reload_button,
 		"jump": jump_button,
@@ -699,15 +726,20 @@ func _apply_settings() -> void:
 	if pistol != null:
 		pistol.set_aim_assist_enabled(settings.aim_assist)
 		pistol.set_effects_enabled(settings.screen_effects)
+	if fire_mode_button != null:
+		fire_mode_button.text = _button_display_text(settings.fire_mode)
 	if performance_governor != null:
 		performance_governor.set_effects_requested(settings.screen_effects)
-		performance_governor.set_quality_tier(settings.resolved_quality_tier())
+		# LOW/MEDIUM/HIGH/ULTRA are fixed, player-selected presentation tiers.
+		# Only AUTO may invoke the governor's temporary pressure fallback.
+		performance_governor.set_quality_tier(settings.resolved_quality_tier(), settings.uses_adaptive_quality())
 	_update_settings_summary()
 
 func _update_settings_summary() -> void:
 	if settings_summary != null:
 		var active_tier := performance_governor.display_tier() if performance_governor != null else settings.resolved_quality_tier()
-		settings_summary.text = "LOOK  %.0f%%   •   ASSIST  %s   •   EFFECTS  %s\nQUALITY  %s → %s" % [settings.look_sensitivity * 100.0, "ON" if settings.aim_assist else "OFF", "ON" if settings.screen_effects else "OFF", settings.quality_tier, active_tier]
+		var quality_line := "QUALITY  %s  --  %s" % [settings.quality_tier, active_tier]
+		settings_summary.text = "LOOK  %.0f%%   •   ASSIST  %s   •   EFFECTS  %s\n%s" % [settings.look_sensitivity * 100.0, "ON" if settings.aim_assist else "OFF", "ON" if settings.screen_effects else "OFF", quality_line]
 
 func _build_hud_editor() -> void:
 	editor_surface = Control.new()
@@ -782,6 +814,9 @@ func _apply_default_hud_layout() -> void:
 	# the device canvas. This removes the former SWAP/CROUCH ambiguity.
 	_set_control_rect("joystick", Vector2(34, screen.y - 220), Vector2(176, 176))
 	_set_control_rect("fire", Vector2(screen.x - 174, screen.y - 226), Vector2(144, 144))
+	# Mode switch occupies the gap above-left of FIRE. It never steals the FIRE
+	# hit target and is persisted like the existing mobile controls.
+	_set_control_rect("fire_mode", Vector2(screen.x - 264, screen.y - 282), Vector2(76, 54))
 	_set_control_rect("aim", Vector2(screen.x - 378, screen.y - 112), Vector2(84, 84))
 	_set_control_rect("reload", Vector2(screen.x - 284, screen.y - 112), Vector2(84, 84))
 	_set_control_rect("jump", Vector2(screen.x - 284, screen.y - 210), Vector2(84, 84))
@@ -1023,6 +1058,10 @@ func _button_display_text(text_value: String) -> String:
 		"CROUCH":
 			return "↓\nCROUCH"
 		"SWAP":
-			return "⇄\nSWAP"
+				return "⇄\nSWAP"
+		"SINGLE":
+				return "•\nSINGLE"
+		"AUTO":
+				return "≋\nAUTO"
 		_:
-			return text_value
+				return text_value

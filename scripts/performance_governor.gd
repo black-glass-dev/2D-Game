@@ -1,9 +1,9 @@
 class_name PerformanceGovernor
 extends Node
 
-## Presentation-only adaptive governor. It never changes simulation, controls or
-## waves. Tier defines the initial render budget; sustained pressure can lower
-## 3D scale and expensive lights/shadows after two seconds, then restore safely.
+## Presentation-only governor. Manual LOW/MEDIUM/HIGH/ULTRA selections are
+## locked exactly as selected; only AUTO may reduce presentation after sustained
+## frame pressure. Simulation, controls, waves, damage and ammo are untouched.
 const SAMPLE_INTERVAL := 1.0
 const REDUCE_AFTER := 2.0
 const RESTORE_AFTER := 7.0
@@ -12,34 +12,40 @@ var world_root: Node3D
 var effects_requested := true
 var requested_tier := "HIGH"
 var resolved_tier := "HIGH"
+var adaptive_enabled := false
 var adaptive_reduced := false
 var sample_left := SAMPLE_INTERVAL
 var low_fps_time := 0.0
 var high_fps_time := 0.0
 
-func configure(root: Node3D, tier := "HIGH") -> void:
+func configure(root: Node3D, tier := "HIGH", allow_adaptive := false) -> void:
 	world_root = root
 	requested_tier = tier
 	resolved_tier = tier
+	adaptive_enabled = allow_adaptive
 	_apply_presentation()
 
 func set_effects_requested(enabled: bool) -> void:
 	effects_requested = enabled
 	_apply_presentation()
 
-func set_quality_tier(tier: String) -> void:
+func set_quality_tier(tier: String, allow_adaptive := false) -> void:
 	requested_tier = tier
 	resolved_tier = tier
+	adaptive_enabled = allow_adaptive
 	adaptive_reduced = false
 	low_fps_time = 0.0
 	high_fps_time = 0.0
+	sample_left = SAMPLE_INTERVAL
 	_apply_presentation()
 
 func display_tier() -> String:
-	return resolved_tier + (" • ADAPT" if adaptive_reduced else "")
+	if not adaptive_enabled:
+		return resolved_tier
+	return resolved_tier + (" • OPTIMIZING" if adaptive_reduced else " • ADAPTIVE")
 
 func _process(delta: float) -> void:
-	if world_root == null:
+	if world_root == null or not adaptive_enabled:
 		return
 	sample_left -= delta
 	if sample_left > 0.0:
@@ -74,11 +80,13 @@ func _apply_presentation() -> void:
 		viewport.scaling_3d_scale = _render_scale()
 
 func _render_scale() -> float:
+	# Fixed manual tiers are predictable and visibly distinct. AUTO begins at
+	# the detected tier, then is the only path permitted to shed 3D scale.
 	var scale_by_tier := {
 		"LOW": .68,
-		"MEDIUM": .80,
-		"HIGH": .92,
+		"MEDIUM": .75,
+		"HIGH": .90,
 		"ULTRA": 1.0,
 	}
-	var scale_value := float(scale_by_tier.get(resolved_tier, .92))
-	return maxf(.62, scale_value - (.12 if adaptive_reduced else 0.0))
+	var scale_value := float(scale_by_tier.get(resolved_tier, .90))
+	return maxf(.60, scale_value - (.10 if adaptive_reduced else 0.0))
