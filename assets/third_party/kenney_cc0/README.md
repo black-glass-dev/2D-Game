@@ -13,14 +13,14 @@ The source mirror describes its collection as Kenney art released under CC0 and 
 | --- | --- | --- |
 | `weapons/pistol.glb` | `3d/weapon/pistol.glb` | Player sidearm detail mesh |
 | `weapons/machinegun.glb` | `3d/weapon/machinegun.glb` | Player rifle and raider carbine detail mesh |
-| `characters/arena_soldier.glb`, `characters/Textures/colormap.png` | `3d/mini-arena/character-soldier.glb`, `3d/mini-arena/Textures/colormap.png` | Animated raider base character |
-| `outpost/{wall_window,wall_garage,roof_metal,barrier_damaged,truck_cargo}.glb` and `outpost/Textures/*` | `3d/retro-urban/` equivalents and `3d/retro-urban/Textures/*` | Conventional outpost architecture, barriers and cargo trucks |
+| `characters/{blocky_smuggler_a,blocky_smuggler_b}.glb`, `characters/Textures/{texture-a,texture-b}.png` | `3d/blocky-characters/character-{a,b}.glb`, `3d/blocky-characters/Textures/texture-{a,b}.png` | Animated hostile-smuggler base character variants |
+| `outpost/{wall_window,wall_garage,roof_metal,barrier_damaged}.glb` and their `outpost/Textures/*` dependencies | `3d/retro-urban/` equivalents and `3d/retro-urban/Textures/*` | Conventional outpost architecture and fortified barriers |
 | `props/{barrel,metal_panel,rock_sand_a,rock_sand_b}.glb`, `props/Textures/colormap.png` | `3d/survival/` equivalents and `3d/survival/Textures/colormap.png` | Fuel drums, field repairs and desert rocks |
 
 The relative texture folders are required by the GLB image references and are intentionally kept next to the relevant models. No commercial-game art, characters, maps, brands, or logos are included.
 
 ## Scope selection
 
-Only conventional 2000-era-adjacent elements were selected: pistols/carbines, a human soldier, industrial walls/garage bays, sheet-metal roofs, concrete barriers, cargo trucks, fuel drums, metal repairs and desert rocks. No Kenney space, blaster, alien, laser, or futuristic environment assets are used by Operation Redline.
+Only conventional 2000-era-adjacent elements were selected: pistols/carbines, two human smuggler variants, industrial walls/garage bays, sheet-metal roofs, concrete barriers, fuel drums, metal repairs and desert rocks. No Kenney space, blaster, alien, laser, or futuristic environment assets are used by Operation Redline.
 
 Attribution is not required by CC0, but Operation Redline credits Kenney voluntarily. See the repository-level `CREDITS.md` for the concise product credit.

@@ -15,7 +15,7 @@ The following assets were authored specifically for this repository and are incl
 
 ### Kenney — CC0 1.0 Universal
 
-The project vendors a deliberately small set of conventional low-poly models from the Kenney asset library, credited voluntarily to **Kenney / kenney.nl**. They are used for the player weapon details, raider base character, outpost wall/garage/roof modules, cargo trucks, barriers, fuel drums, sheet-metal repairs and desert rocks.
+The project vendors a deliberately small set of conventional low-poly models from the Kenney asset library, credited voluntarily to **Kenney / kenney.nl**. They are used for the player weapon details, hostile-smuggler character variants, outpost wall/garage/roof modules, barriers, fuel drums, sheet-metal repairs and desert rocks.
 
 - **License:** [Creative Commons Zero 1.0 Universal (CC0)](https://creativecommons.org/publicdomain/zero/1.0/)
 - **Auditable source/pin:** `shorepine/kenney` commit `3694c6879e487c108f55677be7dd2ca75b07cc3b`

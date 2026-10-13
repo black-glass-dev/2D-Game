@@ -13,9 +13,12 @@ const SIGHT_CHECK_INTERVAL := 0.22
 const GRAVITY := 18.0
 const RADAR_NEAR_RANGE := 22.0
 
-# Conventional low-poly character and carbine from Kenney's CC0 library.
+# Conventional low-poly smuggler characters and carbine from Kenney's CC0 library.
 # Source/provenance: assets/third_party/kenney_cc0/README.md.
-const KENNEY_SOLDIER_SCENE := preload("res://assets/third_party/kenney_cc0/characters/arena_soldier.glb")
+const KENNEY_SMUGGLER_SCENES := [
+	preload("res://assets/third_party/kenney_cc0/characters/blocky_smuggler_a.glb"),
+	preload("res://assets/third_party/kenney_cc0/characters/blocky_smuggler_b.glb"),
+]
 const KENNEY_MACHINEGUN_SCENE := preload("res://assets/third_party/kenney_cc0/weapons/machinegun.glb")
 
 var health := MAX_HEALTH
@@ -43,7 +46,7 @@ var footstep_dust: GPUParticles3D
 var muzzle_flash_left := 0.0
 var hit_react := 0.0
 var reload_motion := 0.0
-var imported_soldier: Node3D
+var imported_smuggler: Node3D
 var imported_animator: AnimationPlayer
 var imported_animation := ""
 
@@ -165,7 +168,7 @@ func _update_visual_motion(delta: float) -> void:
 	if body_visual == null or not active:
 		return
 	var speed := Vector2(velocity.x, velocity.z).length()
-	if imported_soldier != null:
+	if imported_smuggler != null:
 		# The source includes authored hold/walk/shoot clips; use them rather than
 		# posing a robot-like primitive limb rig. Animation is cosmetic only.
 		if muzzle_flash_left > 0.0:
@@ -257,10 +260,10 @@ func _build_model() -> void:
 	var accent := _mat([Color("a4342d"), Color("c14431"), Color("802d30")][variant], .68, .05)
 	var face_wrap := _mat([Color("2c2927"), Color("27312e"), Color("382923")][variant], .94, .0)
 	var black := _mat(Color("0b1215"), .50, .58)
-	# The imported Kenney soldier is a genuinely modeled, textured character,
+	# The imported Kenney CC0 smuggler is a genuinely modeled, textured character,
 	# replacing the old all-primitive tactical mannequin. Keep a small red
 	# armband only as an original gameplay-identification affordance.
-	if _build_imported_soldier(accent):
+	if _build_imported_smuggler(accent):
 		_build_weapon(black, accent)
 		_build_footstep_dust()
 		_build_nameplate()
@@ -296,18 +299,20 @@ func _build_model() -> void:
 	_build_footstep_dust()
 	_build_nameplate()
 
-func _build_imported_soldier(accent: Material) -> bool:
-	var scene_visual := KENNEY_SOLDIER_SCENE.instantiate() as Node3D
+func _build_imported_smuggler(accent: Material) -> bool:
+	var source_index := spawn_index % KENNEY_SMUGGLER_SCENES.size()
+	var source_scene := KENNEY_SMUGGLER_SCENES[source_index] as PackedScene
+	var scene_visual := source_scene.instantiate() as Node3D if source_scene != null else null
 	if scene_visual == null:
 		return false
-	imported_soldier = scene_visual
-	imported_soldier.name = "Kenney CC0 armed raider"
-	# The source character is stylised/proportional for pixel art. This authored
-	# non-uniform display scale keeps a readable adult human silhouette inside the
-	# existing 1.75 m collider without changing navigation or hitboxes.
-	imported_soldier.scale = Vector3(.78, 2.14, .95)
-	body_visual.add_child(imported_soldier)
-	imported_animator = _find_animation_player(imported_soldier)
+	imported_smuggler = scene_visual
+	imported_smuggler.name = "Kenney CC0 blocky smuggler"
+	# These two full-height, textured 128px-style character variants have a
+	# human 2 m silhouette at native scale. They replace the previous robot-like
+	# raider without touching collision, navigation or headshot hitboxes.
+	imported_smuggler.scale = Vector3.ONE
+	body_visual.add_child(imported_smuggler)
+	imported_animator = _find_animation_player(imported_smuggler)
 	_set_imported_animation("holding-both")
 	_part_box("Raider faction armband", Vector3(-.34, 1.37, -.01), Vector3(.15, .11, .27), accent)
 	return true
@@ -333,6 +338,12 @@ func _set_imported_animation(short_name: String) -> void:
 		return
 	imported_animator.play(animation_name, .12)
 	imported_animation = animation_name
+
+func _apply_imported_material(node: Node, material: Material) -> void:
+	if node is MeshInstance3D:
+		(node as MeshInstance3D).material_override = material
+	for child in node.get_children():
+		_apply_imported_material(child, material)
 
 func _limb(limb_name: String, local_position: Vector3, uniform: Material, glove: Material) -> Node3D:
 	var limb := Node3D.new()
@@ -361,14 +372,15 @@ func _build_weapon(black: Material, accent: Material) -> void:
 	weapon_root.position = Vector3(.20, 1.25, -.37)
 	weapon_root.rotation_degrees = Vector3(-8, 0, 0)
 	body_visual.add_child(weapon_root)
-	if imported_soldier != null:
+	if imported_smuggler != null:
 		var imported_carbine := KENNEY_MACHINEGUN_SCENE.instantiate() as Node3D
 		if imported_carbine != null:
 			imported_carbine.name = "Kenney CC0 conventional carbine"
 			# Kenney's machinegun model is a compact real-world-style service weapon
 			# pointing along local -Z, matching the existing muzzle/effects contract.
 			imported_carbine.position = Vector3(-.075, -.045, -.13)
-			imported_carbine.scale = Vector3(1.28, 1.28, 1.28)
+			imported_carbine.scale = Vector3(1.12, 1.12, 1.12)
+			_apply_imported_material(imported_carbine, black)
 			weapon_root.add_child(imported_carbine)
 	else:
 		_part_box_on(weapon_root, "Carbine stock", Vector3(0, -.01, .24), Vector3(.11, .10, .22), black)

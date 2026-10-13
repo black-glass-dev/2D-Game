@@ -19,7 +19,6 @@ const KENNEY_WALL_WINDOW := preload("res://assets/third_party/kenney_cc0/outpost
 const KENNEY_WALL_GARAGE := preload("res://assets/third_party/kenney_cc0/outpost/wall_garage.glb")
 const KENNEY_ROOF_METAL := preload("res://assets/third_party/kenney_cc0/outpost/roof_metal.glb")
 const KENNEY_BARRIER := preload("res://assets/third_party/kenney_cc0/outpost/barrier_damaged.glb")
-const KENNEY_CARGO_TRUCK := preload("res://assets/third_party/kenney_cc0/outpost/truck_cargo.glb")
 const KENNEY_BARREL := preload("res://assets/third_party/kenney_cc0/props/barrel.glb")
 const KENNEY_METAL_PANEL := preload("res://assets/third_party/kenney_cc0/props/metal_panel.glb")
 const KENNEY_SAND_ROCK_A := preload("res://assets/third_party/kenney_cc0/props/rock_sand_a.glb")
@@ -29,8 +28,8 @@ static func build(root: Node3D) -> void:
 	_build_environment(root)
 	_build_cinematic_presentation(root)
 	# Texture tints stay deliberately brighter than the source maps. The maps hold
-	# the micro-detail while these values preserve readable teal/orange separation
-	# under the warm, low-angle key light.
+	# the micro-detail while these values preserve readable sun-bleached desert
+	# separation under the warm, low-angle key light.
 	var sand := _pbr_material(SAND_TEXTURE, Color("efb677"), 0.91, 0.0, 7.5)
 	var concrete := _pbr_material(CONCRETE_TEXTURE, Color("b9cac2"), 0.72, 0.08, 2.0)
 	var metal := _pbr_material(METAL_TEXTURE, Color("a4beb3"), 0.46, 0.62, 3.0)
@@ -208,7 +207,8 @@ static func _build_environment(root: Node3D) -> void:
 	var env := Environment.new()
 	var sky := Sky.new()
 	var sky_material := ProceduralSkyMaterial.new()
-	sky_material.sky_top_color = Color("1b596b")
+	# Desaturated desert haze replaces the prior teal cinematic cast.
+	sky_material.sky_top_color = Color("526f7c")
 	sky_material.sky_horizon_color = Color("eda06d")
 	sky_material.sky_curve = 0.14
 	sky_material.sky_energy_multiplier = 0.82
@@ -221,7 +221,7 @@ static func _build_environment(root: Node3D) -> void:
 	env.background_mode = Environment.BG_SKY
 	env.sky = sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	env.ambient_light_color = Color("6aaab3")
+	env.ambient_light_color = Color("8b9991")
 	env.ambient_light_energy = 0.62
 	env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
@@ -462,10 +462,8 @@ static func _build_kenney_outpost_dressing(root: Node3D) -> void:
 	_kenney_prop(root, "Kenney radio shed metal roof", KENNEY_ROOF_METAL, Vector3(9.0, 3.55, -8.0), Vector3(7.0, 1.0, 6.0), 0.0, 0)
 	_kenney_prop(root, "Kenney checkpoint canopy roof", KENNEY_ROOF_METAL, Vector3(-12.0, 4.55, 36.0), Vector3(6.6, 1.0, 6.6), 0.0, 0)
 
-	# Cargo / fortified route: recurring low-poly objects create a real logistics
-	# story without replacing collision or pathfinding with imported geometry.
-	_kenney_prop(root, "Kenney parked cargo truck", KENNEY_CARGO_TRUCK, Vector3(-35.0, .12, 14.0), Vector3(4.45, 4.45, 4.45), 0.0, 0)
-	_kenney_prop(root, "Kenney smuggler cargo truck", KENNEY_CARGO_TRUCK, Vector3(25.0, .12, 25.0), Vector3(4.10, 4.10, 4.10), 180.0, 0)
+	# Fortified routes use field barriers, fuel and repairs without replacing
+	# collision or pathfinding with imported geometry.
 	for barrier_data in [
 		[Vector3(2.0, .10, 38.7), 0.0], [Vector3(5.0, .10, 38.7), 0.0],
 		[Vector3(11.0, .10, 38.7), 0.0], [Vector3(-24.0, .10, 29.0), 90.0],

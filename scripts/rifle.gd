@@ -277,11 +277,13 @@ func _build_model() -> void:
 	gun_root.name = "Detailed first-person service rifle"
 	gun_root.position = Vector3(0.32, -0.28, -0.56)
 	add_child(gun_root)
-	var gunmetal := _mat(Color("2b3838"), 0.42, 0.72)
-	var worn_metal := _mat(Color("657469"), 0.48, 0.64)
-	var polymer := _mat(Color("121b1d"), 0.88, 0.06)
-	var olive := _mat(Color("596447"), 0.72, 0.18)
-	var brass := _mat(Color("b98b48"), 0.42, 0.72)
+	# Restrained black/olive/steel values keep the service weapon grounded in a
+	# circa-2000 outpost instead of the old high-teal, high-metallic sci-fi read.
+	var gunmetal := _mat(Color("292b27"), 0.62, 0.38)
+	var worn_metal := _mat(Color("505348"), 0.70, 0.28)
+	var polymer := _mat(Color("161714"), 0.93, 0.02)
+	var olive := _mat(Color("494b32"), 0.78, 0.10)
+	var brass := _mat(Color("8e7040"), 0.55, 0.38)
 	var glove := _mat(Color("293534"), 0.86, 0.10)
 	var sleeve := _mat(Color("526353"), 0.92, 0.02)
 	_part("Machined upper receiver", Vector3(0, 0, 0), Vector3(.19, .17, .54), gunmetal)
@@ -348,9 +350,16 @@ func _add_kenney_carbine_detail() -> void:
 	# Its native muzzle points along -Z. This aligns the real external mesh with
 	# the established recoil, casing and muzzle-flash positions while retaining
 	# the intentionally open original reflex sight and first-person hands.
-	imported_carbine.position = Vector3(-.075, -.095, -.39)
-	imported_carbine.scale = Vector3(1.48, 1.48, 1.48)
+	imported_carbine.position = Vector3(-.075, -.17, -.56)
+	imported_carbine.scale = Vector3(.92, .92, .92)
+	_apply_viewmodel_material(imported_carbine, _mat(Color("292b27"), .64, .35))
 	gun_root.add_child(imported_carbine)
+
+func _apply_viewmodel_material(node: Node, material: Material) -> void:
+	if node is MeshInstance3D:
+		(node as MeshInstance3D).material_override = material
+	for child in node.get_children():
+		_apply_viewmodel_material(child, material)
 
 func _build_arms(sleeve: Material, glove: Material) -> void:
 	for side in [-1.0, 1.0]:
@@ -402,13 +411,12 @@ func _cylinder_part_on(parent: Node3D, part_name: String, position_value: Vector
 
 func _lens_material() -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
-	material.albedo_color = Color(0.20, 0.82, 0.78, 0.16)
-	material.metallic = 0.35
-	material.roughness = 0.08
+	# A dim smoked reflex lens reads as field gear in sunlight; it deliberately
+	# has no cyan emissive glow or hologram-like visual language.
+	material.albedo_color = Color(0.31, 0.34, 0.25, 0.14)
+	material.metallic = 0.10
+	material.roughness = 0.32
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	material.emission_enabled = true
-	material.emission = Color("42d9c8")
-	material.emission_energy_multiplier = 0.28
 	material.no_depth_test = true
 	return material
 

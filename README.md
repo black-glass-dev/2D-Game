@@ -84,7 +84,7 @@ See [`docs/TEST_REPORT.md`](docs/TEST_REPORT.md) for the exact checks run, passe
 
 ## Asset provenance
 
-The game combines project-authored 128×128 pixel-art textures/runtime kits with a small, period-appropriate **Kenney CC0** subset: conventional pistols/carbines, an animated human soldier, industrial outpost walls/roofs, cargo trucks, barriers, fuel drums and desert dressing. The exact source paths, pinned source revision and CC0 terms are retained in [`assets/third_party/kenney_cc0/README.md`](assets/third_party/kenney_cc0/README.md); see [`CREDITS.md`](CREDITS.md) for the concise credit. No commercial-game or science-fiction asset kit is used.
+The game combines project-authored 128×128 pixel-art textures/runtime kits with a small, period-appropriate **Kenney CC0** subset: conventional pistols/carbines, animated human-smuggler variants, industrial outpost walls/roofs, barriers, fuel drums and desert dressing. The exact source paths, pinned source revision and CC0 terms are retained in [`assets/third_party/kenney_cc0/README.md`](assets/third_party/kenney_cc0/README.md); see [`CREDITS.md`](CREDITS.md) for the concise credit. No commercial-game or science-fiction asset kit is used.
 
 ## Repository layout
 

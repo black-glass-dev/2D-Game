@@ -251,10 +251,10 @@ func _build_model() -> void:
 	gun_root.name = "Detailed first-person service pistol"
 	gun_root.position = Vector3(0.30, -0.31, -0.49)
 	add_child(gun_root)
-	var slide := _mat(Color("394344"), .40, .72)
-	var worn := _mat(Color("69706a"), .48, .58)
-	var polymer := _mat(Color("161e20"), .90, .05)
-	var brass := _mat(Color("b98b48"), .42, .72)
+	var slide := _mat(Color("31322d"), .60, .38)
+	var worn := _mat(Color("5a5a4d"), .68, .25)
+	var polymer := _mat(Color("171815"), .93, .02)
+	var brass := _mat(Color("8e7040"), .55, .38)
 	var glove := _mat(Color("2a3535"), .84, .08)
 	var sleeve := _mat(Color("526353"), .92, .02)
 	_part("Machined slide", Vector3(0, .045, -.11), Vector3(.145, .12, .47), slide)
@@ -307,9 +307,16 @@ func _add_kenney_pistol_detail() -> void:
 	imported_pistol.name = "Kenney CC0 service pistol detail"
 	# The GLB is a compact conventional sidearm. Its local -Z muzzle is seated
 	# just behind the existing flash so shots retain a single visual source.
-	imported_pistol.position = Vector3(-.075, -.235, -.18)
-	imported_pistol.scale = Vector3(1.52, 1.52, 1.52)
+	imported_pistol.position = Vector3(-.075, -.25, -.27)
+	imported_pistol.scale = Vector3(1.05, 1.05, 1.05)
+	_apply_viewmodel_material(imported_pistol, _mat(Color("31322d"), .64, .34))
 	gun_root.add_child(imported_pistol)
+
+func _apply_viewmodel_material(node: Node, material: Material) -> void:
+	if node is MeshInstance3D:
+		(node as MeshInstance3D).material_override = material
+	for child in node.get_children():
+		_apply_viewmodel_material(child, material)
 
 func _build_arm(sleeve: Material, glove: Material) -> void:
 	var arm := Node3D.new()
