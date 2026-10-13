@@ -56,15 +56,19 @@ The real capture harness performs the same FOV/ADS call used by gameplay and wai
 
 ## Quality tiers
 
-| Tier | 3D scale | Presentation budget | Intended target |
+| Tier | 3D scale | Presentation budget | Governor behaviour |
 |---|---:|---|---|
-| LOW | 68% | no directional shadows/SSAO; bloom/effects constrained | lower-end Android, stable play over image detail |
-| MEDIUM | 80% | tuned shadows, FXAA, modest fog/particles | 30–60 FPS mobile |
-| HIGH | 92% | filmic glow, shadows, SSAO where renderer supports it, full dust | Snapdragon 7-class / 6 GB target at 60 FPS |
-| ULTRA | 100% | largest shadow range and full effects budget | high-end Android/Desktop |
-| AUTO | detected | selects LOW/MEDIUM/HIGH from processor capability, then governor can reduce presentation | first launch |
+| LOW | 68% | no directional shadows, SSAO, lamps, dust or embers; 24 cosmetic scatter meshes | **locked** — no adaptive override |
+| MEDIUM | 75% | 28 m directional shadow, three local lamps, 52 scatter meshes and 42% wave particles; no bloom/SSAO | **locked** — no adaptive override |
+| HIGH | 90% | 48 m soft directional shadow, five local lamps, 86 scatter meshes, bloom, SSAO and 78% wave particles | **locked** — no adaptive override |
+| ULTRA | 100% | 70 m shadow range, six local lamps, all 112 scatter meshes, strongest bloom/SSAO and full particles | **locked** — no adaptive override |
+| AUTO | detected | selects LOW/MEDIUM/HIGH from processor capability | only this mode may lower 3D scale by 10%, turn off expensive lights/shadows and reduce particles after two seconds below target; restores after seven stable seconds |
 
 The governor only changes rendering. It never reduces game simulation, input, enemy count, waves or HUD rate.
+
+## Mobile fire modes
+
+The original tap behaviour remains the default **SINGLE** mode. A new persisted `SINGLE` / `AUTO` selector is placed above-left of the existing FIRE circle, is movable/resizable in the HUD editor, and never changes the FIRE hit area. In SINGLE mode `button_down` calls the existing weapon shot once. In AUTO mode, holding FIRE repeatedly calls that same shot path and each rifle/pistol's existing cooldown remains the sole rate-of-fire authority. Damage, magazines, reserve ammunition, recoil, aim assist and wave/AI logic are shared with the original single shot code rather than duplicated.
 
 ## Verification and screenshot honesty
 

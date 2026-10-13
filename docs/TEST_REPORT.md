@@ -2,9 +2,9 @@
 
 **Date:** 2026-10-13 (Asia/Dhaka)
 
-**Current candidate:** [Operation Redline debug APK candidate #51](https://github.com/islamyousuf032-glitch/2D-Game/releases/tag/apk-candidate-51) (`OperationRedline-debug.apk`, 67,121,011 bytes)
+**Current candidate:** [Operation Redline debug APK candidate #52](https://github.com/islamyousuf032-glitch/2D-Game/releases/tag/apk-candidate-52) (`OperationRedline-debug.apk`, 67,141,491 bytes)
 
-**Status:** **Source checks, Godot import, Android export/signature, headless gameplay startup and real renderer screenshot capture passed. Candidate #51 includes the verified no-black-panel ADS repair and is downloadable as an in-place debug update; the GitHub-hosted Android emulator itself timed out booting, so this build is not labelled as a fully physical-device-tested final release.**
+**Status:** **Source checks, Godot import, Android export/signature, headless gameplay startup and real renderer screenshot capture passed. Candidate #52 adds persistent mobile SINGLE/AUTO fire selection and locked manual quality tiers, while retaining the verified no-black-panel ADS repair. It is downloadable as an in-place debug update; the GitHub-hosted Android emulator itself timed out booting, so this build is not labelled as a fully physical-device-tested final release.**
 
 ## Passed checks
 
@@ -24,11 +24,13 @@
 
 ## Current APK and graphics evidence
 
-- Downloadable candidate #51: [`OperationRedline-debug.apk`](https://github.com/islamyousuf032-glitch/2D-Game/releases/download/apk-candidate-51/OperationRedline-debug.apk)
-- Candidate #51 carries the full original-art graphics pass plus the repaired carbine ADS route: one main-camera world render, a 75→40° cubic FOV transition, 0.45× retained look sensitivity, transparent screen-space glass and an open reflex viewmodel below the reticle. The sidearm uses the same safe route at 55°. There is no mobile scope SubViewport, opaque black panel or filled black lens.
+- Downloadable candidate #52: [`OperationRedline-debug.apk`](https://github.com/islamyousuf032-glitch/2D-Game/releases/download/apk-candidate-52/OperationRedline-debug.apk)
+- Candidate #52 adds the persistent `SINGLE` / `AUTO` HUD selector beside the FIRE cluster. SINGLE preserves one shot per FIRE press; AUTO uses hold-to-fire while retaining each weapon's existing cooldown, ammunition, recoil and damage logic.
+- Manual LOW, MEDIUM, HIGH and ULTRA selection is now locked exactly at the player-selected visual budget. Only AUTO is allowed to temporarily adapt after sustained frame pressure. Tier changes now visibly affect 3D render scale, shadow range, SSAO/bloom, lamps, scatter meshes, dust and embers without changing game simulation.
+- Candidate #52 retains the repaired carbine ADS route: one main-camera world render, a 75→40° cubic FOV transition, 0.45× retained look sensitivity, transparent screen-space glass and an open reflex viewmodel below the reticle. The sidearm uses the same safe route at 55°. There is no mobile scope SubViewport, opaque black panel or filled black lens.
 - Genuine renderer frames are versioned in [`screenshots/before/`](../screenshots/before/) and [`screenshots/after/`](../screenshots/after/), including the repaired `09_ads.png` frame. The implementation and fallback/tier record is in [`GRAPHICS_REPORT.md`](../GRAPHICS_REPORT.md); asset provenance is recorded in [`CREDITS.md`](../CREDITS.md).
-- Candidate #51 completed all source/export/headless/capture gates in GitHub Actions run [`38379198434`](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/38379198434). The workflow stores the signed APK and build evidence artifacts for the run.
-- Candidate #15 established the persistent debug signing certificate and monotonically increasing Android version code. Candidate #51 is in that same signing stream, so it directly updates candidate #15 through #50; only #14-and-earlier candidates require one final uninstall.
+- Candidate #52 completed all source/export/headless/capture gates in GitHub Actions run [`38393797261`](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/38393797261). The workflow stores the signed APK and build evidence artifacts for the run.
+- Candidate #15 established the persistent debug signing certificate and monotonically increasing Android version code. Candidate #52 is in that same signing stream, so it directly updates candidate #15 through #51; only #14-and-earlier candidates require one final uninstall.
 
 ## Physical-device gate
 
