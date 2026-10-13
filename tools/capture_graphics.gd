@@ -58,7 +58,12 @@ func _initialize() -> void:
 		if entry[0] == "09_ads":
 			player.set_aim(true)
 		elif entry[0] == "10_firing":
-			scene_root._fire()
+			# The player stays frozen to keep all comparison frames reproducible.
+			# Trigger the already-equipped weapon itself rather than Main._fire(),
+			# which correctly rejects fire input while the frozen player has no control.
+			# This still runs the real muzzle flash, light, tracer and pooled impacts.
+			if scene_root.active_weapon != null:
+				scene_root.active_weapon.try_fire(camera)
 		elif entry[0] == "11_low_hp":
 			player.take_damage(74, Vector3(-8, 1, 3))
 		elif entry[0] == "12_reload_crouch":
