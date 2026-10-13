@@ -60,7 +60,12 @@ func _initialize() -> void:
 			showcase_raider.visible = true
 		_set_view(entry[1], entry[2])
 		if entry[0] == "09_ads":
-			player.set_ads_fov(OutpostPlayer.CARBINE_ADS_FOV)
+			# The before comparison worktree intentionally predates the ADS controller.
+			# Keep this harness source-compatible with both revisions; the old build
+			# still receives its own historical aim state, while the current build
+			# gets the exact 40-degree carbine FOV.
+			if player.has_method("set_ads_fov"):
+				player.set_ads_fov(40.0)
 			player.set_aim(true)
 		elif entry[0] == "10_firing":
 			# The player stays frozen to keep all comparison frames reproducible.
