@@ -1,6 +1,6 @@
 # Operation Redline — Graphics Overhaul Progress
 
-_Last updated: 2026-10-12 (Asia/Dhaka)_
+_Last updated: 2026-10-13 (Asia/Dhaka)_
 
 ## Verification baseline
 
@@ -23,9 +23,9 @@ _Last updated: 2026-10-12 (Asia/Dhaka)_
 - [x] WP10 — operation loading splash.
 - [x] WP11 — AUTO/LOW/MEDIUM/HIGH/ULTRA selection, first-launch auto-detect, dynamic 3D resolution and adaptive presentation governor.
 - [x] Screenshot set — genuine renderer captures are committed under `screenshots/before/` and `screenshots/after/`; the CI harness refreshes all 12 required views including explicit 15 m and 5 m Raider frames.
-- [~] Post-package visual polish — improved terrain normals/height variation, visible window frames, readable sign plaque, weathering scatter/tyre tracks, non-overlapping circular defaults and dynamic crosshair are locally validated; CI capture/export is pending this commit.
+- [x] Post-package visual polish — terrain normals/height variation, visible window frames, readable sign plaque, weathering scatter/tyre tracks, non-overlapping circular defaults, dynamic crosshair, layered weapon flash, and a more readable Raider tactical front/shouldered-carbine silhouette are rendered in the refreshed genuine after set.
 - [ ] Final physical Android validation (the hosted emulator has an infrastructure boot timeout).
 
 ## Next continuation point
 
-The source is at the post-package visual-polish stage. Wait for the CI import/export/headless/capture result of the visual-polish commit. Inspect the regenerated real renderer frames in `screenshots/after/`, then update this status and `GRAPHICS_REPORT.md` with the candidate/run outcome. A physical Android playthrough remains the only gate before a physical-device-final label.
+The complete source/render work is committed and CI-rendered. The latest full visual candidate is #48 from commit `b6db62c`; its source, Android export, headless startup and all 12 real before/after renderer captures passed. The hosted Android emulator timed out while booting, so a physical Android playthrough is the only remaining gate before a physical-device-final label.

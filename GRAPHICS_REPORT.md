@@ -1,6 +1,6 @@
 # Operation Redline — Full Graphics Overhaul Report
 
-**Date:** 2026-10-12 (Asia/Dhaka)
+**Date:** 2026-10-13 (Asia/Dhaka)
 
 **Engine:** Godot 4.7.2, GL Compatibility renderer
 
@@ -28,17 +28,18 @@ Visual terrain and cosmetic dressing are separate from collision geometry. The o
 | WP10 Load | Original operation loading splash shown while the runtime scene builds | `main.gd` |
 | WP11 Performance | AUTO/LOW/MEDIUM/HIGH/ULTRA setting, mobile auto-detect, dynamic 3D render scale, 2-second load shed, 7-second recovery, tier-based lights/shadows/SSAO/glow/particles | `game_settings.gd`, `performance_governor.gd`, `world_builder.gd`, `main.gd` |
 
-## Post-package visual polish — pending CI renderer capture
+## Post-package visual polish — CI renderer verified
 
 A second direct presentation pass was made after reviewing the captured frames rather than treating the first asset pass as final. It preserves every gameplay node and collision body while improving the weakest visual reads:
 
-- **Terrain:** finite-difference normals now shade the cosmetic dunes correctly; three-frequency dune/ripple height, tyre-track segments, windblown scrap and dry-brush clusters add depth while the original flat collision floor remains authoritative.
-- **Architecture:** window frames were rebuilt as rails/mullions instead of opaque plates that hid the reflective glass; the outpost name now has a high-contrast metal plaque and camera-readable sign treatment.
-- **Materials:** terrain/building tint values were lifted to preserve PBR micro-detail and cool/warm separation under the low sun.
-- **HUD:** new-player defaults use a spaced circular right-thumb cluster, eliminating the old SWAP/CROUCH conflict; all previous saved layouts still load untouched. Action press scale/haptic feedback and a true movement/ADS-responsive four-segment reticle were added.
-- **Evidence:** the real capture harness now places its showcase Raider in clear gameplay lanes at explicit 15 m and 5 m distances and captures short-lived firing/low-health states on the immediate rendered frame.
+- **Terrain:** finite-difference normals shade the cosmetic dunes correctly; three-frequency dune/ripple height, tyre-track segments, windblown scrap and dry-brush clusters add depth while the original flat collision floor remains authoritative.
+- **Architecture:** window frames are rails/mullions instead of opaque plates that hide reflective glass; the outpost name has a high-contrast metal plaque and camera-readable sign treatment.
+- **Materials:** terrain/building tint values preserve PBR micro-detail and cool/warm separation under the low sun.
+- **HUD:** new-player defaults use a spaced circular right-thumb cluster, eliminating the old SWAP/CROUCH conflict; all previous saved layouts still load untouched. Action press scale/haptic feedback and a true movement/ADS-responsive four-segment reticle are active.
+- **Characters/VFX:** Raiders now use a front-facing tactical capture pose, compact helmet/visor/mask stack, plate carrier/pouches/arm bands/knee pads, aimed carbine silhouette and layered rifle/pistol muzzle-flash cores. These changes are presentation-only; their capsule/headshot collision remains unchanged.
+- **Evidence:** the real capture harness places its showcase Raider in clear gameplay lanes at explicit 15 m and 5 m distances, turns its encounter-facing front toward the capture camera, and captures short-lived firing/low-health states on the immediate rendered frame.
 
-The source/static/project/native checks passed locally after this pass. The paragraph above intentionally does **not** assert a renderer result until the next GitHub Actions OpenGL capture completes and replaces the versioned after frames.
+The source/static/project/native checks, Android export, headless startup and refreshed OpenGL before/after capture all passed in [GitHub Actions run 38355410579](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/38355410579). It generated candidate #48 and refreshed all 12 after frames.
 
 ## Quality tiers
 
