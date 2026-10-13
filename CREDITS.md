@@ -13,4 +13,12 @@ The following assets were authored specifically for this repository and are incl
 
 ## Third-party assets
 
-None were imported for the graphics overhaul. The implementation deliberately avoids commercial-game assets, logos, characters and textures. Godot's built-in primitives, materials, fonts and particle renderer are engine features rather than redistributed art assets.
+### Kenney — CC0 1.0 Universal
+
+The project vendors a deliberately small set of conventional low-poly models from the Kenney asset library, credited voluntarily to **Kenney / kenney.nl**. They are used for the player weapon details, raider base character, outpost wall/garage/roof modules, cargo trucks, barriers, fuel drums, sheet-metal repairs and desert rocks.
+
+- **License:** [Creative Commons Zero 1.0 Universal (CC0)](https://creativecommons.org/publicdomain/zero/1.0/)
+- **Auditable source/pin:** `shorepine/kenney` commit `3694c6879e487c108f55677be7dd2ca75b07cc3b`
+- **Vendored subset and exact source paths:** [`assets/third_party/kenney_cc0/README.md`](assets/third_party/kenney_cc0/README.md)
+
+Only real-world/period-appropriate assets were selected. No Kenney sci-fi, space, blaster, alien, laser, commercial-game, branded, or copied material is part of this project. Godot's built-in primitives, materials, fonts and particle renderer remain engine features rather than redistributed art assets.

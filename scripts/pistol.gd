@@ -19,6 +19,8 @@ const RANGE := 62.0
 const BASE_SPREAD := 0.008
 const SHOT_SOUND := preload("res://assets/audio/pistol_shot.wav")
 const RELOAD_SOUND := preload("res://assets/audio/reload_click.wav")
+# Conventional Kenney CC0 sidearm mesh; provenance is recorded beside assets.
+const KENNEY_PISTOL_SCENE := preload("res://assets/third_party/kenney_cc0/weapons/pistol.glb")
 
 var ammo := MAGAZINE_SIZE
 var reserve := STARTING_RESERVE
@@ -263,6 +265,7 @@ func _build_model() -> void:
 	_cylinder_part("Threaded barrel", Vector3(0, .05, -.37), .038, .15, 10, polymer)
 	_part("Front sight", Vector3(0, .125, -.30), Vector3(.034, .05, .04), brass)
 	_part("Rear sight", Vector3(0, .125, .08), Vector3(.070, .05, .04), brass)
+	_add_kenney_pistol_detail()
 	_build_arm(sleeve, glove)
 	muzzle_flash = MeshInstance3D.new()
 	muzzle_flash.name = "Layered pistol muzzle flash"
@@ -296,6 +299,17 @@ func _build_model() -> void:
 	muzzle_light.position = muzzle_flash.position
 	gun_root.add_child(muzzle_light)
 	gun_root.visible = false
+
+func _add_kenney_pistol_detail() -> void:
+	var imported_pistol := KENNEY_PISTOL_SCENE.instantiate() as Node3D
+	if imported_pistol == null:
+		return
+	imported_pistol.name = "Kenney CC0 service pistol detail"
+	# The GLB is a compact conventional sidearm. Its local -Z muzzle is seated
+	# just behind the existing flash so shots retain a single visual source.
+	imported_pistol.position = Vector3(-.075, -.235, -.18)
+	imported_pistol.scale = Vector3(1.52, 1.52, 1.52)
+	gun_root.add_child(imported_pistol)
 
 func _build_arm(sleeve: Material, glove: Material) -> void:
 	var arm := Node3D.new()

@@ -12,6 +12,19 @@ const ASPHALT_TEXTURE := "res://assets/textures/asphalt_512.png"
 const DETAIL_NORMAL := "res://assets/textures/terrain_detail_normal_512.png"
 const CINEMATIC_GRADE_SHADER := "res://assets/shaders/cinematic_grade.gdshader"
 
+# Kenney CC0 retro-urban/survival pieces. These are intentionally conventional
+# industrial, cargo and field-dressing assets — no science-fiction kit pieces.
+# Full source and CC0 provenance live in assets/third_party/kenney_cc0/README.md.
+const KENNEY_WALL_WINDOW := preload("res://assets/third_party/kenney_cc0/outpost/wall_window.glb")
+const KENNEY_WALL_GARAGE := preload("res://assets/third_party/kenney_cc0/outpost/wall_garage.glb")
+const KENNEY_ROOF_METAL := preload("res://assets/third_party/kenney_cc0/outpost/roof_metal.glb")
+const KENNEY_BARRIER := preload("res://assets/third_party/kenney_cc0/outpost/barrier_damaged.glb")
+const KENNEY_CARGO_TRUCK := preload("res://assets/third_party/kenney_cc0/outpost/truck_cargo.glb")
+const KENNEY_BARREL := preload("res://assets/third_party/kenney_cc0/props/barrel.glb")
+const KENNEY_METAL_PANEL := preload("res://assets/third_party/kenney_cc0/props/metal_panel.glb")
+const KENNEY_SAND_ROCK_A := preload("res://assets/third_party/kenney_cc0/props/rock_sand_a.glb")
+const KENNEY_SAND_ROCK_B := preload("res://assets/third_party/kenney_cc0/props/rock_sand_b.glb")
+
 static func build(root: Node3D) -> void:
 	_build_environment(root)
 	_build_cinematic_presentation(root)
@@ -39,6 +52,10 @@ static func build(root: Node3D) -> void:
 	_build_expanded_sectors(root, concrete, metal, olive, glass, dark, lamp_glow)
 	_build_watchtower(root, metal, olive, glass, crate, lamp_glow)
 	_build_cover_and_containers(root, crate, metal, olive, lamp_glow)
+	# A deliberately small, authored set of externally sourced low-poly assets
+	# replaces the generic-primitives-only impression without inflating mobile
+	# draw/triangle budgets. Gameplay collision remains the authored primitive kit.
+	_build_kenney_outpost_dressing(root)
 	_build_scatter(root, rock, crate, olive)
 	_build_terrain_story_details(root, asphalt, rock, crate)
 	_build_lamps(root, metal, lamp_glow)
@@ -105,6 +122,16 @@ static func _apply_scatter_budget(root: Node3D, tier: String, adaptive_reduced: 
 		if mesh == null:
 			continue
 		mesh.visible = int(mesh.get_meta("quality_rank", 0)) < budget
+	# Imported CC0 art is similarly tier-aware. Low keeps the necessary walls,
+	# barriers and trucks; optional drums/repairs and distant rocks return as the
+	# selected quality rises. This never changes collision or encounter logic.
+	var kenney_budget_by_tier := {"LOW": 0, "MEDIUM": 1, "HIGH": 2, "ULTRA": 2}
+	var kenney_budget := 0 if adaptive_reduced else int(kenney_budget_by_tier.get(tier, 2))
+	for prop_node in root.get_tree().get_nodes_in_group("redline_kenney_props"):
+		var prop := prop_node as Node3D
+		if prop == null:
+			continue
+		prop.visible = int(prop.get_meta("quality_rank", 0)) <= kenney_budget
 
 static func set_wave_atmosphere(root: Node3D, wave_number: int) -> void:
 	var env_node := root.get_node_or_null("Dusty sunset environment") as WorldEnvironment
@@ -417,6 +444,66 @@ static func _build_cover_and_containers(root: Node3D, crate: Material, metal: Ma
 			_box(root, "Container stencil", position + Vector3(-size.x * .22, 0.58, size.z * .52 + .04), Vector3(size.x * .30, .38, .035), olive, false)
 	for position in [Vector3(-13.5, 0.46, 9.5), Vector3(-12.55, 0.46, 9.5), Vector3(-11.6, 0.46, 9.5), Vector3(18.0, 0.46, -5.0), Vector3(18.95, 0.46, -5.0), Vector3(-28.0, 0.46, -22.0), Vector3(26.0, 0.46, 37.0), Vector3(27.0, 0.46, 37.0)]:
 		_box(root, "Sandbag", position, Vector3(0.86, 0.5, 0.42), crate, false)
+
+static func _build_kenney_outpost_dressing(root: Node3D) -> void:
+	# All placement coordinates are authored against the collision-safe primitive
+	# level. They add recognizable late-1990s/early-2000s military logistics
+	# language (garage bays, cargo, drums, sheet-metal repairs), not scifi set
+	# dressing. Most pieces are deliberately behind or beside combat routes.
+	#
+	# Walls / roofs: external textured architecture layered over simple collision.
+	_kenney_prop(root, "Kenney command window bay", KENNEY_WALL_WINDOW, Vector3(-11.9, .12, -.82), Vector3(3.9, 3.9, 1.0), 0.0, 0)
+	_kenney_prop(root, "Kenney command window bay", KENNEY_WALL_WINDOW, Vector3(-5.1, .12, -.82), Vector3(3.9, 3.9, 1.0), 0.0, 0)
+	_kenney_prop(root, "Kenney radio window bay", KENNEY_WALL_WINDOW, Vector3(6.6, .12, -4.84), Vector3(3.6, 3.0, 1.0), 0.0, 0)
+	_kenney_prop(root, "Kenney radio window bay", KENNEY_WALL_WINDOW, Vector3(11.4, .12, -4.84), Vector3(3.6, 3.0, 1.0), 0.0, 0)
+	_kenney_prop(root, "Kenney depot garage bay", KENNEY_WALL_GARAGE, Vector3(11.0, .12, 4.28), Vector3(4.2, 4.0, 1.0), 0.0, 0)
+	_kenney_prop(root, "Kenney north hangar bay", KENNEY_WALL_GARAGE, Vector3(-33.0, .14, -24.26), Vector3(8.5, 6.0, 1.0), 0.0, 0)
+	_kenney_prop(root, "Kenney relay garage bay", KENNEY_WALL_GARAGE, Vector3(37.0, 1.05, -24.30), Vector3(4.3, 4.2, 1.0), 0.0, 0)
+	_kenney_prop(root, "Kenney radio shed metal roof", KENNEY_ROOF_METAL, Vector3(9.0, 3.55, -8.0), Vector3(7.0, 1.0, 6.0), 0.0, 0)
+	_kenney_prop(root, "Kenney checkpoint canopy roof", KENNEY_ROOF_METAL, Vector3(-12.0, 4.55, 36.0), Vector3(6.6, 1.0, 6.6), 0.0, 0)
+
+	# Cargo / fortified route: recurring low-poly objects create a real logistics
+	# story without replacing collision or pathfinding with imported geometry.
+	_kenney_prop(root, "Kenney parked cargo truck", KENNEY_CARGO_TRUCK, Vector3(-35.0, .12, 14.0), Vector3(4.45, 4.45, 4.45), 0.0, 0)
+	_kenney_prop(root, "Kenney smuggler cargo truck", KENNEY_CARGO_TRUCK, Vector3(25.0, .12, 25.0), Vector3(4.10, 4.10, 4.10), 180.0, 0)
+	for barrier_data in [
+		[Vector3(2.0, .10, 38.7), 0.0], [Vector3(5.0, .10, 38.7), 0.0],
+		[Vector3(11.0, .10, 38.7), 0.0], [Vector3(-24.0, .10, 29.0), 90.0],
+		[Vector3(20.0, .10, -15.0), 90.0], [Vector3(-22.0, .10, -3.0), 0.0],
+	]:
+		var barrier_position: Vector3 = barrier_data[0]
+		var barrier_yaw: float = barrier_data[1]
+		_kenney_prop(root, "Kenney damaged concrete barrier", KENNEY_BARRIER, barrier_position, Vector3(4.2, 4.2, 4.2), barrier_yaw, 0)
+
+	# Medium/low budget dressing: readable fuel drums and field repairs near the
+	# player at high detail, without wasting fill rate on distant clutter.
+	for barrel in [Vector3(-30.2, .10, 9.0), Vector3(-29.4, .10, 9.3), Vector3(-30.8, .10, 9.5), Vector3(15.6, .10, 13.8), Vector3(16.3, .10, 13.5), Vector3(4.0, .10, 33.8)]:
+		_kenney_prop(root, "Kenney fuel drum", KENNEY_BARREL, barrel, Vector3(2.7, 2.7, 2.7), 0.0, 1)
+	for panel_data in [
+		[Vector3(-7.0, .10, -14.62), 0.0], [Vector3(-2.7, .10, -14.62), 0.0],
+		[Vector3(15.8, .10, 6.0), 90.0], [Vector3(15.8, .10, 7.7), 90.0],
+	]:
+		var panel_position: Vector3 = panel_data[0]
+		var panel_yaw: float = panel_data[1]
+		_kenney_prop(root, "Kenney bolted sheet-metal repair", KENNEY_METAL_PANEL, panel_position, Vector3(3.0, 3.0, 3.0), panel_yaw, 1)
+	for rock in [Vector3(-26.0, .04, 19.0), Vector3(-31.0, .04, 24.0), Vector3(31.0, .04, -8.0), Vector3(28.0, .04, -13.0), Vector3(-6.0, .04, 31.0), Vector3(12.0, .04, 28.0)]:
+		var rock_scene: PackedScene = KENNEY_SAND_ROCK_A if int(absf(rock.x + rock.z)) % 2 == 0 else KENNEY_SAND_ROCK_B
+		_kenney_prop(root, "Kenney desert rock", rock_scene, rock, Vector3(2.2, 2.2, 2.2), float(int(absf(rock.x) * 17.0) % 180), 2)
+
+static func _kenney_prop(parent: Node3D, label: String, source: PackedScene, position_value: Vector3, scale_value: Vector3, yaw_degrees: float, quality_rank: int) -> Node3D:
+	var holder := Node3D.new()
+	holder.name = label
+	holder.position = position_value
+	holder.rotation_degrees.y = yaw_degrees
+	holder.scale = scale_value
+	holder.add_to_group("redline_kenney_props")
+	holder.set_meta("quality_rank", quality_rank)
+	parent.add_child(holder)
+	var visual := source.instantiate() as Node3D
+	if visual != null:
+		visual.name = "%s visual" % label
+		holder.add_child(visual)
+	return holder
 
 static func _build_scatter(root: Node3D, rock: Material, crate: Material, olive: Material) -> void:
 	# Deterministic scatter means there are no per-frame allocations and every

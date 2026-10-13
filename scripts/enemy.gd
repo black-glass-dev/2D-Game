@@ -13,6 +13,11 @@ const SIGHT_CHECK_INTERVAL := 0.22
 const GRAVITY := 18.0
 const RADAR_NEAR_RANGE := 22.0
 
+# Conventional low-poly character and carbine from Kenney's CC0 library.
+# Source/provenance: assets/third_party/kenney_cc0/README.md.
+const KENNEY_SOLDIER_SCENE := preload("res://assets/third_party/kenney_cc0/characters/arena_soldier.glb")
+const KENNEY_MACHINEGUN_SCENE := preload("res://assets/third_party/kenney_cc0/weapons/machinegun.glb")
+
 var health := MAX_HEALTH
 var attack_timer := 1.0
 var sight_timer := 0.0
@@ -38,6 +43,9 @@ var footstep_dust: GPUParticles3D
 var muzzle_flash_left := 0.0
 var hit_react := 0.0
 var reload_motion := 0.0
+var imported_soldier: Node3D
+var imported_animator: AnimationPlayer
+var imported_animation := ""
 
 func setup(index: int) -> void:
 	spawn_index = index
@@ -157,6 +165,15 @@ func _update_visual_motion(delta: float) -> void:
 	if body_visual == null or not active:
 		return
 	var speed := Vector2(velocity.x, velocity.z).length()
+	if imported_soldier != null:
+		# The source includes authored hold/walk/shoot clips; use them rather than
+		# posing a robot-like primitive limb rig. Animation is cosmetic only.
+		if muzzle_flash_left > 0.0:
+			_set_imported_animation("holding-both-shoot")
+		elif speed > .38:
+			_set_imported_animation("walk")
+		else:
+			_set_imported_animation("holding-both")
 	walk_phase += delta * (3.2 + speed * 3.8)
 	hit_react = maxf(hit_react - delta * 7.0, 0.0)
 	reload_motion = maxf(reload_motion - delta * 1.8, 0.0)
@@ -240,7 +257,18 @@ func _build_model() -> void:
 	var accent := _mat([Color("a4342d"), Color("c14431"), Color("802d30")][variant], .68, .05)
 	var face_wrap := _mat([Color("2c2927"), Color("27312e"), Color("382923")][variant], .94, .0)
 	var black := _mat(Color("0b1215"), .50, .58)
-	var visor := _mat(Color("164d52"), .12, .82, Color("46d7cc"), .55)
+	# The imported Kenney soldier is a genuinely modeled, textured character,
+	# replacing the old all-primitive tactical mannequin. Keep a small red
+	# armband only as an original gameplay-identification affordance.
+	if _build_imported_soldier(accent):
+		_build_weapon(black, accent)
+		_build_footstep_dust()
+		_build_nameplate()
+		return
+	# Conservative fallback for an interrupted/missing asset import. It remains
+	# a conventional, non-scifi combatant and preserves gameplay if a developer
+	# intentionally removes the optional CC0 asset directory.
+	var visor := _mat(Color("263b3a"), .20, .55, Color.TRANSPARENT, .0)
 	var plate_edge := _mat(Color("486560"), .50, .34)
 	_part_capsule("Tactical uniform torso", Vector3(0, 1.20, 0), .29, .72, uniform)
 	_part_box("Plate carrier", Vector3(0, 1.20, -.238), Vector3(.54, .50, .09), vest)
@@ -267,6 +295,44 @@ func _build_model() -> void:
 	_build_weapon(black, accent)
 	_build_footstep_dust()
 	_build_nameplate()
+
+func _build_imported_soldier(accent: Material) -> bool:
+	var scene_visual := KENNEY_SOLDIER_SCENE.instantiate() as Node3D
+	if scene_visual == null:
+		return false
+	imported_soldier = scene_visual
+	imported_soldier.name = "Kenney CC0 armed raider"
+	# The source character is stylised/proportional for pixel art. This authored
+	# non-uniform display scale keeps a readable adult human silhouette inside the
+	# existing 1.75 m collider without changing navigation or hitboxes.
+	imported_soldier.scale = Vector3(.78, 2.14, .95)
+	body_visual.add_child(imported_soldier)
+	imported_animator = _find_animation_player(imported_soldier)
+	_set_imported_animation("holding-both")
+	_part_box("Raider faction armband", Vector3(-.34, 1.37, -.01), Vector3(.15, .11, .27), accent)
+	return true
+
+func _find_animation_player(node: Node) -> AnimationPlayer:
+	if node is AnimationPlayer:
+		return node as AnimationPlayer
+	for child in node.get_children():
+		var found := _find_animation_player(child)
+		if found != null:
+			return found
+	return null
+
+func _set_imported_animation(short_name: String) -> void:
+	if imported_animator == null:
+		return
+	var animation_name := ""
+	for candidate in imported_animator.get_animation_list():
+		if candidate == short_name or candidate.ends_with("/" + short_name):
+			animation_name = candidate
+			break
+	if animation_name.is_empty() or imported_animation == animation_name:
+		return
+	imported_animator.play(animation_name, .12)
+	imported_animation = animation_name
 
 func _limb(limb_name: String, local_position: Vector3, uniform: Material, glove: Material) -> Node3D:
 	var limb := Node3D.new()
@@ -295,13 +361,23 @@ func _build_weapon(black: Material, accent: Material) -> void:
 	weapon_root.position = Vector3(.20, 1.25, -.37)
 	weapon_root.rotation_degrees = Vector3(-8, 0, 0)
 	body_visual.add_child(weapon_root)
-	_part_box_on(weapon_root, "Carbine stock", Vector3(0, -.01, .24), Vector3(.11, .10, .22), black)
-	_part_box_on(weapon_root, "Carbine receiver", Vector3(0, 0, 0), Vector3(.12, .12, .38), black)
-	_part_box_on(weapon_root, "Carbine red handguard", Vector3(0, 0, -.28), Vector3(.10, .095, .28), accent)
-	_part_box_on(weapon_root, "Carbine top rail", Vector3(0, .08, -.12), Vector3(.045, .025, .48), black)
-	_part_box_on(weapon_root, "Carbine sight", Vector3(0, .13, -.12), Vector3(.08, .08, .11), black)
-	_part_box_on(weapon_root, "Carbine magazine", Vector3(0, -.14, .04), Vector3(.085, .22, .12), black)
-	_part_box_on(weapon_root, "Carbine barrel", Vector3(0, .005, -.53), Vector3(.055, .055, .28), black)
+	if imported_soldier != null:
+		var imported_carbine := KENNEY_MACHINEGUN_SCENE.instantiate() as Node3D
+		if imported_carbine != null:
+			imported_carbine.name = "Kenney CC0 conventional carbine"
+			# Kenney's machinegun model is a compact real-world-style service weapon
+			# pointing along local -Z, matching the existing muzzle/effects contract.
+			imported_carbine.position = Vector3(-.075, -.045, -.13)
+			imported_carbine.scale = Vector3(1.28, 1.28, 1.28)
+			weapon_root.add_child(imported_carbine)
+	else:
+		_part_box_on(weapon_root, "Carbine stock", Vector3(0, -.01, .24), Vector3(.11, .10, .22), black)
+		_part_box_on(weapon_root, "Carbine receiver", Vector3(0, 0, 0), Vector3(.12, .12, .38), black)
+		_part_box_on(weapon_root, "Carbine red handguard", Vector3(0, 0, -.28), Vector3(.10, .095, .28), accent)
+		_part_box_on(weapon_root, "Carbine top rail", Vector3(0, .08, -.12), Vector3(.045, .025, .48), black)
+		_part_box_on(weapon_root, "Carbine sight", Vector3(0, .13, -.12), Vector3(.08, .08, .11), black)
+		_part_box_on(weapon_root, "Carbine magazine", Vector3(0, -.14, .04), Vector3(.085, .22, .12), black)
+		_part_box_on(weapon_root, "Carbine barrel", Vector3(0, .005, -.53), Vector3(.055, .055, .28), black)
 	weapon_flash = MeshInstance3D.new()
 	weapon_flash.name = "Raider muzzle flash"
 	var flash_mesh := SphereMesh.new()

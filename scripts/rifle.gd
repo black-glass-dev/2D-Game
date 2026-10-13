@@ -21,6 +21,8 @@ const RECOIL_PATTERN := [
 ]
 const SHOT_SOUND := preload("res://assets/audio/rifle_shot.wav")
 const RELOAD_SOUND := preload("res://assets/audio/reload_click.wav")
+# Conventional Kenney CC0 weapon model; provenance is recorded with the asset.
+const KENNEY_MACHINEGUN_SCENE := preload("res://assets/third_party/kenney_cc0/weapons/machinegun.glb")
 
 var ammo := MAGAZINE_SIZE
 var reserve := STARTING_RESERVE
@@ -302,6 +304,7 @@ func _build_model() -> void:
 	_part("Open optic glass", Vector3(0, .216, -.20), Vector3(.092, .105, .007), _lens_material())
 	for offset in [-.30, -.16, -.02, .12]:
 		_part("Handguard vent", Vector3(.085, -.015, offset - .30), Vector3(.014, .045, .055), polymer)
+	_add_kenney_carbine_detail()
 	_build_arms(sleeve, glove)
 	muzzle_flash = MeshInstance3D.new()
 	muzzle_flash.name = "Layered rifle muzzle flash"
@@ -336,6 +339,18 @@ func _build_model() -> void:
 	muzzle_light.omni_range = 2.8
 	muzzle_light.position = muzzle_flash.position
 	gun_root.add_child(muzzle_light)
+
+func _add_kenney_carbine_detail() -> void:
+	var imported_carbine := KENNEY_MACHINEGUN_SCENE.instantiate() as Node3D
+	if imported_carbine == null:
+		return
+	imported_carbine.name = "Kenney CC0 service carbine detail"
+	# Its native muzzle points along -Z. This aligns the real external mesh with
+	# the established recoil, casing and muzzle-flash positions while retaining
+	# the intentionally open original reflex sight and first-person hands.
+	imported_carbine.position = Vector3(-.075, -.095, -.39)
+	imported_carbine.scale = Vector3(1.48, 1.48, 1.48)
+	gun_root.add_child(imported_carbine)
 
 func _build_arms(sleeve: Material, glove: Material) -> void:
 	for side in [-1.0, 1.0]:

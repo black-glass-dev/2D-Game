@@ -82,10 +82,14 @@ A reproducible GitHub Actions lane is included at [`.github/workflows/android-ap
 
 See [`docs/TEST_REPORT.md`](docs/TEST_REPORT.md) for the exact checks run, passed results, and the outstanding Android-export gate. An APK must not be labelled **tested** until the Godot Android toolchain generates it and install/launch validation is recorded.
 
+## Asset provenance
+
+The game combines project-authored 128×128 pixel-art textures/runtime kits with a small, period-appropriate **Kenney CC0** subset: conventional pistols/carbines, an animated human soldier, industrial outpost walls/roofs, cargo trucks, barriers, fuel drums and desert dressing. The exact source paths, pinned source revision and CC0 terms are retained in [`assets/third_party/kenney_cc0/README.md`](assets/third_party/kenney_cc0/README.md); see [`CREDITS.md`](CREDITS.md) for the concise credit. No commercial-game or science-fiction asset kit is used.
+
 ## Repository layout
 
 ```text
-assets/       Original 128×128 textures and application icon
+assets/       Original 128×128 textures, CC0 Kenney outpost kit and application icon
 scenes/       Godot startup scene
 scripts/      Player, combat, enemy, world and HUD scripts
 native/       Portable C++20 survival core and unit tests
