@@ -173,7 +173,9 @@ func _update_visual_motion(delta: float) -> void:
 	# rotate them decisively forward rather than leaving the old mannequin-like
 	# vertical silhouette. The compact procedural rig still blends walk, hit and
 	# reload movement without a per-Raider AnimationPlayer allocation.
-	var aim_pose := -1.12 + sin(walk_phase) * minf(speed * .08, .06) + hit_react * .22
+	# Godot's +X rotation takes a downward local limb toward camera-facing -Z.
+	# Keeping this positive puts the carbine and both hands in front of the vest.
+	var aim_pose := 1.12 + sin(walk_phase) * minf(speed * .08, .06) + hit_react * .22
 	if left_arm != null:
 		left_arm.rotation.x = lerpf(left_arm.rotation.x, aim_pose + gait * .35 + reload_motion * .72, 1.0 - exp(-delta * 15.0))
 	if right_arm != null:
@@ -244,10 +246,12 @@ func _build_model() -> void:
 		_part_box("Front magazine pouch", Vector3(pouch_x, 1.13, -.305), Vector3(.13, .20, .07), black)
 	_part_box("Faction red shoulder", Vector3(.34, 1.46, 0), Vector3(.13, .19, .28), accent)
 	_part_box("Faction red armband", Vector3(-.35, 1.34, -.015), Vector3(.14, .10, .27), accent)
-	_part_capsule("Balaclava head", Vector3(0, 1.79, 0), .205, .40, face_wrap)
-	_part_capsule("Armoured helmet", Vector3(0, 1.91, .01), .235, .27, vest)
-	_part_box("Helmet crown", Vector3(0, 2.03, .01), Vector3(.34, .10, .31), black)
-	_part_box("Ballistic visor", Vector3(0, 1.83, -.205), Vector3(.31, .105, .045), visor)
+	# A compact head stack avoids a floating helmet silhouette at close range:
+	# neck → balaclava → flattened helmet dome → front visor/mask.
+	_part_capsule("Balaclava head", Vector3(0, 1.78, 0), .185, .34, face_wrap)
+	_part_sphere("Armoured helmet dome", Vector3(0, 1.90, .015), .235, vest)
+	_part_box("Helmet crown", Vector3(0, 1.985, .015), Vector3(.33, .075, .30), black)
+	_part_box("Ballistic visor", Vector3(0, 1.83, -.214), Vector3(.31, .105, .045), visor)
 	_part_box("Breather mask", Vector3(0, 1.70, -.205), Vector3(.24, .115, .08), black)
 	_part_box("Back radio", Vector3(0, 1.24, .19), Vector3(.24, .33, .10), black)
 	_part_box("Utility belt", Vector3(0, .94, -.01), Vector3(.48, .10, .27), black)
