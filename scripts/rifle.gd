@@ -219,9 +219,11 @@ func _update_weapon_pose(delta: float) -> void:
 		target_position = Vector3(0.52, -0.52, -0.34)
 		target_rotation = Vector3(deg_to_rad(-24.0), deg_to_rad(-13.0), deg_to_rad(8.0))
 	elif owner_player != null and owner_player.is_aiming:
-		# The open reflex sight aligns below the ADS reticle without ever placing a
-		# solid mesh across the world view.
-		target_position = Vector3(0.018, -0.17, -0.43)
+		# Seat the open reflex sight below the reticle rather than over it. The old
+		# ADS pose brought the physical optic into the exact screen centre, making
+		# its dark base read like the historical opaque scope rectangle. The main
+		# camera/FOV is now the optic; the viewmodel only frames its lower edge.
+		target_position = Vector3(0.018, -0.40, -0.56)
 		target_rotation = Vector3(deg_to_rad(-1.0), 0.0, 0.0)
 	else:
 		var movement := owner_player.get_move_amount() if owner_player != null else 0.0
