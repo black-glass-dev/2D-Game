@@ -27,7 +27,10 @@ var reserve := STARTING_RESERVE
 var cooldown := 0.0
 var reload_left := 0.0
 var muzzle_flash: MeshInstance3D
+var muzzle_flare: MeshInstance3D
 var muzzle_light: OmniLight3D
+var muzzle_flash_left := 0.0
+var effects_enabled := true
 var gun_root: Node3D
 var owner_player: OutpostPlayer
 var effects: WeaponEffects
@@ -60,12 +63,14 @@ func set_aim_assist_enabled(enabled: bool) -> void:
 	aim_assist_enabled = enabled
 
 func set_effects_enabled(enabled: bool) -> void:
+	effects_enabled = enabled
 	if effects != null:
 		effects.set_effects_enabled(enabled)
 
 func _process(delta: float) -> void:
 	view_time += delta
 	cooldown = maxf(cooldown - delta, 0.0)
+	muzzle_flash_left = maxf(muzzle_flash_left - delta, 0.0)
 	equip_blend = move_toward(equip_blend, 1.0 if equipped else 0.0, delta * 7.5)
 	bloom = move_toward(bloom, 0.0, delta * 0.026)
 	visual_recoil = move_toward(visual_recoil, 0.0, delta * 9.0)
@@ -73,10 +78,14 @@ func _process(delta: float) -> void:
 		reload_left -= delta
 		if reload_left <= 0.0:
 			_complete_reload()
+	var flash_active := effects_enabled and muzzle_flash_left > 0.0
 	if muzzle_flash != null:
-		muzzle_flash.visible = cooldown > FIRE_INTERVAL * 0.45
+		muzzle_flash.visible = flash_active
+	if muzzle_flare != null:
+		muzzle_flare.visible = flash_active
+		muzzle_flare.rotation_degrees.z = sin(view_time * 92.0) * 18.0
 	if muzzle_light != null:
-		muzzle_light.light_energy = 2.5 if cooldown > FIRE_INTERVAL * 0.45 else 0.0
+		muzzle_light.light_energy = 2.5 if flash_active else 0.0
 	_update_weapon_pose(delta)
 	if gun_root != null and equip_blend <= 0.02 and not equipped:
 		gun_root.visible = false
@@ -89,6 +98,9 @@ func try_fire(camera: Camera3D) -> bool:
 		return false
 	ammo -= 1
 	cooldown = FIRE_INTERVAL
+	# Decouple the light/flash persistence from fire cadence: a short but stable
+	# 0.12 s visual window remains readable on 30 FPS mobile hardware.
+	muzzle_flash_left = 0.12
 	shot_serial += 1
 	var recoil_step: Vector2 = RECOIL_PATTERN[(shot_serial - 1) % RECOIL_PATTERN.size()]
 	if owner_player != null:
@@ -292,6 +304,21 @@ func _build_model() -> void:
 	muzzle_flash.material_override = _mat(Color("fff1c1"), .2, .0, Color("ff7d20"), 6.0)
 	muzzle_flash.visible = false
 	gun_root.add_child(muzzle_flash)
+	# A separate tapered hot core makes the flash read as a layered combustion
+	# event rather than a single glowing sphere, while reusing the same light.
+	muzzle_flare = MeshInstance3D.new()
+	muzzle_flare.name = "Rifle tapered muzzle flare"
+	var flare := CylinderMesh.new()
+	flare.top_radius = .018
+	flare.bottom_radius = .11
+	flare.height = .34
+	flare.radial_segments = 6
+	muzzle_flare.mesh = flare
+	muzzle_flare.position = Vector3(0, .025, -1.15)
+	muzzle_flare.rotation_degrees.x = 90.0
+	muzzle_flare.material_override = _mat(Color("fff5ce"), .12, .0, Color("ff6e1d"), 7.5)
+	muzzle_flare.visible = false
+	gun_root.add_child(muzzle_flare)
 	muzzle_light = OmniLight3D.new()
 	muzzle_light.name = "Rifle pooled muzzle light"
 	muzzle_light.light_color = Color("ff9e41")

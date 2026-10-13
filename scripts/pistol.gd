@@ -27,7 +27,9 @@ var reload_left := 0.0
 var owner_player: OutpostPlayer
 var gun_root: Node3D
 var muzzle_flash: MeshInstance3D
+var muzzle_flare: MeshInstance3D
 var muzzle_light: OmniLight3D
+var muzzle_flash_left := 0.0
 var effects: WeaponEffects
 var shot_audio: AudioStreamPlayer
 var reload_audio: AudioStreamPlayer
@@ -65,15 +67,19 @@ func set_effects_enabled(enabled: bool) -> void:
 func _process(delta: float) -> void:
 	view_time += delta
 	cooldown = maxf(cooldown - delta, 0.0)
+	muzzle_flash_left = maxf(muzzle_flash_left - delta, 0.0)
 	visual_recoil = move_toward(visual_recoil, 0.0, delta * 11.0)
 	equip_blend = move_toward(equip_blend, 1.0 if equipped else 0.0, delta * 7.5)
 	if reload_left > 0.0:
 		reload_left -= delta
 		if reload_left <= 0.0:
 			_complete_reload()
-	var flash_active := effects_enabled and cooldown > FIRE_INTERVAL * 0.42
+	var flash_active := effects_enabled and muzzle_flash_left > 0.0
 	if muzzle_flash != null:
 		muzzle_flash.visible = flash_active
+	if muzzle_flare != null:
+		muzzle_flare.visible = flash_active
+		muzzle_flare.rotation_degrees.z = sin(view_time * 86.0) * 16.0
 	if muzzle_light != null:
 		muzzle_light.light_energy = 2.1 if flash_active else 0.0
 	_update_pose(delta)
@@ -88,6 +94,7 @@ func try_fire(camera: Camera3D) -> bool:
 		return false
 	ammo -= 1
 	cooldown = FIRE_INTERVAL
+	muzzle_flash_left = 0.12
 	shot_serial += 1
 	visual_recoil = 1.0
 	ammo_changed.emit(ammo, reserve)
@@ -268,6 +275,19 @@ func _build_model() -> void:
 	muzzle_flash.material_override = _mat(Color("fff0c0"), .2, .0, Color("ff9e3e"), 5.2)
 	muzzle_flash.visible = false
 	gun_root.add_child(muzzle_flash)
+	muzzle_flare = MeshInstance3D.new()
+	muzzle_flare.name = "Pistol tapered muzzle flare"
+	var flare := CylinderMesh.new()
+	flare.top_radius = .014
+	flare.bottom_radius = .075
+	flare.height = .23
+	flare.radial_segments = 6
+	muzzle_flare.mesh = flare
+	muzzle_flare.position = Vector3(0, .045, -.57)
+	muzzle_flare.rotation_degrees.x = 90.0
+	muzzle_flare.material_override = _mat(Color("fff4d0"), .12, .0, Color("ff7b21"), 6.7)
+	muzzle_flare.visible = false
+	gun_root.add_child(muzzle_flare)
 	muzzle_light = OmniLight3D.new()
 	muzzle_light.name = "Pistol pooled muzzle light"
 	muzzle_light.light_color = Color("ff9e3e")
