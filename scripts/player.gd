@@ -35,6 +35,11 @@ const SLIDE_DURATION := 0.62
 const SLIDE_START_SPEED := 8.1
 const SLIDE_END_SPEED := 3.0
 const MANTLE_DURATION := 0.22
+const HIP_FOV := 75.0
+const CARBINE_ADS_FOV := 40.0
+const SIDEARM_ADS_FOV := 55.0
+const ADS_IN_SEC := 0.16
+const ADS_SENSITIVITY_SCALE := 0.45
 const LANDING_SOUND := preload("res://assets/audio/landing_thump.wav")
 
 var health := MAX_HEALTH
@@ -75,6 +80,8 @@ var current_move_input := Vector2.ZERO
 var recoil_rotation := Vector2.ZERO
 var regen_delay_left := 0.0
 var regen_fraction := 0.0
+var ads_fov := SIDEARM_ADS_FOV
+var fov_tween: Tween
 var landing_audio: AudioStreamPlayer
 
 func _ready() -> void:
@@ -101,7 +108,7 @@ func _ready() -> void:
 	camera.name = "PlayerCamera"
 	camera.current = true
 	camera.near = 0.05
-	camera.fov = 74.0
+	camera.fov = HIP_FOV
 	recoil_pivot.add_child(camera)
 
 	var fill := OmniLight3D.new()
@@ -209,7 +216,10 @@ func _set_touch_move(value: Vector2) -> void:
 	movement_touch_changed.emit(touch_move, move_touch != -1)
 
 func _rotate_look(delta: Vector2) -> void:
-	var aim_multiplier := 0.62 if is_aiming else 1.0
+	# ADS multiplies the user-selected LOOK sensitivity instead of replacing it.
+	# This keeps a 120% saved look setting responsive while delivering stable
+	# carbine sight alignment on touch.
+	var aim_multiplier := ADS_SENSITIVITY_SCALE if is_aiming else 1.0
 	rotate_y(-delta.x * aim_multiplier)
 	head.rotation.x = clampf(head.rotation.x - delta.y * aim_multiplier, deg_to_rad(-78), deg_to_rad(78))
 
@@ -397,8 +407,11 @@ func _update_view(delta: float) -> void:
 	camera.position = camera.position.lerp(target_camera_position, _smooth_weight(delta, 16.0))
 	var target_roll := sin(bob_phase) * bob_scale * (0.42 if not is_aiming else 0.15)
 	camera.rotation.z = lerpf(camera.rotation.z, target_roll, _smooth_weight(delta, 12.0))
-	var target_fov := 57.0 if is_aiming else (82.0 if is_sprinting else 74.0)
-	camera.fov = lerpf(camera.fov, target_fov, _smooth_weight(delta, 9.0))
+	# ADS owns camera.fov through the explicit 0.16-second cubic tween in
+	# set_aim(). Do not fight that animation with a per-frame lerp.
+	if not is_aiming:
+		var target_fov := 82.0 if is_sprinting else HIP_FOV
+		camera.fov = lerpf(camera.fov, target_fov, _smooth_weight(delta, 9.0))
 
 func _horizontal_speed() -> float:
 	return Vector2(velocity.x, velocity.z).length()
@@ -406,8 +419,22 @@ func _horizontal_speed() -> float:
 func _smooth_weight(delta: float, sharpness: float) -> float:
 	return 1.0 - exp(-sharpness * delta)
 
+func set_ads_fov(value: float) -> void:
+	ads_fov = clampf(value, CARBINE_ADS_FOV, SIDEARM_ADS_FOV)
+
 func set_aim(enabled: bool) -> void:
-	is_aiming = enabled and not is_sprinting and not is_sliding
+	var desired := enabled and not is_sprinting and not is_sliding
+	if is_aiming == desired:
+		return
+	is_aiming = desired
+	if camera == null:
+		return
+	if fov_tween != null and fov_tween.is_valid():
+		fov_tween.kill()
+	fov_tween = create_tween()
+	fov_tween.set_trans(Tween.TRANS_CUBIC)
+	fov_tween.set_ease(Tween.EASE_OUT)
+	fov_tween.tween_property(camera, "fov", ads_fov if is_aiming else HIP_FOV, ADS_IN_SEC)
 
 func add_recoil(vertical_degrees: float, horizontal_degrees: float) -> void:
 	# Recoil is an independent pivot, so recovery never fights direct look input.

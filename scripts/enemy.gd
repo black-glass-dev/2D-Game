@@ -192,7 +192,11 @@ func _update_visual_motion(delta: float) -> void:
 
 func _update_detail_lod(distance: float) -> void:
 	if tactical_label != null:
-		tactical_label.visible = distance < 30.0 and active
+		var player := get_tree().get_first_node_in_group("player") as OutpostPlayer
+		# A floating health name should not cross the optic reticle. It returns as
+		# soon as ADS releases and remains available for normal hip-fire targeting.
+		var hide_for_ads := player != null and player.is_aiming
+		tactical_label.visible = distance < 30.0 and active and not hide_for_ads
 	if weapon_flash != null and distance > 28.0:
 		weapon_flash.visible = false
 

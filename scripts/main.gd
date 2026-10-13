@@ -8,6 +8,7 @@ const SPAWN_POINTS := [
 ]
 const HUD_LAYOUT_FILE := "user://operation_redline_hud.cfg"
 const HUD_KEYS := ["joystick", "fire", "aim", "reload", "jump", "crouch", "swap", "minimap"]
+const ADS_GLASS_SHADER := preload("res://assets/shaders/ads_glass.gdshader")
 
 var player: OutpostPlayer
 var rifle: ServiceRifle
@@ -30,7 +31,10 @@ var damage_overlay: ColorRect
 var damage_edges: Array[ColorRect] = []
 var damage_indicator: Label
 var hit_marker: Label
+var reticle_root: Control
 var reticle_segments: Array[ColorRect] = []
+var ads_overlay: ColorRect
+var ads_reticle: Label
 var kill_feed: VBoxContainer
 var minimap: TacticalRadar
 var settings := RedlineSettings.new()
@@ -123,7 +127,7 @@ func _process(delta: float) -> void:
 		var desktop_mouse := not OS.has_feature("mobile")
 		if desktop_mouse and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 			_fire()
-		player.set_aim(touch_aim or (desktop_mouse and Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)))
+		_set_aim_state(touch_aim or (desktop_mouse and Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)))
 	_update_respawn(delta)
 	damage_flash = maxf(damage_flash - delta * 1.8, 0.0)
 	damage_indicator_left = maxf(damage_indicator_left - delta, 0.0)
@@ -135,6 +139,34 @@ func _process(delta: float) -> void:
 	if damage_indicator != null:
 		damage_indicator.modulate.a = clampf(damage_indicator_left * 1.6, 0.0, 1.0) if settings.screen_effects else 0.0
 	_update_dynamic_reticle()
+	_update_ads_presentation()
+
+func _set_aim_state(enabled: bool) -> void:
+	if player == null:
+		return
+	# The main camera always renders ADS. No SubViewport or scope texture is
+	# allocated on mobile, eliminating the black second-camera failure mode.
+	player.set_ads_fov(OutpostPlayer.CARBINE_ADS_FOV if active_weapon == rifle else OutpostPlayer.SIDEARM_ADS_FOV)
+	player.set_aim(enabled)
+
+func _cancel_aim() -> void:
+	touch_aim = false
+	if player != null:
+		player.set_aim(false)
+	if aim_button != null:
+		aim_button.text = _button_display_text("AIM")
+	_update_ads_presentation()
+
+func _update_ads_presentation() -> void:
+	var aiming := player != null and player.is_aiming
+	if ads_overlay != null:
+		ads_overlay.visible = aiming
+		if ads_overlay.material is ShaderMaterial:
+			var glass := ads_overlay.material as ShaderMaterial
+			glass.set_shader_parameter("radius", 0.30 if active_weapon == rifle else 0.37)
+	if ads_reticle != null:
+		ads_reticle.visible = aiming
+		ads_reticle.text = "+" if active_weapon == rifle else "○"
 
 func _fire() -> void:
 	if player == null or not player.can_control or active_weapon == null or weapon_switch_left > 0.0:
@@ -160,12 +192,14 @@ func _on_crouch_button_down() -> void:
 		player.request_crouch()
 
 func _reload_active_weapon() -> void:
+	_cancel_aim()
 	if active_weapon != null and active_weapon.has_method("start_reload"):
 		active_weapon.start_reload()
 
 func _switch_weapon() -> void:
 	if weapon_switch_left > 0.0 or rifle == null or pistol == null:
 		return
+	_cancel_aim()
 	weapon_switch_left = 0.30
 	if active_weapon == rifle:
 		rifle.set_equipped(false)
@@ -337,7 +371,8 @@ func _push_kill_feed(message: String, headshot: bool) -> void:
 	tween.tween_callback(entry.queue_free)
 
 func _build_dynamic_reticle() -> void:
-	var root := Control.new()
+	reticle_root = Control.new()
+	var root := reticle_root
 	root.name = "Dynamic spread reticle"
 	root.set_anchors_preset(Control.PRESET_CENTER)
 	root.position = Vector2(-1, -1)
@@ -356,19 +391,52 @@ func _build_dynamic_reticle() -> void:
 func _update_dynamic_reticle() -> void:
 	if reticle_segments.size() != 4:
 		return
+	var aiming := player != null and player.is_aiming
+	if reticle_root != null:
+		reticle_root.visible = not aiming
+	if aiming:
+		return
 	var movement := player.get_move_amount() if player != null else 0.0
 	var gap := lerpf(7.0, 18.0, movement)
-	if player != null and player.is_aiming:
-		gap = 3.5
 	reticle_segments[0].position = Vector2(-gap - 10.0, -1.0)
 	reticle_segments[1].position = Vector2(gap, -1.0)
 	reticle_segments[2].position = Vector2(-1.0, -gap - 10.0)
 	reticle_segments[3].position = Vector2(-1.0, gap)
 
+func _build_ads_overlay() -> void:
+	# This is a screen-space glass treatment, not a second render target. Its
+	# transparent center guarantees that the primary camera world remains visible
+	# at every quality tier and it ignores input so HUD controls keep working.
+	ads_overlay = ColorRect.new()
+	ads_overlay.name = "Transparent ADS glass overlay"
+	ads_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	ads_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var glass_material := ShaderMaterial.new()
+	glass_material.shader = ADS_GLASS_SHADER
+	ads_overlay.material = glass_material
+	ads_overlay.visible = false
+	hud.add_child(ads_overlay)
+	ads_reticle = Label.new()
+	ads_reticle.name = "ADS mil reticle"
+	ads_reticle.text = "+"
+	ads_reticle.set_anchors_preset(Control.PRESET_CENTER)
+	ads_reticle.position = Vector2(-14, -22)
+	ads_reticle.size = Vector2(28, 44)
+	ads_reticle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ads_reticle.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	ads_reticle.add_theme_font_size_override("font_size", 31)
+	ads_reticle.add_theme_color_override("font_color", Color("fff6d6"))
+	ads_reticle.add_theme_color_override("font_outline_color", Color("182426"))
+	ads_reticle.add_theme_constant_override("outline_size", 2)
+	ads_reticle.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ads_reticle.visible = false
+	hud.add_child(ads_reticle)
+
 func _build_hud() -> void:
 	hud = CanvasLayer.new()
 	hud.name = "Tactical HUD"
 	add_child(hud)
+	_build_ads_overlay()
 	var top_bar := ColorRect.new()
 	top_bar.name = "Translucent tactical header"
 	top_bar.color = Color(0.018, 0.045, 0.055, 0.76)

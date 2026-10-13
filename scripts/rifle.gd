@@ -219,8 +219,10 @@ func _update_weapon_pose(delta: float) -> void:
 		target_position = Vector3(0.52, -0.52, -0.34)
 		target_rotation = Vector3(deg_to_rad(-24.0), deg_to_rad(-13.0), deg_to_rad(8.0))
 	elif owner_player != null and owner_player.is_aiming:
-		target_position = Vector3(0.025, -0.21, -0.39)
-		target_rotation = Vector3(deg_to_rad(-1.2), 0.0, 0.0)
+		# The open reflex sight aligns below the ADS reticle without ever placing a
+		# solid mesh across the world view.
+		target_position = Vector3(0.018, -0.17, -0.43)
+		target_rotation = Vector3(deg_to_rad(-1.0), 0.0, 0.0)
 	else:
 		var movement := owner_player.get_move_amount() if owner_player != null else 0.0
 		var breathing := sin(view_time * 1.45) * 0.006
@@ -288,8 +290,14 @@ func _build_model() -> void:
 	_part("Curved magazine", Vector3(0, -.23, .055), Vector3(.11, .30, .18), polymer)
 	_part("Magazine witness strip", Vector3(.058, -.23, .055), Vector3(.01, .18, .12), brass)
 	_part("Rail", Vector3(0, .125, -.16), Vector3(.055, .032, .58), gunmetal)
-	_part("Holographic sight", Vector3(0, .185, -.12), Vector3(.10, .13, .17), polymer)
-	_part("Sight glass", Vector3(0, .20, -.19), Vector3(.074, .070, .012), _mat(Color("69d8d0"), .15, .42, Color("44d9c4"), .8))
+	# The former opaque Holographic sight box was the black ADS rectangle seen on
+	# phones. This is a real open reflex frame: four slim metal rails plus a
+	# transparent emissive lens, never a dark filled panel over the world.
+	_part("Open optic base", Vector3(0, .158, -.12), Vector3(.13, .032, .20), gunmetal)
+	_part("Open optic left frame", Vector3(-.058, .215, -.12), Vector3(.016, .13, .18), worn_metal)
+	_part("Open optic right frame", Vector3(.058, .215, -.12), Vector3(.016, .13, .18), worn_metal)
+	_part("Open optic brow", Vector3(0, .276, -.12), Vector3(.13, .016, .18), worn_metal)
+	_part("Open optic glass", Vector3(0, .216, -.20), Vector3(.092, .105, .007), _lens_material())
 	for offset in [-.30, -.16, -.02, .12]:
 		_part("Handguard vent", Vector3(.085, -.015, offset - .30), Vector3(.014, .045, .055), polymer)
 	_build_arms(sleeve, glove)
@@ -374,6 +382,18 @@ func _cylinder_part_on(parent: Node3D, part_name: String, position_value: Vector
 	visual.rotation_degrees.x = 90
 	visual.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	parent.add_child(visual)
+
+func _lens_material() -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.albedo_color = Color(0.20, 0.82, 0.78, 0.16)
+	material.metallic = 0.35
+	material.roughness = 0.08
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.emission_enabled = true
+	material.emission = Color("42d9c8")
+	material.emission_energy_multiplier = 0.28
+	material.no_depth_test = true
+	return material
 
 func _mat(color: Color, roughness: float, metallic := 0.0, emission := Color.TRANSPARENT, energy := 0.0) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()

@@ -60,6 +60,7 @@ func _initialize() -> void:
 			showcase_raider.visible = true
 		_set_view(entry[1], entry[2])
 		if entry[0] == "09_ads":
+			player.set_ads_fov(OutpostPlayer.CARBINE_ADS_FOV)
 			player.set_aim(true)
 		elif entry[0] == "10_firing":
 			# The player stays frozen to keep all comparison frames reproducible.
@@ -73,8 +74,10 @@ func _initialize() -> void:
 		elif entry[0] == "12_reload_crouch":
 			player.request_crouch()
 			scene_root._reload_active_weapon()
-		# Preserve short-lived actual muzzle, tracer and damage frame states.
-		await _frames(1 if entry[0] == "10_firing" or entry[0] == "11_low_hp" else 2)
+		# Let the documented 0.16 s cubic ADS tween settle before taking the
+		# evidence frame; short-lived muzzle/tracer/damage frames stay immediate.
+		var settle_frames := 12 if entry[0] == "09_ads" else (1 if entry[0] == "10_firing" or entry[0] == "11_low_hp" else 2)
+		await _frames(settle_frames)
 		_capture(entry[0])
 		player.set_aim(false)
 	await _frames(2)
