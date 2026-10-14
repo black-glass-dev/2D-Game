@@ -4,7 +4,7 @@
 
 **Engine:** Godot 4.7.2, GL Compatibility renderer
 
-**Art direction:** original golden-hour rust-red military outpost; warm low sun, cool teal fill, dust haze and clear tactical silhouettes.
+**Art direction:** original golden-hour rust-red, circa-2000 desert military outpost; warm low sun, muted olive/steel fill, dust haze and clear tactical silhouettes. No neon, futuristic or sci-fi visual language is used.
 
 ## Safety and gameplay preservation
 
@@ -19,14 +19,25 @@ Visual terrain and cosmetic dressing are separate from collision geometry. The o
 | WP1 Lighting/PBR | Filmic tonemapping, warm sun/cool fill, tuned 2-split soft shadows, sky ambient/reflection, SSAO where supported, capped lamp/muzzle lights, PBR materials with mipmapped anisotropic detail | `world_builder.gd`, `project.godot` |
 | WP2 Atmosphere | Procedural sky, visible sun disc, layered dust bands, exponential atmospheric fog, GPU dust motes/embers and smooth Wave 1/2/3 fog/exposure progression | `world_builder.gd`, `main.gd` |
 | WP3 Ground | Separate undulating visual terrain, detail normal map, road/pad layers, deterministic rock/drum scatter and layered strata mesas | `world_builder.gd`, `generate_assets.py`, `assets/textures/` |
-| WP4 Outpost | Detailed modular facings, windows, frames, roof clutter, generator/radio pieces, container trim/stencils, lamp fixtures/spill, fences/wire, ladder/rail watchtower and crisp sign | `world_builder.gd` |
-| WP5 Raiders | Three articulated tactical variants, helmets/vests/visors, weapon, health nameplate, procedural walk/aim/fire/reload/hit/death animation, muzzle flash, shadows and footstep dust | `enemy.gd` |
-| WP6 Viewmodels | Detailed original rifle/pistol receivers, rails, sights, magazines, gloved forearms/hands, breathing/sway, ADS/sprint/reload/swap/recoil presentation and pooled muzzle lights | `rifle.gd`, `pistol.gd` |
+| WP4 Outpost | Detailed modular facings, windows, frames, roof clutter, generator/radio pieces, container trim/stencils, lamp fixtures/spill, fences/wire, ladder/rail watchtower, crisp sign and Kenney CC0 conventional garage/window/roof/barrier/fuel/rock dressing | `world_builder.gd`, `assets/third_party/kenney_cc0/` |
+| WP5 Raiders | Kenney CC0 human-smuggler bases aligned to the gameplay capsule, with period tactical clothing, helmets/vests/visors, conventional carbines, health nameplates, authored hold/walk/shoot clips, muzzle flash, shadows and footstep dust | `enemy.gd`, `assets/third_party/kenney_cc0/characters/` |
+| WP6 Viewmodels | Detailed original rifle/pistol receivers, rails, sights, magazines, gloved forearms/hands, breathing/sway, ADS/sprint/reload/swap/recoil presentation and pooled muzzle lights, supplemented by Kenney CC0 conventional machinegun/pistol detail meshes | `rifle.gd`, `pistol.gd`, `assets/third_party/kenney_cc0/weapons/` |
 | WP7 Combat VFX | Fixed pools for tracers, casings, smoke, impacts and decals; dirt/metal/concrete/flesh impact variants; ambient GPU particles and Raider step dust | `weapon_effects.gd`, weapon scripts |
-| WP8 Post | Filmic tone map, teal/orange grade, bloom, FXAA project setting, vignette-style damage treatment; effects respond to tier/settings | `world_builder.gd`, `project.godot` |
+| WP8 Post | Filmic tone map, restrained desert earth-tone grade, bloom, FXAA project setting, vignette-style damage treatment; effects respond to tier/settings | `world_builder.gd`, `project.godot` |
 | WP9 HUD | Glass/translucent icon action controls, non-overlap defaults, animated graphical vitals, ammunition/weapon readout, tactical header, dynamic reticle/hit feedback, restyled radar/FOV cone/pulsing contacts | `main.gd`, `tactical_radar.gd` |
 | WP10 Load | Original operation loading splash shown while the runtime scene builds | `main.gd` |
 | WP11 Performance | AUTO/LOW/MEDIUM/HIGH/ULTRA setting, mobile auto-detect, dynamic 3D render scale, 2-second load shed, 7-second recovery, tier-based lights/shadows/SSAO/glow/particles | `game_settings.gd`, `performance_governor.gd`, `world_builder.gd`, `main.gd` |
+
+## CC0 period-art replacement — conventional, auditable external assets
+
+The later art pass replaces the futuristic read rather than merely changing colour values. A deliberately small downloaded Kenney CC0 subset is vendored with exact source paths, source commit and licence terms in [`assets/third_party/kenney_cc0/README.md`](assets/third_party/kenney_cc0/README.md), and credited in [`CREDITS.md`](CREDITS.md).
+
+- **Weapons:** conventional pistol/machinegun detail meshes are layered into the existing service sidearm, player carbine and Raider carbine rigs; the existing ADS, recoil, muzzle, ammunition and hit logic stays authoritative.
+- **Characters:** two external, animated human block-character bases now provide the Raider bodies. They are scale-aligned to the gameplay capsule and given restrained olive/charcoal clothing, a field vest, scarf, helmet, open visor and non-glowing carbine. No alien, armoured-soldier franchise look, neon or energy weapon is used.
+- **Buildings and props:** garage/window bays, corrugated roofs, damaged concrete barriers, fuel drums, sheet-metal repairs and sand rocks dress the retained original collision-safe outpost. These are ordinary early-2000s border/military logistics elements, not space/cyberpunk pieces.
+- **Performance and safety:** imported pieces are grouped into the existing LOW/MEDIUM/HIGH/ULTRA dressing budgets. Collision, pathing, waves, score, HUD saves and touch systems remain the existing authored implementation.
+
+Only assets selected for the real-world period are shipped. The source subset expressly excludes Kenney space, blaster, alien, laser and futuristic environment pieces, and the project contains no commercial-game asset, character, map, brand or logo.
 
 ## Post-package visual polish — CI renderer verified
 

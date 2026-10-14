@@ -237,7 +237,7 @@ func _build_headshot_hitbox() -> void:
 	var shape := SphereShape3D.new()
 	shape.radius = 0.25
 	shape_node.shape = shape
-	shape_node.position = Vector3(0, 1.75, 0)
+	shape_node.position = Vector3(0, 1.67, 0)
 	head_hitbox.add_child(shape_node)
 	add_child(head_hitbox)
 
@@ -259,13 +259,17 @@ func _build_model() -> void:
 	var vest := _mat(Color("111d20"), .58, .22)
 	var accent := _mat([Color("a4342d"), Color("c14431"), Color("802d30")][variant], .68, .05)
 	var face_wrap := _mat([Color("2c2927"), Color("27312e"), Color("382923")][variant], .94, .0)
+	# Preserve a distinct, human face on the CC0 base rather than flattening the
+	# complete model into one uniform colour. The scarf/helmet layers below keep
+	# the figure tactically anonymous without turning it into a sci-fi robot.
+	var head_skin := _mat([Color("8b5f45"), Color("76503b"), Color("9a6848")][variant], .91, .0)
 	var black := _mat(Color("0b1215"), .50, .58)
 	# The imported Kenney CC0 smuggler provides the human silhouette, proportions
 	# and authored movement clips. Its bright civilian source colours are replaced
 	# with grounded field clothing plus an original plate carrier, helmet and
 	# shouldered arms, so it reads as a circa-2000 armed smuggler rather than a
 	# pink/blue toy-like civilian in the desert.
-	if _build_imported_smuggler(uniform, vest, face_wrap, black, accent):
+	if _build_imported_smuggler(uniform, vest, head_skin, face_wrap, black, accent):
 		_build_weapon(black, accent)
 		_build_footstep_dust()
 		_build_nameplate()
@@ -301,7 +305,7 @@ func _build_model() -> void:
 	_build_footstep_dust()
 	_build_nameplate()
 
-func _build_imported_smuggler(uniform: Material, vest: Material, face_wrap: Material, black: Material, accent: Material) -> bool:
+func _build_imported_smuggler(uniform: Material, vest: Material, head_skin: Material, face_wrap: Material, black: Material, accent: Material) -> bool:
 	var source_index := spawn_index % KENNEY_SMUGGLER_SCENES.size()
 	var source_scene := KENNEY_SMUGGLER_SCENES[source_index] as PackedScene
 	var scene_visual := source_scene.instantiate() as Node3D if source_scene != null else null
@@ -309,13 +313,13 @@ func _build_imported_smuggler(uniform: Material, vest: Material, face_wrap: Mate
 		return false
 	imported_smuggler = scene_visual
 	imported_smuggler.name = "Kenney CC0 field-clothed smuggler"
-	# These two full-height, 128px-style human variants keep their original
-	# low-poly geometry and animation. Replacing their source-shirt materials is
-	# intentional: the CC0 variants ship in casual bright clothing, which clashes
-	# with the grounded early-2000s hostile-combatant brief.
-	imported_smuggler.scale = Vector3.ONE
+	# The source figures are deliberately blocky (their unscaled height is 2.7 m).
+	# Match the 1.75 m collider before adding the tactical kit, rather than leaving
+	# a giant square head and a hitbox which only covers the figure's lower half.
+	# This still uses the external model's human silhouette and authored clips.
+	imported_smuggler.scale = Vector3.ONE * 0.72
 	body_visual.add_child(imported_smuggler)
-	_apply_imported_material(imported_smuggler, uniform)
+	_apply_imported_character_materials(imported_smuggler, uniform, head_skin, black)
 	_hide_imported_arm_meshes(imported_smuggler)
 	imported_animator = _find_animation_player(imported_smuggler)
 	_set_imported_animation("holding-both")
@@ -341,30 +345,29 @@ func _set_imported_mesh_visibility(node: Node, is_visible: bool) -> void:
 		_set_imported_mesh_visibility(child, is_visible)
 
 func _build_imported_tactical_overlays(uniform: Material, vest: Material, face_wrap: Material, black: Material, accent: Material) -> void:
-	# These grounded equipment layers sit on the imported person rather than
-	# replacing it. They give the CC0 source character a field vest, balaclava,
-	# helmet, boots and a stable carbine pose without changing its collider,
-	# hitbox, enemy AI, navigation or score logic.
+	# These grounded equipment layers sit on the scaled CC0 person rather than
+	# replacing it. Their positions follow the imported model's 0–1.94 m body:
+	# legs 0–.72, torso .72–1.37 and head 1.37–1.94. That keeps every layer on
+	# the human figure instead of stacking a second oversized mannequin on top.
 	var plate_edge := _mat(Color("4e5e50"), .56, .22)
 	var visor := _mat(Color("253a35"), .25, .30, Color.TRANSPARENT, .0)
-	_part_box("Smuggler plate carrier", Vector3(0, 1.20, -.238), Vector3(.54, .50, .09), vest)
-	_part_box("Carrier upper plate", Vector3(0, 1.38, -.292), Vector3(.38, .13, .035), plate_edge)
-	_part_box("Carrier lower plate", Vector3(0, 1.04, -.292), Vector3(.40, .10, .035), plate_edge)
-	for pouch_x in [-.17, 0.0, .17]:
-		_part_box("Front magazine pouch", Vector3(pouch_x, 1.13, -.305), Vector3(.13, .20, .07), black)
-	_part_box("Faction red shoulder", Vector3(.34, 1.46, 0), Vector3(.13, .19, .28), accent)
-	_part_box("Raider faction armband", Vector3(-.34, 1.37, -.01), Vector3(.15, .11, .27), accent)
-	_part_sphere("Balaclava head", Vector3(0, 1.78, 0), .17, face_wrap)
-	_part_box("Armoured helmet shell", Vector3(0, 1.915, .018), Vector3(.38, .19, .32), vest)
-	_part_box("Helmet crown", Vector3(0, 2.025, .018), Vector3(.32, .045, .27), black)
-	_part_box("Ballistic visor", Vector3(0, 1.83, -.194), Vector3(.30, .10, .045), visor)
-	_part_box("Breather mask", Vector3(0, 1.70, -.185), Vector3(.24, .115, .08), black)
-	_part_box("Back radio", Vector3(0, 1.24, .19), Vector3(.24, .33, .10), black)
-	_part_box("Utility belt", Vector3(0, .94, -.01), Vector3(.48, .10, .27), black)
-	left_arm = _limb("Left shouldered arm", Vector3(-.34, 1.45, 0), uniform, black)
-	right_arm = _limb("Right shouldered arm", Vector3(.34, 1.45, 0), uniform, black)
-	_part_box("Left combat boot", Vector3(-.16, .29, -.075), Vector3(.17, .15, .30), black)
-	_part_box("Right combat boot", Vector3(.16, .29, -.075), Vector3(.17, .15, .30), black)
+	_part_box("Smuggler plate carrier", Vector3(0, 1.04, -.250), Vector3(.48, .40, .08), vest)
+	_part_box("Carrier upper plate", Vector3(0, 1.18, -.302), Vector3(.34, .10, .032), plate_edge)
+	_part_box("Carrier lower plate", Vector3(0, .91, -.302), Vector3(.36, .085, .032), plate_edge)
+	for pouch_x in [-.15, 0.0, .15]:
+		_part_box("Front magazine pouch", Vector3(pouch_x, 1.00, -.315), Vector3(.115, .17, .065), black)
+	_part_box("Faction red shoulder", Vector3(.31, 1.25, 0), Vector3(.11, .16, .24), accent)
+	_part_box("Raider faction armband", Vector3(-.31, 1.17, -.01), Vector3(.125, .095, .24), accent)
+	_part_box("Desert patrol helmet", Vector3(0, 1.80, .018), Vector3(.58, .15, .42), vest)
+	_part_box("Helmet crown", Vector3(0, 1.90, .018), Vector3(.48, .045, .34), black)
+	_part_box("Face wrap", Vector3(0, 1.55, -.305), Vector3(.39, .18, .035), face_wrap)
+	_part_box("Ballistic visor", Vector3(0, 1.70, -.315), Vector3(.42, .075, .025), visor)
+	_part_box("Back radio", Vector3(0, 1.07, .19), Vector3(.21, .28, .09), black)
+	_part_box("Utility belt", Vector3(0, .78, -.01), Vector3(.43, .085, .24), black)
+	left_arm = _limb("Left shouldered arm", Vector3(-.31, 1.25, 0), uniform, black)
+	right_arm = _limb("Right shouldered arm", Vector3(.31, 1.25, 0), uniform, black)
+	_part_box("Left combat boot", Vector3(-.14, .18, -.070), Vector3(.15, .13, .27), black)
+	_part_box("Right combat boot", Vector3(.14, .18, -.070), Vector3(.15, .13, .27), black)
 
 func _find_animation_player(node: Node) -> AnimationPlayer:
 	if node is AnimationPlayer:
@@ -387,6 +390,24 @@ func _set_imported_animation(short_name: String) -> void:
 		return
 	imported_animator.play(animation_name, .12)
 	imported_animation = animation_name
+
+func _apply_imported_character_materials(node: Node, uniform: Material, head_skin: Material, boot: Material) -> void:
+	# Kenney's CC0 character file gives each body part a useful semantic name.
+	# Keep those values distinct: a face, olive clothing and dark boots read as a
+	# compact human raider at mobile scale, where one flat material becomes a
+	# featureless rectangular silhouette.
+	if node is MeshInstance3D:
+		var part_name := str(node.name).to_lower()
+		var material := uniform
+		if "head" in part_name:
+			material = head_skin
+		elif "leg" in part_name:
+			material = uniform
+		elif "arm" in part_name:
+			material = boot
+		(node as MeshInstance3D).material_override = material
+	for child in node.get_children():
+		_apply_imported_character_materials(child, uniform, head_skin, boot)
 
 func _apply_imported_material(node: Node, material: Material) -> void:
 	if node is MeshInstance3D:
@@ -486,7 +507,7 @@ func _build_footstep_dust() -> void:
 func _build_nameplate() -> void:
 	tactical_label = Label3D.new()
 	tactical_label.name = "Raider tactical nameplate"
-	tactical_label.position = Vector3(0, 2.42, 0)
+	tactical_label.position = Vector3(0, 2.16, 0)
 	tactical_label.pixel_size = .0045
 	tactical_label.font_size = 34
 	tactical_label.outline_size = 6
