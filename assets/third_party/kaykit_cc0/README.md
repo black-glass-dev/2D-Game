@@ -9,7 +9,8 @@
 
 | Local files | Original source path | In-game role |
 | --- | --- | --- |
-| `characters/Rogue.glb` | `addons/kaykit_character_pack_adventures/Characters/gltf/Rogue.glb` | Tactical smuggler base A |
-| `characters/Rogue_Hooded.glb` | `addons/kaykit_character_pack_adventures/Characters/gltf/Rogue_Hooded.glb` | Tactical smuggler base B |
+| `characters/raider_rig_trimmed.glb` | `addons/kaykit_character_pack_adventures/Characters/gltf/Rogue.glb` | Shared tactical-smuggler base rig |
 
-The models are genuine low-poly rigged human characters with authored animation clips. Operation Redline uses their unbranded human body/limb geometry and animation, removes medieval source accessories and the exaggerated source head at runtime, and applies its own era-appropriate field clothing, field vest and conventional carbine. No original KayKit weapon, logo, map or commercial-game content is used.
+`raider_rig_trimmed.glb` is a performance-minded CC0 derivative of the cited source: only the `2H_Ranged_Aiming`, `2H_Ranged_Shooting`, and `Walking_A` clips are retained, and source knife, crossbow, throwable, cape, and exaggerated-head meshes are removed before export. This reduces the character package from 3.6 MB to 2.4 MB and avoids loading an unused second animation library on mobile.
+
+The remaining model is genuine low-poly rigged human body/limb geometry with authored movement clips. Operation Redline adds its own restrained period field clothing, plate carrier, helmeted head and conventional carbine at runtime. No original KayKit weapon, logo, map or commercial-game content is used.

@@ -25,7 +25,7 @@ Only real-world/period-appropriate assets were selected. No Kenney sci-fi, space
 
 ### KayKit / Kay Lousberg — CC0 1.0 Universal
 
-The project vendors two rigged, low-poly **KayKit Adventurers** human models as the base geometry and animation source for hostile smugglers. At runtime, their source knives, crossbows, throwable props, cape and exaggerated source head are hidden; the game applies its own restrained field clothing, tactical kit and conventional carbine. No medieval source accessory, KayKit logo, map or commercial-game material is used.
+The project vendors a trimmed, rigged low-poly **KayKit Adventurers** human model as the base geometry and animation source for hostile smugglers. The CC0 derivative retains only the two-handed aim/shoot and walk clips; source knife, crossbow, throwable props, cape and exaggerated source head are removed before import. The game applies its own restrained field clothing, tactical kit and conventional carbine. No medieval source accessory, KayKit logo, map or commercial-game material is used.
 
 - **License:** [Creative Commons Zero 1.0 Universal (CC0)](https://creativecommons.org/publicdomain/zero/1.0/)
 - **Auditable source/pin:** `KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0` commit `672074b73ba276876a19e8816ecdc5241817ab47`

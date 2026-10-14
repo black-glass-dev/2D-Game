@@ -13,13 +13,15 @@ const SIGHT_CHECK_INTERVAL := 0.22
 const GRAVITY := 18.0
 const RADAR_NEAR_RANGE := 22.0
 
-# Genuine low-poly human character rigs from KayKit's CC0 library. Their
-# provenance is retained in assets/third_party/kaykit_cc0/README.md. The source
-# accessories are hidden below; only the human mesh and authored movement clips
-# are used as the base for the game's original circa-2000 tactical kit.
+# Genuine low-poly human character rig from KayKit's CC0 library. Its provenance
+# is retained in assets/third_party/kaykit_cc0/README.md. Only the human mesh
+# and authored gameplay clips are used as the base for the original circa-2000
+# tactical kit. The source Rogue rig is reduced offline to its three gameplay clips and the
+# unneeded medieval/head meshes are removed. One shared CC0 rig keeps every
+# concurrent Raider instanced from the same GPU resources; material variants
+# below supply encounter variety without loading a second animation library.
 const KAYKIT_SMUGGLER_SCENES := [
-	preload("res://assets/third_party/kaykit_cc0/characters/Rogue.glb"),
-	preload("res://assets/third_party/kaykit_cc0/characters/Rogue_Hooded.glb"),
+	preload("res://assets/third_party/kaykit_cc0/characters/raider_rig_trimmed.glb"),
 ]
 const KENNEY_MACHINEGUN_SCENE := preload("res://assets/third_party/kenney_cc0/weapons/machinegun.glb")
 
@@ -261,16 +263,12 @@ func _build_model() -> void:
 	var vest := _mat(Color("111d20"), .58, .22)
 	var accent := _mat([Color("a4342d"), Color("c14431"), Color("802d30")][variant], .68, .05)
 	var face_wrap := _mat([Color("2c2927"), Color("27312e"), Color("382923")][variant], .94, .0)
-	# Preserve a distinct, human face on the CC0 base rather than flattening the
-	# complete model into one uniform colour. The scarf/helmet layers below keep
-	# the figure tactically anonymous without turning it into a sci-fi robot.
-	var head_skin := _mat([Color("8b5f45"), Color("76503b"), Color("9a6848")][variant], .91, .0)
 	var black := _mat(Color("0b1215"), .50, .58)
 	# The imported KayKit CC0 rig provides a readable human silhouette, proportions
 	# and authored movement clips. Its medieval accessories are disabled and every
 	# visible material is replaced by grounded field clothing, a plate carrier,
 	# helmet and conventional carbine so it reads as a circa-2000 armed smuggler.
-	if _build_imported_smuggler(uniform, vest, head_skin, face_wrap, black, accent):
+	if _build_imported_smuggler(uniform, vest, face_wrap, black, accent):
 		_build_weapon(black, accent)
 		_build_footstep_dust()
 		_build_nameplate()
@@ -306,7 +304,7 @@ func _build_model() -> void:
 	_build_footstep_dust()
 	_build_nameplate()
 
-func _build_imported_smuggler(uniform: Material, vest: Material, head_skin: Material, face_wrap: Material, black: Material, accent: Material) -> bool:
+func _build_imported_smuggler(uniform: Material, vest: Material, face_wrap: Material, black: Material, accent: Material) -> bool:
 	var source_index := spawn_index % KAYKIT_SMUGGLER_SCENES.size()
 	var source_scene := KAYKIT_SMUGGLER_SCENES[source_index] as PackedScene
 	var scene_visual := source_scene.instantiate() as Node3D if source_scene != null else null
@@ -319,31 +317,11 @@ func _build_imported_smuggler(uniform: Material, vest: Material, head_skin: Mate
 	# proportions instead of the previous rectangular block-character silhouette.
 	imported_smuggler.scale = Vector3.ONE * 0.80
 	body_visual.add_child(imported_smuggler)
-	_apply_imported_character_materials(imported_smuggler, uniform, head_skin)
-	_hide_imported_medieval_accessories(imported_smuggler)
+	_apply_imported_character_materials(imported_smuggler, uniform)
 	imported_animator = _find_animation_player(imported_smuggler)
 	_set_imported_animation("2H_Ranged_Aiming")
 	_build_imported_tactical_overlays(vest, face_wrap, black, accent)
 	return true
-
-func _hide_imported_medieval_accessories(node: Node) -> void:
-	# The KayKit human rigs ship with medieval knives, crossbows, throwable props,
-	# a cape and a deliberately exaggerated adventurer head. Hide those source
-	# elements — never repurpose them — while retaining the fully rigged arms,
-	# legs and body for natural movement. A restrained original helmeted head is
-	# added below to keep the 2000-era combat silhouette proportionate.
-	var part_name := str(node.name).to_lower()
-	if "knife" in part_name or "crossbow" in part_name or "throwable" in part_name or "cape" in part_name or "head" in part_name:
-		_set_imported_mesh_visibility(node, false)
-		return
-	for child in node.get_children():
-		_hide_imported_medieval_accessories(child)
-
-func _set_imported_mesh_visibility(node: Node, is_visible: bool) -> void:
-	if node is VisualInstance3D:
-		(node as VisualInstance3D).visible = is_visible
-	for child in node.get_children():
-		_set_imported_mesh_visibility(child, is_visible)
 
 func _build_imported_tactical_overlays(vest: Material, face_wrap: Material, black: Material, accent: Material) -> void:
 	# These grounded equipment layers sit on the scaled CC0 person rather than
@@ -396,20 +374,14 @@ func _set_imported_animation(short_name: String) -> void:
 	imported_animator.play(animation_name, .12)
 	imported_animation = animation_name
 
-func _apply_imported_character_materials(node: Node, uniform: Material, head_skin: Material) -> void:
-	# KayKit's CC0 rig keeps the human head/body/arm/leg meshes semantically
-	# separate. Preserve a visible face and olive field clothing rather than
-	# flattening the character into the old featureless rectangular silhouette.
+func _apply_imported_character_materials(node: Node, uniform: Material) -> void:
+	# The trimmed CC0 rig retains only its human torso, arm and leg meshes. A
+	# common olive field-uniform material makes it integrate with the original
+	# vest, helmet and boot overlays without reviving any source character style.
 	if node is MeshInstance3D:
-		var part_name := str(node.name).to_lower()
-		var material := uniform
-		if "head" in part_name:
-			material = head_skin
-		elif "leg" in part_name or "arm" in part_name:
-			material = uniform
-		(node as MeshInstance3D).material_override = material
+		(node as MeshInstance3D).material_override = uniform
 	for child in node.get_children():
-		_apply_imported_character_materials(child, uniform, head_skin)
+		_apply_imported_character_materials(child, uniform)
 
 func _apply_imported_material(node: Node, material: Material) -> void:
 	if node is MeshInstance3D:

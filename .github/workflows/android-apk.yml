@@ -191,7 +191,10 @@ jobs:
           # The fully dressed 1280×720 OpenGL evidence pass can take several
           # minutes on CI's llvmpipe software renderer. It is not a device FPS
           # budget; allow it to finish every genuine comparison frame.
-          timeout 360s xvfb-run --auto-servernum godot \
+          # CC0 skinned-character evidence is intentionally rendered at the full
+          # 1280×720 acceptance size. llvmpipe on CI is far slower than a phone
+          # GPU, so keep the honest full-frame pass and give it a bounded 12 min.
+          timeout 720s xvfb-run --auto-servernum godot \
             --path "$GITHUB_WORKSPACE" --rendering-driver opengl3 \
             --script "$GITHUB_WORKSPACE/tools/capture_graphics.gd" -- \
             --output "$GITHUB_WORKSPACE/build/screenshots/after" 2>&1 | tee build/godot-after-capture.log

@@ -1,6 +1,6 @@
 # Operation Redline — Graphics Overhaul Progress
 
-_Last updated: 2026-10-13 (Asia/Dhaka)_
+_Last updated: 2026-10-14 (Asia/Dhaka)_
 
 ## Verification baseline
 
@@ -26,6 +26,8 @@ _Last updated: 2026-10-13 (Asia/Dhaka)_
 - [x] Post-package visual polish — terrain normals/height variation, visible window frames, readable sign plaque, weathering scatter/tyre tracks, non-overlapping circular defaults, dynamic crosshair, layered weapon flash, and a more readable Raider tactical front/shouldered-carbine silhouette are rendered in the refreshed genuine after set.
 - [x] Priority ADS repair — the carbine now uses main-camera 75→40° FOV ADS, 0.16-second cubic transitions, 0.45× saved-look multiplier, transparent glass/vignette and an open reflex frame seated below the reticle. No scope SubViewport, opaque panel or filled black lens exists in the mobile aim route; sidearm uses the same safe route at 55°.
 - [x] Mobile fire/optimization pass — persistent SINGLE/AUTO selector added beside FIRE. SINGLE remains tap-to-fire; AUTO fires at the existing weapon cooldown while FIRE is held. Manual LOW/MEDIUM/HIGH/ULTRA choices are locked and visibly apply render scale, shadows, SSAO, bloom, lamp, scatter and particle budgets; only AUTO enables temporary adaptive recovery.
+- [x] Grounded external-art pass — curated Kenney CC0 conventional weapons/outpost/prop models and a trimmed KayKit CC0 human rig replace the strongest sci-fi/primitive-only reads. The KayKit derivative retains only the three used combat locomotion clips and removes source medieval/head geometry before import; exact sources and licensing are in `CREDITS.md` and `assets/third_party/`.
+- [ ] Final CI renderer capture/APK validation of the trimmed character refinement.
 - [ ] Final physical Android validation (the hosted emulator has an infrastructure boot timeout).
 
 ## Next continuation point

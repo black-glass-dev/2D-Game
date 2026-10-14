@@ -1,6 +1,6 @@
 # Operation Redline — Full Graphics Overhaul Report
 
-**Date:** 2026-10-13 (Asia/Dhaka)
+**Date:** 2026-10-14 (Asia/Dhaka)
 
 **Engine:** Godot 4.7.2, GL Compatibility renderer
 
@@ -33,7 +33,7 @@ Visual terrain and cosmetic dressing are separate from collision geometry. The o
 The later art pass replaces the futuristic read rather than merely changing colour values. Deliberately small downloaded Kenney and KayKit CC0 subsets are vendored with exact source paths, source commits and licence terms in [`assets/third_party/kenney_cc0/README.md`](assets/third_party/kenney_cc0/README.md) and [`assets/third_party/kaykit_cc0/README.md`](assets/third_party/kaykit_cc0/README.md), and credited in [`CREDITS.md`](CREDITS.md).
 
 - **Weapons:** conventional pistol/machinegun detail meshes are layered into the existing service sidearm, player carbine and Raider carbine rigs; the existing ADS, recoil, muzzle, ammunition and hit logic stays authoritative.
-- **Characters:** two external, rigged KayKit human bases now provide the Raider bodies. Their medieval knives, crossbows, throwable props and cape are hidden; their natural human arms, legs, body and two-handed ranged/walk/shoot clips remain; a compact original helmeted head replaces the exaggerated source head. They are scale-aligned to the gameplay capsule and given restrained olive/charcoal clothing, a field vest, scarf, helmet, open visor and non-glowing carbine. No alien, armoured-soldier franchise look, neon or energy weapon is used.
+- **Characters:** one shared external KayKit CC0 human rig provides every Raider body. The vendored 2.4 MB derivative retains only its authored two-handed aim/shoot and walk clips; source knife, crossbow, throwable, cape and exaggerated-head meshes are removed before import. The body is scale-aligned to the gameplay capsule and given an original compact helmeted head, olive/charcoal clothing, field vest, scarf, open visor and non-glowing carbine. Material variants supply encounter variety without loading a second animation library. No alien, armoured-soldier franchise look, neon or energy weapon is used.
 - **Buildings and props:** garage/window bays, corrugated roofs, damaged concrete barriers, fuel drums, sheet-metal repairs and sand rocks dress the retained original collision-safe outpost. These are ordinary early-2000s border/military logistics elements, not space/cyberpunk pieces.
 - **Performance and safety:** imported pieces are grouped into the existing LOW/MEDIUM/HIGH/ULTRA dressing budgets. Collision, pathing, waves, score, HUD saves and touch systems remain the existing authored implementation.
 

@@ -12,6 +12,12 @@ func _initialize() -> void:
 	output_directory = _read_output_directory()
 	DirAccess.make_dir_recursive_absolute(output_directory)
 	scene_root = load("res://scenes/Main.tscn").instantiate() as Node3D
+	# The capture scene is instantiated directly instead of through
+	# change_scene_to_packed(). Mark it current before _ready() runs so real
+	# gameplay-owned systems (notably the pooled WeaponEffects child) attach to
+	# this authentic scene exactly as they do in the game, rather than emitting
+	# harmless but misleading empty-pool errors in the firing frame.
+	current_scene = scene_root
 	root.add_child(scene_root)
 	# The complete runtime scene is built synchronously on add_child; a compact
 	# settle avoids spending the software-render evidence budget on idle frames.
