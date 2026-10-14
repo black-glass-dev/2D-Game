@@ -54,7 +54,7 @@ The source/static/project/native checks, Android export, headless startup and re
 
 ## Current CC0 character refinement verification
 
-The shared 2.4 MB trimmed KayKit rig and full-size renderer evidence were subsequently validated in [GitHub Actions run 38518175341](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/38518175341), building candidate #60 from `72a179b`. Source/static and native tests, Godot import, APK export/signature, headless gameplay startup, and all twelve 1280×720 after-frame captures passed. The capture harness now also registers its direct-instantiated main scene as the current scene before `_ready()`, so the real pooled firing effects attach normally during the evidence pass. The run's only failure was the pre-existing GitHub-hosted Android emulator boot timeout; it is not presented as a device-launch pass.
+The shared 2.4 MB trimmed KayKit rig and full-size renderer evidence were subsequently validated in [GitHub Actions run 38519953827](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/38519953827), building candidate #61 from `bfcc41a`. Source/static and native tests, Godot import, APK export/signature, headless gameplay startup, and all twelve 1280×720 after-frame captures passed. The capture harness now also registers its direct-instantiated main scene as the current scene before `_ready()`, so the real pooled firing effects attach normally during the evidence pass. The workflow additionally switched to Android's lightweight AOSP Android Test Device image for the smoke attempt. Its hosted emulator still timed out before boot, so that infrastructure limitation remains and is not presented as a device-launch pass.
 
 ## Priority ADS repair — black-scope fallback eliminated
 
