@@ -2,7 +2,7 @@
 
 **তারিখ:** 2026-10-14 (Asia/Dhaka)
 
-**স্ট্যাটাস:** পরিকল্পনা — director-এর **“চালাও”** অনুমতির অপেক্ষায়
+**স্ট্যাটাস:** Execution authorized by the director on 2026-10-14; M0 is complete and M1 is next.
 **নিয়ম:** Deliverable A আগে সম্পূর্ণ হবে; তারপর Gate 2 অনুমোদন নিয়ে Deliverable B art pass শুরু হবে। প্রতিটি batch শেষে boot/test evidence, changelog, progress এবং QA entry লেখা হবে।
 
 ## Delivery order
