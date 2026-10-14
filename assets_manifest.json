@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-10-14",
+  "policy": {
+    "preferred_license": "CC0-1.0",
+    "max_texture_dimension": 1024,
+    "max_package_bytes": 209715200,
+    "max_total_download_bytes": 524288000,
+    "retry_delays_seconds": [2, 4, 8],
+    "request_timeout_seconds": 30
+  },
+  "assets": []
+}
