@@ -1,0 +1,27 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/map_data.gd" id="1_map_data"]
+
+[resource]
+script = ExtResource("1_map_data")
+id = "MP_DS_01"
+name_bn = "ডেজার্ট আউটপোস্ট"
+name_en = "Desert Outpost"
+tagline_bn = "সীমান্ত ঘাঁটি ধরে রাখো, চোরাকারবারিদের ঢেউ থামাও।"
+tagline_en = "Hold the border outpost against escalating smuggler waves."
+scene_path = "res://scenes/Main.tscn"
+difficulty_stars = 2
+size_label = "128 m × 128 m"
+environment_label = "Desert military outpost"
+max_waves = 3
+unlock_state = "UNLOCKED"
+music_track = ""
+spawn_profile = {
+"profile_id": "desert_default",
+"player_spawn": Vector3(0, 0.12, 13),
+"spawn_points": [Vector3(-45, 0.15, -39), Vector3(44, 0.15, -38), Vector3(-44, 0.15, 38), Vector3(43, 0.15, 38), Vector3(-6, 0.15, -47), Vector3(7, 0.15, 47), Vector3(47, 0.15, 3), Vector3(-48, 0.15, 3)],
+"wave_sizes": [6, 9, 12]
+}
+legend_bn = PackedStringArray(["কমান্ড ইয়ার্ডে প্রধান প্রতিরক্ষা", "উত্তর হ্যাঙ্গার ও টাওয়ার থেকে শত্রু আসতে পারে", "দক্ষিণ চেকপয়েন্টে কভার নাও", "রিলোডের জন্য ওয়েভ বিরতি ব্যবহার করো"])
+legend_en = PackedStringArray(["Defend from the command yard", "Watch the north hangar and tower lanes", "Use south checkpoint cover", "Reload during wave breaks"])
+playable = true

@@ -8,6 +8,19 @@ run/main_scene="res://scenes/Main.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://assets/ui/app_icon.svg"
 
+[autoload]
+SettingsService="*res://scripts/services/settings_service.gd"
+SaveService="*res://scripts/services/save_service.gd"
+MapRegistry="*res://scripts/services/map_registry.gd"
+InputService="*res://scripts/services/input_service.gd"
+AudioService="*res://scripts/services/audio_service.gd"
+LocalizationService="*res://scripts/services/localization_service.gd"
+SceneLoader="*res://scripts/services/scene_loader.gd"
+GameManager="*res://scripts/services/game_manager.gd"
+
+[internationalization]
+locale/translations=PackedStringArray("res://data/localization/redline.csv")
+
 [display/window]
 # Landscape-native design resolution. Canvas-items stretch fills every supported
 # device aspect ratio; dynamic 3D scaling is applied by PerformanceGovernor.

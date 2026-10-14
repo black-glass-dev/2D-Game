@@ -1,0 +1,85 @@
+extends Node
+
+## Adds named actions without removing legacy direct-input behaviour. Player and
+## menu migration can therefore move action-by-action while existing touch and
+## keyboard paths continue to work.
+const ACTION_MOVE_FORWARD := "redline_move_forward"
+const ACTION_MOVE_BACK := "redline_move_back"
+const ACTION_MOVE_LEFT := "redline_move_left"
+const ACTION_MOVE_RIGHT := "redline_move_right"
+const ACTION_FIRE := "redline_fire"
+const ACTION_AIM := "redline_aim"
+const ACTION_JUMP := "redline_jump"
+const ACTION_CROUCH := "redline_crouch"
+const ACTION_SWAP := "redline_swap"
+const ACTION_RELOAD := "redline_reload"
+const ACTION_PAUSE := "redline_pause"
+const ACTION_MENU_ACCEPT := "redline_menu_accept"
+const ACTION_MENU_BACK := "redline_menu_back"
+
+func _ready() -> void:
+	_register_defaults()
+
+func _register_defaults() -> void:
+	_add_key(ACTION_MOVE_FORWARD, KEY_W)
+	_add_key(ACTION_MOVE_FORWARD, KEY_UP)
+	_add_key(ACTION_MOVE_BACK, KEY_S)
+	_add_key(ACTION_MOVE_BACK, KEY_DOWN)
+	_add_key(ACTION_MOVE_LEFT, KEY_A)
+	_add_key(ACTION_MOVE_LEFT, KEY_LEFT)
+	_add_key(ACTION_MOVE_RIGHT, KEY_D)
+	_add_key(ACTION_MOVE_RIGHT, KEY_RIGHT)
+	_add_key(ACTION_JUMP, KEY_SPACE)
+	_add_key(ACTION_CROUCH, KEY_C)
+	_add_key(ACTION_SWAP, KEY_Q)
+	_add_key(ACTION_RELOAD, KEY_R)
+	_add_key(ACTION_PAUSE, KEY_ESCAPE)
+	_add_key(ACTION_MENU_ACCEPT, KEY_ENTER)
+	_add_key(ACTION_MENU_BACK, KEY_ESCAPE)
+	_add_mouse_button(ACTION_FIRE, MOUSE_BUTTON_LEFT)
+	_add_mouse_button(ACTION_AIM, MOUSE_BUTTON_RIGHT)
+	_add_joy_button(ACTION_MENU_ACCEPT, JOY_BUTTON_A)
+	_add_joy_button(ACTION_MENU_BACK, JOY_BUTTON_B)
+	_add_joy_button(ACTION_JUMP, JOY_BUTTON_A)
+	_add_joy_button(ACTION_RELOAD, JOY_BUTTON_X)
+	_add_joy_button(ACTION_SWAP, JOY_BUTTON_Y)
+	_add_joy_button(ACTION_PAUSE, JOY_BUTTON_START)
+	_add_joy_button(ACTION_FIRE, JOY_BUTTON_RIGHT_SHOULDER)
+	_add_joy_button(ACTION_AIM, JOY_BUTTON_LEFT_SHOULDER)
+	_add_joy_motion(ACTION_MOVE_LEFT, JOY_AXIS_LEFT_X, -1.0)
+	_add_joy_motion(ACTION_MOVE_RIGHT, JOY_AXIS_LEFT_X, 1.0)
+	_add_joy_motion(ACTION_MOVE_FORWARD, JOY_AXIS_LEFT_Y, -1.0)
+	_add_joy_motion(ACTION_MOVE_BACK, JOY_AXIS_LEFT_Y, 1.0)
+
+func _ensure_action(action: String) -> void:
+	if not InputMap.has_action(action):
+		InputMap.add_action(action)
+
+func _add_key(action: String, keycode: Key) -> void:
+	_ensure_action(action)
+	var event := InputEventKey.new()
+	event.physical_keycode = keycode
+	if not InputMap.action_has_event(action, event):
+		InputMap.action_add_event(action, event)
+
+func _add_mouse_button(action: String, button_index: MouseButton) -> void:
+	_ensure_action(action)
+	var event := InputEventMouseButton.new()
+	event.button_index = button_index
+	if not InputMap.action_has_event(action, event):
+		InputMap.action_add_event(action, event)
+
+func _add_joy_button(action: String, button_index: JoyButton) -> void:
+	_ensure_action(action)
+	var event := InputEventJoypadButton.new()
+	event.button_index = button_index
+	if not InputMap.action_has_event(action, event):
+		InputMap.action_add_event(action, event)
+
+func _add_joy_motion(action: String, axis: JoyAxis, axis_value: float) -> void:
+	_ensure_action(action)
+	var event := InputEventJoypadMotion.new()
+	event.axis = axis
+	event.axis_value = axis_value
+	if not InputMap.action_has_event(action, event):
+		InputMap.action_add_event(action, event)

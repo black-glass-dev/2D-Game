@@ -1,0 +1,35 @@
+keys,en,bn
+app.title,OPERATION REDLINE,অপারেশন রেডলাইন
+app.subtitle,TACTICAL SURVIVAL,কৌশলগত সারভাইভাল
+menu.play,PLAY,খেলুন
+menu.continue,CONTINUE,চালিয়ে যান
+menu.settings,SETTINGS,সেটিংস
+menu.credits,CREDITS,ক্রেডিটস
+menu.quit,QUIT,বন্ধ করুন
+menu.back,BACK,ফিরে যান
+menu.map_select,MAP SELECT,ম্যাপ নির্বাচন
+menu.coming_soon,COMING SOON,শীঘ্রই আসছে
+menu.locked,LOCKED,লকড
+loading.title,LOADING,লোড হচ্ছে
+loading.progress,Loading map resources…,ম্যাপ রিসোর্স লোড হচ্ছে…
+pause.title,PAUSED,বিরতি
+pause.resume,RESUME,আবার শুরু
+pause.restart_wave,RESTART WAVE,ওয়েভ আবার শুরু
+pause.map_select,MAP SELECT,ম্যাপ নির্বাচন
+pause.quit_to_desktop,QUIT TO DESKTOP,ডেস্কটপে ফিরুন
+settings.language,LANGUAGE,ভাষা
+settings.auto,AUTO,স্বয়ংক্রিয়
+settings.graphics,GRAPHICS,গ্রাফিক্স
+settings.audio,AUDIO,অডিও
+settings.controls,CONTROLS,কন্ট্রোল
+settings.accessibility,ACCESSIBILITY,অ্যাক্সেসিবিলিটি
+settings.other,OTHER,অন্যান্য
+settings.reset_defaults,RESET DEFAULTS,ডিফল্টে রিসেট
+game.survival,SURVIVAL,সারভাইভাল
+game.endless,ENDLESS,এন্ডলেস
+game.easy,EASY,সহজ
+game.normal,NORMAL,সাধারণ
+game.hard,HARD,কঠিন
+game.nightmare,NIGHTMARE,নাইটমেয়ার
+map.desert_outpost,Desert Outpost,ডেজার্ট আউটপোস্ট
+map.rooftop_highrise,Rooftop Highrise,রুফটপ হাইরাইজ

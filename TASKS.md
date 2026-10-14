@@ -8,12 +8,12 @@
 
 ## Next: M1 foundation
 
-- [ ] Add service/autoload architecture without changing Desert gameplay ownership.
-- [ ] Introduce schema-versioned settings and save migration.
-- [ ] Add Bengali/English localization CSVs and compatible font resources.
+- [x] Add additive service/autoload architecture without changing Desert gameplay ownership.
+- [x] Introduce schema-versioned settings and save migration contracts.
+- [x] Add the initial Bengali/English localization CSV catalog; compatible font acquisition remains next.
 - [ ] Create shared Redline UI theme and source SVG icons.
-- [ ] Introduce `MapData`, `MapRegistry`, and an `MP_DS_01` Desert compatibility adapter.
-- [ ] Add an input abstraction and conflict-aware rebind persistence.
+- [x] Introduce `MapData`, `MapRegistry`, and an `MP_DS_01` Desert compatibility resource.
+- [x] Add named InputMap actions while preserving legacy input; conflict-aware rebind UI remains next.
 
 ## Guardrails
 
