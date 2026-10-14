@@ -239,7 +239,7 @@ func _build_headshot_hitbox() -> void:
 	var shape := SphereShape3D.new()
 	shape.radius = 0.25
 	shape_node.shape = shape
-	shape_node.position = Vector3(0, 1.67, 0)
+	shape_node.position = Vector3(0, 1.38, 0)
 	head_hitbox.add_child(shape_node)
 	add_child(head_hitbox)
 
@@ -327,11 +327,13 @@ func _build_imported_smuggler(uniform: Material, vest: Material, head_skin: Mate
 	return true
 
 func _hide_imported_medieval_accessories(node: Node) -> void:
-	# The KayKit human rigs ship with medieval knives, crossbows, throwable props
-	# and a cape. Hide those source accessories — never repurpose them — while
-	# retaining the fully rigged arms, legs and human head for natural movement.
+	# The KayKit human rigs ship with medieval knives, crossbows, throwable props,
+	# a cape and a deliberately exaggerated adventurer head. Hide those source
+	# elements — never repurpose them — while retaining the fully rigged arms,
+	# legs and body for natural movement. A restrained original helmeted head is
+	# added below to keep the 2000-era combat silhouette proportionate.
 	var part_name := str(node.name).to_lower()
-	if "knife" in part_name or "crossbow" in part_name or "throwable" in part_name or "cape" in part_name:
+	if "knife" in part_name or "crossbow" in part_name or "throwable" in part_name or "cape" in part_name or part_name == "rogue_head":
 		_set_imported_mesh_visibility(node, false)
 		return
 	for child in node.get_children():
@@ -345,9 +347,9 @@ func _set_imported_mesh_visibility(node: Node, is_visible: bool) -> void:
 
 func _build_imported_tactical_overlays(vest: Material, face_wrap: Material, black: Material, accent: Material) -> void:
 	# These grounded equipment layers sit on the scaled CC0 person rather than
-	# replacing it. The KayKit bind pose is a 0–1.75 m human: legs below .43,
-	# torso .30–1.00 and head .93–1.75. Every layer stays on that figure instead
-	# of stacking a second oversized mannequin on top.
+	# replacing it. The KayKit bind pose keeps the legs below .43 and torso at
+	# .30–1.00. Its stylised source head is intentionally hidden; the compact
+	# covered head below restores a credible field-combat proportion.
 	var plate_edge := _mat(Color("4e5e50"), .56, .22)
 	var visor := _mat(Color("253a35"), .25, .30, Color.TRANSPARENT, .0)
 	_part_box("Smuggler plate carrier", Vector3(0, .88, -.250), Vector3(.48, .36, .08), vest)
@@ -357,10 +359,11 @@ func _build_imported_tactical_overlays(vest: Material, face_wrap: Material, blac
 		_part_box("Front magazine pouch", Vector3(pouch_x, .86, -.315), Vector3(.115, .15, .065), black)
 	_part_box("Faction red shoulder", Vector3(.31, .96, 0), Vector3(.11, .14, .24), accent)
 	_part_box("Raider faction armband", Vector3(-.31, .88, -.01), Vector3(.125, .085, .24), accent)
-	_part_box("Desert patrol helmet", Vector3(0, 1.68, .018), Vector3(.58, .13, .42), vest)
-	_part_box("Helmet crown", Vector3(0, 1.75, .018), Vector3(.48, .035, .34), black)
-	_part_box("Face wrap", Vector3(0, 1.42, -.305), Vector3(.39, .16, .035), face_wrap)
-	_part_box("Ballistic visor", Vector3(0, 1.54, -.315), Vector3(.42, .065, .025), visor)
+	_part_sphere("Raider balaclava head", Vector3(0, 1.32, 0), .22, face_wrap)
+	_part_box("Desert patrol helmet", Vector3(0, 1.48, .018), Vector3(.48, .14, .38), vest)
+	_part_box("Helmet crown", Vector3(0, 1.56, .018), Vector3(.40, .035, .30), black)
+	_part_box("Breather mask", Vector3(0, 1.25, -.235), Vector3(.29, .11, .055), black)
+	_part_box("Ballistic visor", Vector3(0, 1.39, -.255), Vector3(.34, .065, .025), visor)
 	_part_box("Back radio", Vector3(0, .89, .19), Vector3(.21, .25, .09), black)
 	_part_box("Utility belt", Vector3(0, .63, -.01), Vector3(.43, .075, .24), black)
 	# The external rig keeps its own animated human arms. Do not layer the old
@@ -506,7 +509,7 @@ func _build_footstep_dust() -> void:
 func _build_nameplate() -> void:
 	tactical_label = Label3D.new()
 	tactical_label.name = "Raider tactical nameplate"
-	tactical_label.position = Vector3(0, 2.16, 0)
+	tactical_label.position = Vector3(0, 1.88, 0)
 	tactical_label.pixel_size = .0045
 	tactical_label.font_size = 34
 	tactical_label.outline_size = 6

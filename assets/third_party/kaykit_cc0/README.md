@@ -12,4 +12,4 @@
 | `characters/Rogue.glb` | `addons/kaykit_character_pack_adventures/Characters/gltf/Rogue.glb` | Tactical smuggler base A |
 | `characters/Rogue_Hooded.glb` | `addons/kaykit_character_pack_adventures/Characters/gltf/Rogue_Hooded.glb` | Tactical smuggler base B |
 
-The models are genuine low-poly rigged human characters with authored animation clips. Operation Redline uses only their unbranded human geometry and animation, removes any medieval source accessories at runtime, and applies its own era-appropriate field clothing, field vest and conventional carbine. No original KayKit weapon, logo, map or commercial-game content is used.
+The models are genuine low-poly rigged human characters with authored animation clips. Operation Redline uses their unbranded human body/limb geometry and animation, removes medieval source accessories and the exaggerated source head at runtime, and applies its own era-appropriate field clothing, field vest and conventional carbine. No original KayKit weapon, logo, map or commercial-game content is used.
