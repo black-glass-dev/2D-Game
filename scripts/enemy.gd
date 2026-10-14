@@ -13,11 +13,13 @@ const SIGHT_CHECK_INTERVAL := 0.22
 const GRAVITY := 18.0
 const RADAR_NEAR_RANGE := 22.0
 
-# Conventional low-poly smuggler characters and carbine from Kenney's CC0 library.
-# Source/provenance: assets/third_party/kenney_cc0/README.md.
-const KENNEY_SMUGGLER_SCENES := [
-	preload("res://assets/third_party/kenney_cc0/characters/blocky_smuggler_a.glb"),
-	preload("res://assets/third_party/kenney_cc0/characters/blocky_smuggler_b.glb"),
+# Genuine low-poly human character rigs from KayKit's CC0 library. Their
+# provenance is retained in assets/third_party/kaykit_cc0/README.md. The source
+# accessories are hidden below; only the human mesh and authored movement clips
+# are used as the base for the game's original circa-2000 tactical kit.
+const KAYKIT_SMUGGLER_SCENES := [
+	preload("res://assets/third_party/kaykit_cc0/characters/Rogue.glb"),
+	preload("res://assets/third_party/kaykit_cc0/characters/Rogue_Hooded.glb"),
 ]
 const KENNEY_MACHINEGUN_SCENE := preload("res://assets/third_party/kenney_cc0/weapons/machinegun.glb")
 
@@ -169,14 +171,14 @@ func _update_visual_motion(delta: float) -> void:
 		return
 	var speed := Vector2(velocity.x, velocity.z).length()
 	if imported_smuggler != null:
-		# The source includes authored hold/walk/shoot clips; use them rather than
-		# posing a robot-like primitive limb rig. Animation is cosmetic only.
+		# Use the CC0 rig's own two-handed ranged and walk clips. They provide a
+		# believable human weapon stance without a separate robot-like limb rig.
 		if muzzle_flash_left > 0.0:
-			_set_imported_animation("holding-both-shoot")
+			_set_imported_animation("2H_Ranged_Shooting")
 		elif speed > .38:
-			_set_imported_animation("walk")
+			_set_imported_animation("Walking_A")
 		else:
-			_set_imported_animation("holding-both")
+			_set_imported_animation("2H_Ranged_Aiming")
 	walk_phase += delta * (3.2 + speed * 3.8)
 	hit_react = maxf(hit_react - delta * 7.0, 0.0)
 	reload_motion = maxf(reload_motion - delta * 1.8, 0.0)
@@ -201,7 +203,7 @@ func _update_visual_motion(delta: float) -> void:
 	if right_arm != null:
 		right_arm.rotation.x = lerpf(right_arm.rotation.x, aim_pose - gait * .35 - reload_motion * .25, 1.0 - exp(-delta * 15.0))
 	if weapon_root != null:
-		weapon_root.position.y = 1.20 + sin(walk_phase) * minf(speed * .012, .018)
+		weapon_root.position.y = .94 + sin(walk_phase) * minf(speed * .012, .018)
 		weapon_root.rotation.x = reload_motion * .38
 	if weapon_flash != null:
 		weapon_flash.visible = muzzle_flash_left > 0.0
@@ -264,11 +266,10 @@ func _build_model() -> void:
 	# the figure tactically anonymous without turning it into a sci-fi robot.
 	var head_skin := _mat([Color("8b5f45"), Color("76503b"), Color("9a6848")][variant], .91, .0)
 	var black := _mat(Color("0b1215"), .50, .58)
-	# The imported Kenney CC0 smuggler provides the human silhouette, proportions
-	# and authored movement clips. Its bright civilian source colours are replaced
-	# with grounded field clothing plus an original plate carrier, helmet and
-	# shouldered arms, so it reads as a circa-2000 armed smuggler rather than a
-	# pink/blue toy-like civilian in the desert.
+	# The imported KayKit CC0 rig provides a readable human silhouette, proportions
+	# and authored movement clips. Its medieval accessories are disabled and every
+	# visible material is replaced by grounded field clothing, a plate carrier,
+	# helmet and conventional carbine so it reads as a circa-2000 armed smuggler.
 	if _build_imported_smuggler(uniform, vest, head_skin, face_wrap, black, accent):
 		_build_weapon(black, accent)
 		_build_footstep_dust()
@@ -306,37 +307,35 @@ func _build_model() -> void:
 	_build_nameplate()
 
 func _build_imported_smuggler(uniform: Material, vest: Material, head_skin: Material, face_wrap: Material, black: Material, accent: Material) -> bool:
-	var source_index := spawn_index % KENNEY_SMUGGLER_SCENES.size()
-	var source_scene := KENNEY_SMUGGLER_SCENES[source_index] as PackedScene
+	var source_index := spawn_index % KAYKIT_SMUGGLER_SCENES.size()
+	var source_scene := KAYKIT_SMUGGLER_SCENES[source_index] as PackedScene
 	var scene_visual := source_scene.instantiate() as Node3D if source_scene != null else null
 	if scene_visual == null:
 		return false
 	imported_smuggler = scene_visual
-	imported_smuggler.name = "Kenney CC0 field-clothed smuggler"
-	# The source figures are deliberately blocky (their unscaled height is 2.7 m).
-	# Match the 1.75 m collider before adding the tactical kit, rather than leaving
-	# a giant square head and a hitbox which only covers the figure's lower half.
-	# This still uses the external model's human silhouette and authored clips.
-	imported_smuggler.scale = Vector3.ONE * 0.72
+	imported_smuggler.name = "KayKit CC0 field-clothed smuggler"
+	# KayKit's rig is a 2.18 m source character. A 0.80 scale matches the 1.75 m
+	# gameplay capsule and headshot position while preserving natural adult human
+	# proportions instead of the previous rectangular block-character silhouette.
+	imported_smuggler.scale = Vector3.ONE * 0.80
 	body_visual.add_child(imported_smuggler)
-	_apply_imported_character_materials(imported_smuggler, uniform, head_skin, black)
-	_hide_imported_arm_meshes(imported_smuggler)
+	_apply_imported_character_materials(imported_smuggler, uniform, head_skin)
+	_hide_imported_medieval_accessories(imported_smuggler)
 	imported_animator = _find_animation_player(imported_smuggler)
-	_set_imported_animation("holding-both")
-	_build_imported_tactical_overlays(uniform, vest, face_wrap, black, accent)
+	_set_imported_animation("2H_Ranged_Aiming")
+	_build_imported_tactical_overlays(vest, face_wrap, black, accent)
 	return true
 
-func _hide_imported_arm_meshes(node: Node) -> void:
-	# The source arm pose can be a T-pose for a frame while GLB clips initialise.
-	# Hide only those two source meshes and use the game's already-tested,
-	# shouldered-carbine arm rig below. The torso, head and legs remain the CC0
-	# human model, including its walk animation.
+func _hide_imported_medieval_accessories(node: Node) -> void:
+	# The KayKit human rigs ship with medieval knives, crossbows, throwable props
+	# and a cape. Hide those source accessories — never repurpose them — while
+	# retaining the fully rigged arms, legs and human head for natural movement.
 	var part_name := str(node.name).to_lower()
-	if part_name == "arm-left" or part_name == "arm-right":
+	if "knife" in part_name or "crossbow" in part_name or "throwable" in part_name or "cape" in part_name:
 		_set_imported_mesh_visibility(node, false)
 		return
 	for child in node.get_children():
-		_hide_imported_arm_meshes(child)
+		_hide_imported_medieval_accessories(child)
 
 func _set_imported_mesh_visibility(node: Node, is_visible: bool) -> void:
 	if node is VisualInstance3D:
@@ -344,28 +343,31 @@ func _set_imported_mesh_visibility(node: Node, is_visible: bool) -> void:
 	for child in node.get_children():
 		_set_imported_mesh_visibility(child, is_visible)
 
-func _build_imported_tactical_overlays(uniform: Material, vest: Material, face_wrap: Material, black: Material, accent: Material) -> void:
+func _build_imported_tactical_overlays(vest: Material, face_wrap: Material, black: Material, accent: Material) -> void:
 	# These grounded equipment layers sit on the scaled CC0 person rather than
-	# replacing it. Their positions follow the imported model's 0–1.94 m body:
-	# legs 0–.72, torso .72–1.37 and head 1.37–1.94. That keeps every layer on
-	# the human figure instead of stacking a second oversized mannequin on top.
+	# replacing it. The KayKit bind pose is a 0–1.75 m human: legs below .43,
+	# torso .30–1.00 and head .93–1.75. Every layer stays on that figure instead
+	# of stacking a second oversized mannequin on top.
 	var plate_edge := _mat(Color("4e5e50"), .56, .22)
 	var visor := _mat(Color("253a35"), .25, .30, Color.TRANSPARENT, .0)
-	_part_box("Smuggler plate carrier", Vector3(0, 1.04, -.250), Vector3(.48, .40, .08), vest)
-	_part_box("Carrier upper plate", Vector3(0, 1.18, -.302), Vector3(.34, .10, .032), plate_edge)
-	_part_box("Carrier lower plate", Vector3(0, .91, -.302), Vector3(.36, .085, .032), plate_edge)
+	_part_box("Smuggler plate carrier", Vector3(0, .88, -.250), Vector3(.48, .36, .08), vest)
+	_part_box("Carrier upper plate", Vector3(0, .995, -.302), Vector3(.34, .09, .032), plate_edge)
+	_part_box("Carrier lower plate", Vector3(0, .765, -.302), Vector3(.36, .075, .032), plate_edge)
 	for pouch_x in [-.15, 0.0, .15]:
-		_part_box("Front magazine pouch", Vector3(pouch_x, 1.00, -.315), Vector3(.115, .17, .065), black)
-	_part_box("Faction red shoulder", Vector3(.31, 1.25, 0), Vector3(.11, .16, .24), accent)
-	_part_box("Raider faction armband", Vector3(-.31, 1.17, -.01), Vector3(.125, .095, .24), accent)
-	_part_box("Desert patrol helmet", Vector3(0, 1.80, .018), Vector3(.58, .15, .42), vest)
-	_part_box("Helmet crown", Vector3(0, 1.90, .018), Vector3(.48, .045, .34), black)
-	_part_box("Face wrap", Vector3(0, 1.55, -.305), Vector3(.39, .18, .035), face_wrap)
-	_part_box("Ballistic visor", Vector3(0, 1.70, -.315), Vector3(.42, .075, .025), visor)
-	_part_box("Back radio", Vector3(0, 1.07, .19), Vector3(.21, .28, .09), black)
-	_part_box("Utility belt", Vector3(0, .78, -.01), Vector3(.43, .085, .24), black)
-	left_arm = _limb("Left shouldered arm", Vector3(-.31, 1.25, 0), uniform, black)
-	right_arm = _limb("Right shouldered arm", Vector3(.31, 1.25, 0), uniform, black)
+		_part_box("Front magazine pouch", Vector3(pouch_x, .86, -.315), Vector3(.115, .15, .065), black)
+	_part_box("Faction red shoulder", Vector3(.31, .96, 0), Vector3(.11, .14, .24), accent)
+	_part_box("Raider faction armband", Vector3(-.31, .88, -.01), Vector3(.125, .085, .24), accent)
+	_part_box("Desert patrol helmet", Vector3(0, 1.68, .018), Vector3(.58, .13, .42), vest)
+	_part_box("Helmet crown", Vector3(0, 1.75, .018), Vector3(.48, .035, .34), black)
+	_part_box("Face wrap", Vector3(0, 1.42, -.305), Vector3(.39, .16, .035), face_wrap)
+	_part_box("Ballistic visor", Vector3(0, 1.54, -.315), Vector3(.42, .065, .025), visor)
+	_part_box("Back radio", Vector3(0, .89, .19), Vector3(.21, .25, .09), black)
+	_part_box("Utility belt", Vector3(0, .63, -.01), Vector3(.43, .075, .24), black)
+	# The external rig keeps its own animated human arms. Do not layer the old
+	# primitive arms over them; that was the source of the floating shoulder-ball
+	# look in close-range captures.
+	left_arm = null
+	right_arm = null
 	_part_box("Left combat boot", Vector3(-.14, .18, -.070), Vector3(.15, .13, .27), black)
 	_part_box("Right combat boot", Vector3(.14, .18, -.070), Vector3(.15, .13, .27), black)
 
@@ -391,23 +393,20 @@ func _set_imported_animation(short_name: String) -> void:
 	imported_animator.play(animation_name, .12)
 	imported_animation = animation_name
 
-func _apply_imported_character_materials(node: Node, uniform: Material, head_skin: Material, boot: Material) -> void:
-	# Kenney's CC0 character file gives each body part a useful semantic name.
-	# Keep those values distinct: a face, olive clothing and dark boots read as a
-	# compact human raider at mobile scale, where one flat material becomes a
-	# featureless rectangular silhouette.
+func _apply_imported_character_materials(node: Node, uniform: Material, head_skin: Material) -> void:
+	# KayKit's CC0 rig keeps the human head/body/arm/leg meshes semantically
+	# separate. Preserve a visible face and olive field clothing rather than
+	# flattening the character into the old featureless rectangular silhouette.
 	if node is MeshInstance3D:
 		var part_name := str(node.name).to_lower()
 		var material := uniform
 		if "head" in part_name:
 			material = head_skin
-		elif "leg" in part_name:
+		elif "leg" in part_name or "arm" in part_name:
 			material = uniform
-		elif "arm" in part_name:
-			material = boot
 		(node as MeshInstance3D).material_override = material
 	for child in node.get_children():
-		_apply_imported_character_materials(child, uniform, head_skin, boot)
+		_apply_imported_character_materials(child, uniform, head_skin)
 
 func _apply_imported_material(node: Node, material: Material) -> void:
 	if node is MeshInstance3D:
@@ -439,7 +438,7 @@ func _leg(limb_name: String, local_position: Vector3, uniform: Material, boot: M
 func _build_weapon(black: Material, accent: Material) -> void:
 	weapon_root = Node3D.new()
 	weapon_root.name = "Raider shouldered carbine"
-	weapon_root.position = Vector3(.20, 1.25, -.37)
+	weapon_root.position = Vector3(0, .94, -.31)
 	weapon_root.rotation_degrees = Vector3(-8, 0, 0)
 	body_visual.add_child(weapon_root)
 	if imported_smuggler != null:

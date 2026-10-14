@@ -15,10 +15,18 @@ The following assets were authored specifically for this repository and are incl
 
 ### Kenney — CC0 1.0 Universal
 
-The project vendors a deliberately small set of conventional low-poly models from the Kenney asset library, credited voluntarily to **Kenney / kenney.nl**. They are used for the player weapon details, hostile-smuggler character variants, outpost wall/garage/roof modules, barriers, fuel drums, sheet-metal repairs and desert rocks.
+The project vendors a deliberately small set of conventional low-poly models from the Kenney asset library, credited voluntarily to **Kenney / kenney.nl**. They are used for player/raider conventional weapon details, outpost wall/garage/roof modules, barriers, fuel drums, sheet-metal repairs and desert rocks.
 
 - **License:** [Creative Commons Zero 1.0 Universal (CC0)](https://creativecommons.org/publicdomain/zero/1.0/)
 - **Auditable source/pin:** `shorepine/kenney` commit `3694c6879e487c108f55677be7dd2ca75b07cc3b`
 - **Vendored subset and exact source paths:** [`assets/third_party/kenney_cc0/README.md`](assets/third_party/kenney_cc0/README.md)
 
 Only real-world/period-appropriate assets were selected. No Kenney sci-fi, space, blaster, alien, laser, commercial-game, branded, or copied material is part of this project. Godot's built-in primitives, materials, fonts and particle renderer remain engine features rather than redistributed art assets.
+
+### KayKit / Kay Lousberg — CC0 1.0 Universal
+
+The project vendors two rigged, low-poly **KayKit Adventurers** human models as the base geometry and animation source for hostile smugglers. At runtime, their source knives, crossbows, throwable props and cape are hidden; the game applies its own restrained field clothing, tactical kit and conventional carbine. No medieval source accessory, KayKit logo, map or commercial-game material is used.
+
+- **License:** [Creative Commons Zero 1.0 Universal (CC0)](https://creativecommons.org/publicdomain/zero/1.0/)
+- **Auditable source/pin:** `KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0` commit `672074b73ba276876a19e8816ecdc5241817ab47`
+- **Vendored subset and exact source paths:** [`assets/third_party/kaykit_cc0/README.md`](assets/third_party/kaykit_cc0/README.md)
