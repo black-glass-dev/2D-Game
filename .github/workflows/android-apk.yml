@@ -256,13 +256,19 @@ jobs:
       - name: Install and launch APK in Android emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          # API 30/default boots reliably on GitHub-hosted x86_64 runners and is
-          # sufficient to validate this Android 35-compiled, min-SDK-compatible APK.
+          # Android Test Device images are purpose-built for CI and are much
+          # lighter than a full consumer image. API 30 remains sufficient to
+          # validate this Android-35-compiled, min-SDK-compatible APK while
+          # avoiding the repeated hosted-runner boot timeout of the prior image.
           api-level: 30
-          target: default
+          target: aosp_atd
           arch: x86_64
-          profile: pixel_2
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          profile: Nexus 6
+          cores: 2
+          ram-size: 2048M
+          heap-size: 256M
+          emulator-boot-timeout: 360
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -no-snapshot-save
           disable-animations: true
           script: |
             adb install -r build/OperationRedline-debug.apk
