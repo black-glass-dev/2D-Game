@@ -32,4 +32,4 @@ _Last updated: 2026-10-14 (Asia/Dhaka)_
 
 ## Next continuation point
 
-The complete source/render work is committed and CI-rendered. The latest full visual candidate is #60 from commit `bfcc41a`; its source, Android export/signature, headless startup and all 12 real before/after renderer captures passed, including grounded CC0 environment/weapon/character art and the repaired ADS frame. The hosted Android emulator timed out while booting, so a physical Android playthrough is the only remaining gate before a physical-device-final label.
+The complete source/render work is committed and CI-rendered. The latest full visual candidate is #61 from commit `bfcc41a`; its source, Android export/signature, headless startup and all 12 real before/after renderer captures passed, including grounded CC0 environment/weapon/character art and the repaired ADS frame. The hosted Android emulator timed out while booting, so a physical Android playthrough is the only remaining gate before a physical-device-final label.
