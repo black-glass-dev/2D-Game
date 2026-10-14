@@ -52,6 +52,10 @@ A second direct presentation pass was made after reviewing the captured frames r
 
 The source/static/project/native checks, Android export, headless startup and refreshed OpenGL before/after capture all passed in [GitHub Actions run 38355410579](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/38355410579). It generated candidate #48 and refreshed all 12 after frames.
 
+## Current CC0 character refinement verification
+
+The shared 2.4 MB trimmed KayKit rig and full-size renderer evidence were subsequently validated in [GitHub Actions run 38518175341](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/38518175341), building candidate #60 from `72a179b`. Source/static and native tests, Godot import, APK export/signature, headless gameplay startup, and all twelve 1280×720 after-frame captures passed. The capture harness now also registers its direct-instantiated main scene as the current scene before `_ready()`, so the real pooled firing effects attach normally during the evidence pass. The run's only failure was the pre-existing GitHub-hosted Android emulator boot timeout; it is not presented as a device-launch pass.
+
 ## Priority ADS repair — black-scope fallback eliminated
 
 The black optic failure was traced to the carbine viewmodel's former opaque sight block, not a required second-camera rendering feature. The mobile path now keeps the primary `PlayerCamera` as the only world renderer:
