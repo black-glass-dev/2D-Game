@@ -18,7 +18,8 @@
 | Resource links and original texture dimensions | `python3 tools/validate_project.py` | PASS — 45 `res://` links and 4 128×128 textures | M1 Batch 1 terminal log |
 | Native survival core | `./scripts/run_native_tests.sh` | PASS — 3 waves, 27 spawns, completion | M1 Batch 1 terminal log |
 | Whitespace | `git diff --check` | PASS | M1 Batch 1 terminal log |
-| Godot import/headless launch | Not locally available; queued through the Android CI workflow after push | Pending | GitHub Actions run URL to be recorded after completion |
+| Godot import, Android debug export, and headless launch | GitHub Actions run 38589728753 | PASS | `https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/38589728753` — import/export/headless/capture steps succeeded |
+| Android emulator install/launch | GitHub Actions run 38589728753 | BLOCKED — emulator boot timeout | The APK candidate and build evidence uploaded, but the hosted emulator did not boot before timeout; this is not a device-pass result |
 
 ## Outstanding test requirements
 
