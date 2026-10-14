@@ -333,7 +333,7 @@ func _hide_imported_medieval_accessories(node: Node) -> void:
 	# legs and body for natural movement. A restrained original helmeted head is
 	# added below to keep the 2000-era combat silhouette proportionate.
 	var part_name := str(node.name).to_lower()
-	if "knife" in part_name or "crossbow" in part_name or "throwable" in part_name or "cape" in part_name or part_name == "rogue_head":
+	if "knife" in part_name or "crossbow" in part_name or "throwable" in part_name or "cape" in part_name or "head" in part_name:
 		_set_imported_mesh_visibility(node, false)
 		return
 	for child in node.get_children():
