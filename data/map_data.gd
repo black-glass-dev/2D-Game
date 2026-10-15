@@ -14,7 +14,8 @@ extends Resource
 @export_file("*.png") var thumbnail_path := ""
 @export_range(1, 5, 1) var difficulty_stars := 1
 @export var size_label := ""
-@export var environment_label := ""
+@export var environment_bn := ""
+@export var environment_en := ""
 @export var max_waves := 3
 @export_enum("UNLOCKED", "LOCKED", "COMING_SOON") var unlock_state := "UNLOCKED"
 @export var music_track := ""
@@ -31,3 +32,6 @@ func localized_name(locale := "en") -> String:
 
 func localized_tagline(locale := "en") -> String:
 	return tagline_bn if locale.begins_with("bn") else tagline_en
+
+func localized_environment(locale := "en") -> String:
+	return environment_bn if locale.begins_with("bn") else environment_en

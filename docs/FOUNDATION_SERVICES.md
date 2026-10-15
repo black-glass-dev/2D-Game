@@ -12,12 +12,12 @@ M1 introduces global services without replacing the playable Desert runtime in t
 4. `InputService` — named keyboard/mouse/gamepad actions while legacy direct input remains active.
 5. `AudioService` — prepares `Music`, `SFX`, and `UI` buses while current combat players retain their existing Master routing.
 6. `LocalizationService` — resolves `Auto`, Bengali, and English locale preference using the initial CSV catalog.
-7. `SceneLoader` — threaded request/progress/fade contract, unused by legacy Main until M2.
-8. `GameManager` — Boot/Menu/MapSelect/Loading/Playing/Pause/End state contract, unused by legacy Main until M2.
+7. `SceneLoader` — threaded request/progress/fade contract adopted by `Boot.tscn` for map hand-off.
+8. `GameManager` — Boot/Menu/MapSelect/Loading/Playing/Pause/End state contract; `Main.tscn` marks Playing when it takes legacy gameplay ownership.
 
 ## Compatibility guarantees
 
-- `Main.tscn` remains the project entry scene during M1.
+- `Boot.tscn` is the project entry scene; `Main.tscn` remains directly runnable and is the selected `MP_DS_01` gameplay scene.
 - Existing `RedlineSettings`, HUD layout ConfigFile, `WorldBuilder`, player controls, weapons, waves, and Desert spawns are not replaced in this batch.
 - Legacy settings are copied into the new schema; the legacy file remains untouched.
 - Legacy HUD-layout data remains untouched and is only marked as present in `save.json` for a future explicit import.
@@ -25,4 +25,4 @@ M1 introduces global services without replacing the playable Desert runtime in t
 
 ## MapData contract
 
-`RedlineMapData` holds the map ID, bilingual name/tagline, scene and thumbnail paths, difficulty/size/environment labels, unlock state, music track, spawn profile, legend, and playable flag. `MP_DS_01.tres` packages the existing Desert spawn profile without changing any runtime spawn selection yet.
+`RedlineMapData` holds the map ID, bilingual name/tagline/environment, scene and thumbnail paths, difficulty/size labels, unlock state, music track, spawn profile, legend, and playable flag. `MP_DS_01.tres` packages the existing Desert spawn profile without changing any runtime spawn selection yet.

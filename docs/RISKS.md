@@ -11,4 +11,5 @@
 | R-007 | Hosted Android emulator fails to boot | No CI device-launch proof | Keep export/headless/capture gates; use a physical-device checklist for final classification | Active — M3/M6 |
 | R-008 | Branch index had become detached from the published project content | Accidental overwrite/loss during registration | Byte-compare with remote, create safety archive, reset only after matching audit | Mitigated — M0 |
 | R-009 | Menu background can consume gameplay performance budget | Slow boot/battery drain | Quality-gated rail camera with static thumbnail fallback | Planned — M2 |
-| R-010 | Localization font lacks Bengali glyph coverage | Broken UI text | Verify Noto Sans Bengali before enabling Bengali default; English fallback if font load fails | Planned — M1 |
+| R-010 | Localization font lacks Bengali glyph coverage | Broken UI text | Noto Sans Bengali Regular/SemiBold is vendored under OFL; verify actual Bengali render in Godot screenshot capture before closing the risk | Active — M1/M2 |
+| R-011 | New boot shell may fail to hand legacy Desert state ownership back after threaded loading | Menu works but gameplay state/pause logic becomes inconsistent | Keep `Main.tscn` directly runnable and set Playing only in its `_ready`; validate the full Boot → map → Main route with a real headless run | Active — M2 |

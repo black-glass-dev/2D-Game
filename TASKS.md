@@ -10,10 +10,18 @@
 
 - [x] Add additive service/autoload architecture without changing Desert gameplay ownership.
 - [x] Introduce schema-versioned settings and save migration contracts.
-- [x] Add the initial Bengali/English localization CSV catalog; compatible font acquisition remains next.
-- [ ] Create shared Redline UI theme and source SVG icons.
+- [x] Add the initial Bengali/English localization CSV catalog and a compatible OFL font family with provenance.
+- [x] Create shared Redline UI theme and original SVG icon source set.
 - [x] Introduce `MapData`, `MapRegistry`, and an `MP_DS_01` Desert compatibility resource.
 - [x] Add named InputMap actions while preserving legacy input; conflict-aware rebind UI remains next.
+
+## M2 started — Deliverable A flow
+
+- [x] Add an independently runnable Boot → Splash → Main Menu shell.
+- [x] Add a data-driven Desert map card and threaded `SceneLoader` hand-off.
+- [x] Add a touch/keyboard/gamepad navigation baseline plus Android Back route in the shell.
+- [ ] Add the full settings sections, live preview controls, reset confirmation, and control-layout hand-off.
+- [ ] Add map difficulty/mode selection, locked future-map card, loading telemetry, and visual menu background fallback.
 
 ## Guardrails
 

@@ -10,8 +10,12 @@ All notable production changes are documented here.
 - Additive global service contracts for game state, threaded scene loading, versioned settings/save data, map registry, input actions, audio buses, and localization selection.
 - `RedlineMapData` plus `MP_DS_01` data resource for the existing Desert Outpost.
 - Initial English/Bengali CSV localization catalog.
+- `Boot.tscn` and a responsive Boot → Splash → Menu → Map Select → Loading shell that dynamically reads `MapRegistry` and hands off through `SceneLoader`.
+- Noto Sans Bengali Regular/SemiBold under SIL OFL 1.1 with pinned source, copied license, and SHA-256 evidence.
+- Shared Redline theme and original play, settings, back, and lock SVG source icons.
 
 ### Changed
 
-- `project.godot` now registers the foundation services as autoloads and registers the CSV catalog for Godot localization import.
-- Existing Desert gameplay, direct touch/keyboard input, runtime world builder, Android package/signing, and current HUD remain intact during the additive foundation batch.
+- `project.godot` now boots `Boot.tscn`, registers the foundation services as autoloads, and registers the CSV catalog for Godot localization import.
+- `Main.tscn` remains directly runnable; it now marks the global game state as Playing when the legacy Desert runtime takes ownership after loading.
+- Existing Desert gameplay, direct touch/keyboard input, runtime world builder, Android package/signing, and current HUD remain intact during the boot-flow migration.

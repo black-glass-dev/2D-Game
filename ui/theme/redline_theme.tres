@@ -1,0 +1,127 @@
+[gd_resource type="Theme" load_steps=9 format=3]
+
+[ext_resource type="FontFile" path="res://assets/third_party/noto_sans_bengali_ofl/NotoSansBengali-Regular.ttf" id="1_regular"]
+[ext_resource type="FontFile" path="res://assets/third_party/noto_sans_bengali_ofl/NotoSansBengali-SemiBold.ttf" id="2_semibold"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxPanel"]
+bg_color = Color(0.025, 0.047, 0.067, 0.94)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.18, 0.42, 0.52, 0.78)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+shadow_color = Color(0, 0, 0, 0.55)
+shadow_size = 8
+content_margin_left = 20.0
+content_margin_top = 16.0
+content_margin_right = 20.0
+content_margin_bottom = 16.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxButtonNormal"]
+bg_color = Color(0.055, 0.13, 0.18, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.18, 0.60, 0.72, 0.85)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+content_margin_left = 18.0
+content_margin_top = 10.0
+content_margin_right = 18.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxButtonHover"]
+bg_color = Color(0.08, 0.29, 0.36, 0.98)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.38, 0.9, 0.94, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+shadow_color = Color(0.1, 0.85, 0.96, 0.18)
+shadow_size = 8
+content_margin_left = 18.0
+content_margin_top = 10.0
+content_margin_right = 18.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxButtonPressed"]
+bg_color = Color(0.03, 0.10, 0.14, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.95, 0.48, 0.20, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+content_margin_left = 18.0
+content_margin_top = 10.0
+content_margin_right = 18.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxButtonDisabled"]
+bg_color = Color(0.05, 0.07, 0.09, 0.82)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.20, 0.25, 0.28, 0.7)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+content_margin_left = 18.0
+content_margin_top = 10.0
+content_margin_right = 18.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxLineEdit"]
+bg_color = Color(0.02, 0.04, 0.06, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.18, 0.42, 0.52, 0.85)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+
+[resource]
+default_font = ExtResource("1_regular")
+default_font_size = 21
+Button/colors/font_color = Color(0.91, 0.98, 1, 1)
+Button/colors/font_hover_color = Color(1, 1, 1, 1)
+Button/colors/font_pressed_color = Color(1, 0.76, 0.55, 1)
+Button/colors/font_disabled_color = Color(0.48, 0.55, 0.58, 1)
+Button/colors/font_outline_color = Color(0, 0, 0, 0.9)
+Button/constants/outline_size = 1
+Button/fonts/font = ExtResource("2_semibold")
+Button/font_sizes/font_size = 24
+Button/styles/normal = SubResource("StyleBoxButtonNormal")
+Button/styles/hover = SubResource("StyleBoxButtonHover")
+Button/styles/pressed = SubResource("StyleBoxButtonPressed")
+Button/styles/disabled = SubResource("StyleBoxButtonDisabled")
+Label/colors/font_color = Color(0.90, 0.97, 1, 1)
+Label/colors/font_outline_color = Color(0, 0, 0, 0.92)
+Label/constants/outline_size = 1
+Label/fonts/font = ExtResource("1_regular")
+Panel/styles/panel = SubResource("StyleBoxPanel")
+LineEdit/fonts/font = ExtResource("1_regular")
+LineEdit/styles/normal = SubResource("StyleBoxLineEdit")

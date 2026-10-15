@@ -65,3 +65,23 @@
 **Alternative considered:** Remove direct key reads immediately.
 
 **Why not selected:** The menu, pause, touch, and gamepad routes do not yet share a complete action consumer and would be at regression risk.
+
+## D-008 — Boot flow is a dedicated shell scene
+
+**Decision:** Change the default entry scene to `Boot.tscn`, then use `SceneLoader` to hand off the selected data-driven map to the unchanged `Main.tscn` Desert scene.
+
+**Reason:** A separate UI shell provides a genuine Boot → Splash → Menu → Map Select → Loading route without turning the legacy gameplay scene into a menu controller. `Main.tscn` can still be launched independently for regression testing.
+
+**Alternative considered:** Build the menu inside `main.gd` before world construction.
+
+**Why not selected:** That keeps combat objects, HUD, world construction, and front-end state alive together and defeats the mobile performance/failure-isolation goal.
+
+## D-009 — Bengali font is vendored with traceable OFL provenance
+
+**Decision:** Vendor Noto Sans Bengali Regular and SemiBold from a pinned `notofonts/noto-fonts` revision as the shared UI font.
+
+**Reason:** The font renders Bengali and Latin UI text, is licensed under SIL OFL 1.1, and is compact enough for the Android target. The exact binaries, hashes, source revision, and full license are in the repository.
+
+**Alternative considered:** Depend on a device system font or retrieve the upstream release ZIP at build time.
+
+**Why not selected:** System glyph coverage varies by device; the release ZIP redirect was unavailable in the restricted build network. Sparse Git retrieval from the pinned source safely produced reproducible vendor files.

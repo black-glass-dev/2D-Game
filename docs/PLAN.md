@@ -1,15 +1,15 @@
 # Operation Redline — Production Plan (M0–M6)
 
-**তারিখ:** 2026-10-14 (Asia/Dhaka)
+**Date:** 2026-10-14 (Asia/Dhaka)
 
-**স্ট্যাটাস:** Execution authorized by the director on 2026-10-14; M0 is complete and M1 is next.
-**নিয়ম:** Deliverable A আগে সম্পূর্ণ হবে; তারপর Gate 2 অনুমোদন নিয়ে Deliverable B art pass শুরু হবে। প্রতিটি batch শেষে boot/test evidence, changelog, progress এবং QA entry লেখা হবে।
+**Status:** Execution authorized by the director on 2026-10-14; M0 is complete and M1 is in progress.
+**Rule:** Complete Deliverable A before beginning the Deliverable B art pass after Gate 2 approval. Record boot/test evidence, changelog, progress, and QA entries after every batch.
 
 ## Delivery order
 
 1. **Deliverable A:** Boot → Splash → Main Menu → Map Select → async Loading → Gameplay, full settings/persistence/localization/pause/end flow.
-2. **Deliverable B:** `MP_RF_02` Rooftop Highrise — graybox থেকে nav/system/art/optimization/QA।
-3. **Non-regression contract:** `MP_DS_01` Desert Outpost প্রতিটি commit-এর পরে selectable এবং playable থাকবে; existing HUD/touch combat will be preserved while being packaged behind the new services.
+2. **Deliverable B:** `MP_RF_02` Rooftop Highrise — graybox through navigation, systems, art, optimization, and QA.
+3. **Non-regression contract:** `MP_DS_01` Desert Outpost remains selectable and playable after every commit; existing HUD and touch combat are preserved while being packaged behind the new services.
 
 ## Milestones
 
@@ -106,6 +106,6 @@ A batch is only marked done when all applicable items are true:
 
 ## Approval gates
 
-- **Start gate:** this plan intentionally stops here. Work begins only after the director replies **“চালাও”**.
-- **Gate 2:** after `MP_RF_02` graybox + nav captures; art pass starts only after director approval.
-- **Release gate:** no final physical-device-tested APK claim without recorded device launch and control test evidence.
+- **Start gate:** passed on 2026-10-14; implementation is authorized.
+- **Gate 2:** after `MP_RF_02` graybox and navigation captures; the art pass starts only after director approval.
+- **Release gate:** no final physical-device-tested APK claim without recorded device launch and control-test evidence.

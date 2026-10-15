@@ -40,6 +40,13 @@ func _register_defaults() -> void:
 	_add_mouse_button(ACTION_AIM, MOUSE_BUTTON_RIGHT)
 	_add_joy_button(ACTION_MENU_ACCEPT, JOY_BUTTON_A)
 	_add_joy_button(ACTION_MENU_BACK, JOY_BUTTON_B)
+	# Route the D-pad through Godot's built-in UI actions so focused menu
+	# controls remain keyboard/mouse/gamepad equivalent without a second
+	# navigation system.
+	_add_joy_button("ui_up", JOY_BUTTON_DPAD_UP)
+	_add_joy_button("ui_down", JOY_BUTTON_DPAD_DOWN)
+	_add_joy_button("ui_left", JOY_BUTTON_DPAD_LEFT)
+	_add_joy_button("ui_right", JOY_BUTTON_DPAD_RIGHT)
 	_add_joy_button(ACTION_JUMP, JOY_BUTTON_A)
 	_add_joy_button(ACTION_RELOAD, JOY_BUTTON_X)
 	_add_joy_button(ACTION_SWAP, JOY_BUTTON_Y)

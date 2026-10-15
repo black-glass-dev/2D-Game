@@ -10,6 +10,7 @@ The following assets were authored specifically for this repository and are incl
 - Runtime Raider character kit in `scripts/enemy.gd`
 - Runtime rifle, pistol, hands and combat effect kits in `scripts/rifle.gd`, `scripts/pistol.gd` and `scripts/weapon_effects.gd`
 - Generated game sound effects already stored under `assets/audio/`
+- Shared menu UI icon source files in `assets/ui/icons/`
 
 ## Third-party assets
 
@@ -30,3 +31,12 @@ The project vendors a trimmed, rigged low-poly **KayKit Adventurers** human mode
 - **License:** [Creative Commons Zero 1.0 Universal (CC0)](https://creativecommons.org/publicdomain/zero/1.0/)
 - **Auditable source/pin:** `KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0` commit `672074b73ba276876a19e8816ecdc5241817ab47`
 - **Vendored subset and exact source paths:** [`assets/third_party/kaykit_cc0/README.md`](assets/third_party/kaykit_cc0/README.md)
+
+### Noto Sans Bengali — SIL Open Font License 1.1
+
+The player-facing localized UI bundles Noto Sans Bengali Regular and SemiBold for consistent Bengali and Latin glyph coverage.
+
+- **Copyright holder:** The Noto Project Authors
+- **License:** [SIL Open Font License 1.1](https://openfontlicense.org/)
+- **Auditable source/pin:** `notofonts/noto-fonts` commit `ffebf8c1ee449e544955a7e813c54f9b73848eac`
+- **Vendored files, source paths, and license:** [`assets/third_party/noto_sans_bengali_ofl/README.md`](assets/third_party/noto_sans_bengali_ofl/README.md)

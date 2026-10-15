@@ -21,6 +21,16 @@
 | Godot import, Android debug export, and headless launch | GitHub Actions run 38589728753 | PASS | `https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/38589728753` — import/export/headless/capture steps succeeded |
 | Android emulator install/launch | GitHub Actions run 38589728753 | BLOCKED — emulator boot timeout | The APK candidate and build evidence uploaded, but the hosted emulator did not boot before timeout; this is not a device-pass result |
 
+## M1 batch 2 / M2 entry flow — Boot shell
+
+| Test | Command / method | Result | Evidence |
+| --- | --- | --- | --- |
+| GDScript static analysis | `npm run test:gdscript` | PASS — 22 scripts, 0 errors, 0 warnings | M1 Batch 2 terminal log |
+| Resource links and original texture dimensions | `python3 tools/validate_project.py` | PASS — 47 `res://` links and 4 128×128 textures | M1 Batch 2 terminal log |
+| Native survival core | `./scripts/run_native_tests.sh` | PASS — 3 waves, 27 spawns, completion | M1 Batch 2 terminal log |
+| Asset manifest syntax and font hashes | `python3 -m json.tool assets_manifest.json`; `sha256sum` | PASS — manifest parses; Regular/SemiBold match the recorded hashes | M1 Batch 2 terminal log |
+| Godot import/export/headless Boot → Main route | GitHub Actions required | Pending after push | CI URL will be recorded after completion |
+
 ## Outstanding test requirements
 
 - Real Godot headless launch after every code-bearing batch.

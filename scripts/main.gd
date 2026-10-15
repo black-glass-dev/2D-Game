@@ -71,6 +71,9 @@ var respawn_left := -1.0
 var respawn_last_second := -1
 
 func _ready() -> void:
+	# Main remains independently runnable; BootFlow sets Loading, then this
+	# compatibility hand-off marks the legacy Desert session as actively playing.
+	GameManager.set_state(GameManager.State.PLAYING)
 	settings.load_from_disk()
 	WorldBuilder.build(self)
 	performance_governor = PerformanceGovernor.new()

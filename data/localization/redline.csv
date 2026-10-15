@@ -1,6 +1,9 @@
 keys,en,bn
 app.title,OPERATION REDLINE,অপারেশন রেডলাইন
 app.subtitle,TACTICAL SURVIVAL,কৌশলগত সারভাইভাল
+menu.press_to_continue,Press ENTER or tap to continue,ENTER চাপুন বা ট্যাপ করুন
+menu.navigation_hint,ENTER / A: select  •  ESC / B: back,ENTER / A: নির্বাচন  •  ESC / B: ফিরুন
+menu.back_hint,ESC / B / Android Back: return,ESC / B / Android Back: ফিরে যান
 menu.play,PLAY,খেলুন
 menu.continue,CONTINUE,চালিয়ে যান
 menu.settings,SETTINGS,সেটিংস
@@ -8,6 +11,10 @@ menu.credits,CREDITS,ক্রেডিটস
 menu.quit,QUIT,বন্ধ করুন
 menu.back,BACK,ফিরে যান
 menu.map_select,MAP SELECT,ম্যাপ নির্বাচন
+menu.select,SELECT,নির্বাচন করুন
+menu.selected,SELECTED,নির্বাচিত
+menu.start_mission,START MISSION,মিশন শুরু করুন
+menu.no_maps,No map data is available.,কোনো ম্যাপ ডেটা পাওয়া যায়নি।
 menu.coming_soon,COMING SOON,শীঘ্রই আসছে
 menu.locked,LOCKED,লকড
 loading.title,LOADING,লোড হচ্ছে
@@ -24,6 +31,7 @@ settings.audio,AUDIO,অডিও
 settings.controls,CONTROLS,কন্ট্রোল
 settings.accessibility,ACCESSIBILITY,অ্যাক্সেসিবিলিটি
 settings.other,OTHER,অন্যান্য
+settings.full_panel_coming,More settings will be available before mission deployment.,মিশন শুরু করার আগে আরও সেটিংস যোগ করা হবে।
 settings.reset_defaults,RESET DEFAULTS,ডিফল্টে রিসেট
 game.survival,SURVIVAL,সারভাইভাল
 game.endless,ENDLESS,এন্ডলেস
@@ -31,5 +39,6 @@ game.easy,EASY,সহজ
 game.normal,NORMAL,সাধারণ
 game.hard,HARD,কঠিন
 game.nightmare,NIGHTMARE,নাইটমেয়ার
+map.waves,WAVES,ওয়েভ
 map.desert_outpost,Desert Outpost,ডেজার্ট আউটপোস্ট
 map.rooftop_highrise,Rooftop Highrise,রুফটপ হাইরাইজ
