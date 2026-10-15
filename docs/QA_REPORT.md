@@ -62,7 +62,8 @@ Candidate #67 is not treated as a tested delivery because the Android emulator i
 | GDScript static analysis | `npm run test:gdscript` | PASS — 23 scripts, 0 errors, 0 warnings | M2 Batch 3 terminal log |
 | Resource links and original texture dimensions | `python3 tools/validate_project.py` | PASS — 48 `res://` links and 4 128×128 textures | M2 Batch 3 terminal log |
 | Native survival core | `./scripts/run_native_tests.sh` | PASS — 3 waves, 27 spawns, completion | M2 Batch 3 terminal log |
-| Locked Highrise map card | Normal project launch with `--verify-map-select` | Pending after push | CI must emit `MAP_SELECT_PASS` only when `MP_RF_02` is registered, selectable for inspection, and cannot launch |
+| Locked Highrise map card | Normal project launch with `--verify-map-select` | PASS | [GitHub Actions run 38747901596](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/38747901596) passed the headless launch step; CI requires `MAP_SELECT_PASS` only when `MP_RF_02` is registered, selectable for inspection, and cannot launch |
+| Android emulator install/launch | GitHub Actions run 38747901596 | BLOCKED — emulator boot timeout | Candidate #69 was uploaded, but the hosted emulator did not boot before timeout; this is not a device-pass result |
 
 ## Outstanding test requirements
 

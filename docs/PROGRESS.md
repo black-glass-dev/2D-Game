@@ -14,4 +14,4 @@ Last updated: 2026-10-15 (Asia/Dhaka)
 
 ## Current batch
 
-**M2 Batch 3 in progress:** Map Select now reads both the playable Desert resource and locked Highrise metadata, offers a localized tactical detail panel, and stores pre-deployment difficulty/mode selection without modifying Desert combat balance. CI validation of locked-card safety and map data registry behavior is required after this batch. Hosted emulator boot remains the physical-device evidence blocker.
+**M2 Batch 3 validated:** Map Select reads both the playable Desert resource and locked Highrise metadata, offers a localized tactical detail panel, and stores pre-deployment difficulty/mode selection without modifying Desert combat balance. CI run 38747901596 passed source checks, Godot import, Android export, boot/settings/map-select headless checks, and renderer capture. Hosted emulator boot remains the physical-device evidence blocker.
