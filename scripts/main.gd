@@ -780,7 +780,8 @@ func _run_pause_flow_verification() -> void:
 		get_tree().quit(1)
 		return
 	_close_pause()
-	await get_tree().process_frame
+	# `leave_pause()` and Control visibility update synchronously. Do not await a
+	# rendered frame here: the Xvfb capture route can defer it after readback.
 	if GameManager.state != GameManager.State.PLAYING or get_tree().paused or pause_overlay.visible:
 		push_error("Pause-flow verification could not resume gameplay state.")
 		get_tree().quit(1)
