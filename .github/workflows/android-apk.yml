@@ -185,7 +185,10 @@ jobs:
           set -euo pipefail
           export PATH="$HOME/.local/bin:$PATH"
           mkdir -p build/screenshots/pause
-          timeout 75s xvfb-run --auto-servernum godot \
+          # First-frame shader/material setup under CI's llvmpipe renderer can
+          # outlast ordinary headless initialization. Keep a bounded but honest
+          # budget for the real Boot → Main UI capture.
+          timeout 180s xvfb-run --auto-servernum godot \
             --path . --rendering-driver opengl3 -- \
             --verify-pause-flow --capture-pause-bengali \
             --pause-screenshot-dir "$GITHUB_WORKSPACE/build/screenshots/pause" \
