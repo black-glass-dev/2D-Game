@@ -135,3 +135,13 @@
 **Alternative considered:** Pause only the player/director and leave the scene tree running, or duplicate a compact pause settings panel.
 
 **Why not selected:** Partial pausing risks background UI/timers and missed state ownership; duplicated settings would diverge from the already reviewed category UI, persistence behavior, and Bengali localization.
+
+## D-015 — Operation results are durable per-map records, not a new progression system
+
+**Decision:** At mission completion or player-down, record the Desert operation's highest score and furthest wave through the existing `SaveService` per-map `best_results` contract. Present score, reached wave, accuracy, and the durable best score in the existing result overlay; show the record on the Map Select detail card.
+
+**Reason:** This completes the run-end link to score and retry without altering the verified 6/9/12 wave sequence, player HP, reward economy, map unlock state, or director ownership. The current data contract already persists score/wave atomically with the rest of the player save, so it is the smallest compatible surface for an offline single-player record.
+
+**Alternative considered:** Add XP, currencies, a new profile scene, unlock rewards, or modify wave difficulty after a result.
+
+**Why not selected:** Those systems would introduce progression and balance decisions outside the M3 regression scope. They also risk changing the existing Desert survival loop before its base results flow is fully validated.

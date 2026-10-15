@@ -48,17 +48,19 @@ func set_last_map(map_id: String) -> void:
 func get_last_map() -> String:
 	return str(data.get("last_map", "MP_DS_01"))
 
-func set_best_result(map_id: String, score: int, wave: int) -> void:
+func set_best_result(map_id: String, score: int, wave: int) -> Dictionary:
 	if map_id.is_empty():
-		return
+		return {"score": 0, "wave": 0}
 	var best_results: Dictionary = data.get("best_results", {}).duplicate(true)
 	var previous: Dictionary = best_results.get(map_id, {})
-	best_results[map_id] = {
+	var result := {
 		"score": maxi(score, int(previous.get("score", 0))),
 		"wave": maxi(wave, int(previous.get("wave", 0))),
 	}
+	best_results[map_id] = result
 	data["best_results"] = best_results
 	_commit()
+	return result.duplicate(true)
 
 func get_best_result(map_id: String) -> Dictionary:
 	var best_results: Dictionary = data.get("best_results", {})

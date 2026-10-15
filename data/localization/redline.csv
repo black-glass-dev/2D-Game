@@ -26,6 +26,16 @@ pause.restart_operation,RESTART OPERATION,অপারেশন আবার শ
 pause.restart_wave,RESTART WAVE,ওয়েভ আবার শুরু
 pause.map_select,MAP SELECT,ম্যাপ নির্বাচন
 pause.quit_to_desktop,QUIT TO DESKTOP,ডেস্কটপে ফিরুন
+result.mission_complete,MISSION COMPLETE,মিশন সম্পন্ন
+result.mission_failed,MISSION FAILED,মিশন ব্যর্থ
+result.cargo_secured,The cargo is secured.,কার্গো নিরাপদ করা হয়েছে।
+result.redeploying,Redeploy sequence started.,পুনরায় মোতায়েনের প্রক্রিয়া শুরু হয়েছে।
+result.final_score,FINAL SCORE  %05d,চূড়ান্ত স্কোর  %05d
+result.wave,WAVE REACHED  %d,পৌঁছানো ওয়েভ  %d
+result.accuracy,ACCURACY  %d%%,নির্ভুলতা  %d%%
+result.best_score,BEST SCORE  %05d,সর্বোচ্চ স্কোর  %05d
+result.new_best,NEW BEST,নতুন সেরা রেকর্ড
+result.restart_operation,RESTART OPERATION,অপারেশন আবার শুরু
 settings.language,LANGUAGE,ভাষা
 settings.auto,AUTO,স্বয়ংক্রিয়
 settings.graphics,GRAPHICS,গ্রাফিক্স
@@ -86,6 +96,9 @@ map.deployment,DEPLOYMENT,মোতায়েন
 map.legend,TACTICAL NOTES,কৌশলগত নোট
 map.difficulty,DIFFICULTY,কঠিনতা
 map.mode,MODE,মোড
+map.best_score,BEST SCORE,সর্বোচ্চ স্কোর
+map.best_wave,BEST WAVE,সর্বোচ্চ ওয়েভ
+map.no_record,NO OPERATION RECORD,অপারেশনের কোনো রেকর্ড নেই
 map.ready,READY TO DEPLOY,মোতায়েনের জন্য প্রস্তুত
 map.unavailable_detail,This operation cannot launch until its planned systems and review gate are complete.,পরিকল্পিত সিস্টেম ও review gate সম্পূর্ণ না হওয়া পর্যন্ত এই অপারেশন চালু করা যাবে না।
 map.desert_outpost,Desert Outpost,ডেজার্ট আউটপোস্ট

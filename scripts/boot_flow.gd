@@ -19,6 +19,7 @@ const BOOT_FLOW_TEST_ARGUMENT := "--verify-boot-flow"
 const SETTINGS_MENU_TEST_ARGUMENT := "--verify-settings-menu"
 const MAP_SELECT_TEST_ARGUMENT := "--verify-map-select"
 const PAUSE_FLOW_TEST_ARGUMENT := "--verify-pause-flow"
+const RESULT_FLOW_TEST_ARGUMENT := "--verify-result-flow"
 
 var active_view: View = View.SPLASH
 var selected_map_id := "MP_DS_01"
@@ -47,7 +48,7 @@ func _ready() -> void:
 	LocalizationService.locale_changed.connect(_on_locale_changed)
 	_build_shell()
 	_show_splash()
-	if OS.get_cmdline_user_args().has(BOOT_FLOW_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(PAUSE_FLOW_TEST_ARGUMENT):
+	if OS.get_cmdline_user_args().has(BOOT_FLOW_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(PAUSE_FLOW_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(RESULT_FLOW_TEST_ARGUMENT):
 		call_deferred("_begin_headless_handoff_test")
 	elif OS.get_cmdline_user_args().has(SETTINGS_MENU_TEST_ARGUMENT):
 		call_deferred("_begin_settings_menu_test")
@@ -411,6 +412,14 @@ func _make_map_detail(map_data: RedlineMapData) -> PanelContainer:
 	status.text = tr("menu.coming_soon") if map_data.is_coming_soon() else (tr("menu.locked") if not SaveService.is_map_unlocked(map_data.id) else tr("map.ready"))
 	status.add_theme_color_override("font_color", Color("f7b06e"))
 	column.add_child(status)
+	var record := Label.new()
+	var best_result := SaveService.get_best_result(map_data.id)
+	if int(best_result.get("score", 0)) > 0 or int(best_result.get("wave", 0)) > 0:
+		record.text = "%s  %05d   •   %s  %d" % [tr("map.best_score"), int(best_result.get("score", 0)), tr("map.best_wave"), int(best_result.get("wave", 0))]
+	else:
+		record.text = tr("map.no_record")
+	record.modulate.a = 0.78
+	column.add_child(record)
 	var legend_title := Label.new()
 	legend_title.text = tr("map.legend")
 	legend_title.add_theme_font_size_override("font_size", 18)

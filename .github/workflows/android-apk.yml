@@ -178,6 +178,8 @@ jobs:
           grep -q "MAP_SELECT_PASS" build/godot-map-select.log
           timeout 30s godot --headless --path . -- --verify-pause-flow 2>&1 | tee build/godot-pause-flow.log
           grep -q "PAUSE_FLOW_PASS" build/godot-pause-flow.log
+          timeout 30s godot --headless --path . -- --verify-result-flow 2>&1 | tee build/godot-result-flow.log
+          grep -q "RESULT_FLOW_PASS" build/godot-result-flow.log
 
       - name: Capture pause and Bengali settings through normal Boot flow
         shell: bash

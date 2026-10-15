@@ -11,6 +11,7 @@ const HUD_KEYS := ["joystick", "fire", "fire_mode", "aim", "reload", "jump", "cr
 const ADS_GLASS_SHADER := preload("res://assets/shaders/ads_glass.gdshader")
 const REDLINE_THEME := preload("res://ui/theme/redline_theme.tres")
 const PAUSE_FLOW_TEST_ARGUMENT := "--verify-pause-flow"
+const RESULT_FLOW_TEST_ARGUMENT := "--verify-result-flow"
 const PAUSE_CAPTURE_BENGALI_ARGUMENT := "--capture-pause-bengali"
 const PAUSE_CAPTURE_OUTPUT_ARGUMENT := "--pause-screenshot-dir"
 
@@ -61,6 +62,8 @@ var jump_button: Button
 var crouch_button: Button
 var swap_button: Button
 var restart_button: Button
+var end_panel: Control
+var operation_result_recorded := false
 var hud_edit_button: Button
 var movement_stick: TouchJoystick
 var adjustable_controls: Dictionary = {}
@@ -145,6 +148,8 @@ func _ready() -> void:
 		call_deferred("_finish_boot_flow_verification")
 	elif OS.get_cmdline_user_args().has(PAUSE_FLOW_TEST_ARGUMENT):
 		call_deferred("_run_pause_flow_verification")
+	elif OS.get_cmdline_user_args().has(RESULT_FLOW_TEST_ARGUMENT):
+		call_deferred("_run_result_flow_verification")
 
 func _finish_boot_flow_verification() -> void:
 	if GameManager.state != GameManager.State.PLAYING or GameManager.selected_map_id != "MP_DS_01":
@@ -312,20 +317,57 @@ func _on_wave_cleared(wave_number: int) -> void:
 
 func _on_operation_complete() -> void:
 	GameManager.set_state(GameManager.State.MISSION_COMPLETE)
+	var result := _record_operation_result()
 	_set_status("OPERATION COMPLETE")
 	_show_alert("OUTPOST SECURED", 100.0)
 	player.can_control = false
-	_show_end_panel("MISSION COMPLETE", "The cargo is secured. Final score: %05d" % score, Color("8fcf9a"))
+	_show_end_panel(tr("result.mission_complete"), _result_summary(result, true), Color("8fcf9a"))
 
 func _on_player_down() -> void:
 	GameManager.set_state(GameManager.State.GAME_OVER)
+	var result := _record_operation_result()
 	director.stop_operation()
 	damage_flash = 1.0
 	respawn_left = 2.8
 	respawn_last_second = -1
 	_set_status("YOU ARE DOWN")
 	_show_alert("REDEPLOYING", 2.5)
-	_show_end_panel("MISSION FAILED", "Redeploy sequence started.", Color("ed8a74"))
+	_show_end_panel(tr("result.mission_failed"), _result_summary(result, false), Color("ed8a74"))
+
+func _record_operation_result() -> Dictionary:
+	if operation_result_recorded:
+		return SaveService.get_best_result(GameManager.selected_map_id)
+	var map_id: String = GameManager.selected_map_id
+	var previous := SaveService.get_best_result(map_id)
+	var best := SaveService.set_best_result(map_id, score, _current_wave_number())
+	operation_result_recorded = true
+	return {
+		"score": score,
+		"wave": _current_wave_number(),
+		"accuracy": _accuracy_percent(),
+		"best_score": int(best.get("score", 0)),
+		"best_wave": int(best.get("wave", 0)),
+		"new_best": score > int(previous.get("score", 0)) or _current_wave_number() > int(previous.get("wave", 0)),
+	}
+
+func _current_wave_number() -> int:
+	return director.current_wave if director != null else 0
+
+func _accuracy_percent() -> int:
+	return roundi(float(hits) / float(maxi(shots, 1)) * 100.0)
+
+func _result_summary(result: Dictionary, completed: bool) -> String:
+	var outcome := tr("result.cargo_secured") if completed else tr("result.redeploying")
+	var lines := [
+		outcome,
+		tr("result.final_score") % int(result.get("score", score)),
+		tr("result.wave") % int(result.get("wave", _current_wave_number())),
+		tr("result.accuracy") % int(result.get("accuracy", _accuracy_percent())),
+		tr("result.best_score") % int(result.get("best_score", score)),
+	]
+	if bool(result.get("new_best", false)):
+		lines.append(tr("result.new_best"))
+	return "\n".join(lines)
 
 func _update_respawn(delta: float) -> void:
 	if respawn_left <= 0.0:
@@ -388,8 +430,7 @@ func _on_shot_feedback(headshot: bool, eliminated: bool, target_name: String) ->
 
 func _update_accuracy() -> void:
 	if accuracy_label != null:
-		var percentage := 0 if shots == 0 else int(round(float(hits) * 100.0 / float(shots)))
-		accuracy_label.text = "ACC  %d%%" % percentage
+		accuracy_label.text = "ACC  %d%%" % _accuracy_percent()
 
 func _set_status(message: String) -> void:
 	if status_label != null:
@@ -787,6 +828,26 @@ func _run_pause_flow_verification() -> void:
 		get_tree().quit(1)
 		return
 	print("PAUSE_FLOW_PASS state=", GameManager.state)
+	get_tree().quit()
+
+func _run_result_flow_verification() -> void:
+	await get_tree().process_frame
+	GameManager.select_map("M3_RESULT_VERIFY")
+	score = 275
+	shots = 10
+	hits = 7
+	director.current_wave = 3
+	_on_operation_complete()
+	var saved_result := SaveService.get_best_result("M3_RESULT_VERIFY")
+	if GameManager.state != GameManager.State.MISSION_COMPLETE or end_panel == null or not end_panel.visible:
+		push_error("Result-flow verification could not present the mission-complete state.")
+		get_tree().quit(1)
+		return
+	if int(saved_result.get("score", 0)) != 275 or int(saved_result.get("wave", 0)) != 3:
+		push_error("Result-flow verification could not persist the best score and wave.")
+		get_tree().quit(1)
+		return
+	print("RESULT_FLOW_PASS score=", saved_result.get("score", 0), " wave=", saved_result.get("wave", 0))
 	get_tree().quit()
 
 func _pause_capture_directory() -> String:
@@ -1194,15 +1255,24 @@ func _save_hud_layout() -> void:
 	config.save(HUD_LAYOUT_FILE)
 
 func _show_end_panel(title: String, description: String, tint: Color) -> void:
-	var panel := ColorRect.new()
-	panel.name = "EndPanel"
-	panel.color = Color(0.025, 0.04, 0.035, 0.86)
-	panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	hud.add_child(panel)
-	_label(title, Vector2(-260, -85), Vector2(520, 42), 30, tint, Control.PRESET_CENTER, HORIZONTAL_ALIGNMENT_CENTER)
-	_label(description, Vector2(-290, -32), Vector2(580, 35), 17, Color("e6dcc1"), Control.PRESET_CENTER, HORIZONTAL_ALIGNMENT_CENTER)
-	restart_button = _button("RESTART OPERATION", Vector2(-128, 28), Vector2(256, 56), Control.PRESET_CENTER, Color("596d52"))
+	if end_panel != null and is_instance_valid(end_panel):
+		end_panel.queue_free()
+	end_panel = Control.new()
+	end_panel.name = "Operation Result"
+	end_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	hud.add_child(end_panel)
+	var shade := ColorRect.new()
+	shade.color = Color(0.025, 0.04, 0.035, 0.86)
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	end_panel.add_child(shade)
+	_label(title, Vector2(-300, -134), Vector2(600, 42), 30, tint, Control.PRESET_CENTER, HORIZONTAL_ALIGNMENT_CENTER, end_panel)
+	var summary := _label(description, Vector2(-300, -78), Vector2(600, 132), 17, Color("e6dcc1"), Control.PRESET_CENTER, HORIZONTAL_ALIGNMENT_CENTER, end_panel)
+	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	summary.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	restart_button = _button(tr("result.restart_operation"), Vector2(-140, 72), Vector2(280, 58), Control.PRESET_CENTER, Color("596d52"), end_panel)
 	restart_button.pressed.connect(_restart)
+	restart_button.call_deferred("grab_focus")
 
 func _restart() -> void:
 	get_tree().reload_current_scene()
@@ -1212,7 +1282,7 @@ func _toggle_aim() -> void:
 	if aim_button != null:
 		aim_button.text = "◉\nAIM" if touch_aim else _button_display_text("AIM")
 
-func _label(text_value: String, position_offset: Vector2, control_size: Vector2, font_size: int, color: Color, preset := Control.PRESET_TOP_LEFT, alignment := HORIZONTAL_ALIGNMENT_LEFT) -> Label:
+func _label(text_value: String, position_offset: Vector2, control_size: Vector2, font_size: int, color: Color, preset := Control.PRESET_TOP_LEFT, alignment := HORIZONTAL_ALIGNMENT_LEFT, parent: Control = null) -> Label:
 	var label := Label.new()
 	label.text = text_value
 	label.add_theme_font_size_override("font_size", font_size)
@@ -1222,7 +1292,10 @@ func _label(text_value: String, position_offset: Vector2, control_size: Vector2,
 	label.size = control_size
 	label.set_anchors_preset(preset)
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	hud.add_child(label)
+	if parent == null:
+		hud.add_child(label)
+	else:
+		parent.add_child(label)
 	return label
 
 func _button(text_value: String, position_offset: Vector2, control_size: Vector2, preset: int, color: Color, parent: Control = null) -> Button:
@@ -1235,6 +1308,7 @@ func _button(text_value: String, position_offset: Vector2, control_size: Vector2
 		hud.add_child(button)
 	else:
 		button.position = position_offset
+		button.set_anchors_preset(preset)
 		parent.add_child(button)
 	var is_primary_fire := text_value == "FIRE"
 	var is_action_button := parent == controls_root
