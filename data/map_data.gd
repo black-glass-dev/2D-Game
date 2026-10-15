@@ -25,7 +25,18 @@ extends Resource
 @export var playable := true
 
 func is_valid_map() -> bool:
-	return not id.is_empty() and not scene_path.is_empty() and ResourceLoader.exists(scene_path)
+	if id.is_empty() or name_en.is_empty() or name_bn.is_empty():
+		return false
+	# Playable resources must resolve to a real gameplay scene. Locked and
+	# coming-soon resources are still valid registry entries so the Map Select UI
+	# can show their honest metadata without exposing a launch route.
+	return not playable or (not scene_path.is_empty() and ResourceLoader.exists(scene_path))
+
+func can_launch() -> bool:
+	return playable and unlock_state == "UNLOCKED" and not scene_path.is_empty()
+
+func is_coming_soon() -> bool:
+	return unlock_state == "COMING_SOON"
 
 func localized_name(locale := "en") -> String:
 	return name_bn if locale.begins_with("bn") else name_en

@@ -14,6 +14,7 @@ All notable production changes are documented here.
 - Noto Sans Bengali Regular/SemiBold under SIL OFL 1.1 with pinned source, copied license, and SHA-256 evidence.
 - Shared Redline theme and original play, settings, back, and lock SVG source icons.
 - Reusable five-section settings menu covering graphics, audio, controls, accessibility, and other preferences, including automatic persistence and reset confirmation.
+- `MP_RF_02` Rooftop Highrise metadata-only map resource, a locked/coming-soon Map Select card, tactical detail panel, and pre-deployment difficulty/mode session selection state.
 
 ### Changed
 

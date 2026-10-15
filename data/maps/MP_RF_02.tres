@@ -1,0 +1,22 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/map_data.gd" id="1_map_data"]
+
+[resource]
+script = ExtResource("1_map_data")
+id = "MP_RF_02"
+name_bn = "রুফটপ হাইরাইজ"
+name_en = "Rooftop Highrise"
+tagline_bn = "ধাপে ধাপে তৈরি হওয়া নগর ছাদ অভিযানের তথ্য কার্ড।"
+tagline_en = "Metadata card for the staged urban rooftop operation."
+difficulty_stars = 4
+size_label = "120 m × 90 m"
+environment_bn = "নগর হাইরাইজ কমপ্লেক্স"
+environment_en = "Urban highrise complex"
+max_waves = 0
+unlock_state = "COMING_SOON"
+music_track = ""
+spawn_profile = {}
+legend_bn = PackedStringArray("Graybox ও ন্যাভিগেশন যাচাইয়ের পরে খোলা হবে", "Gate 2 অনুমোদনের আগে কোনো art pass নয়")
+legend_en = PackedStringArray("Unlocks after graybox and navigation validation", "No art pass begins before Gate 2 approval")
+playable = false

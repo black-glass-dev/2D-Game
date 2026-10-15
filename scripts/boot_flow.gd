@@ -17,6 +17,7 @@ const SPLASH_SECONDS := 1.35
 const MIN_TOUCH_TARGET := Vector2(320, 58)
 const BOOT_FLOW_TEST_ARGUMENT := "--verify-boot-flow"
 const SETTINGS_MENU_TEST_ARGUMENT := "--verify-settings-menu"
+const MAP_SELECT_TEST_ARGUMENT := "--verify-map-select"
 
 var active_view: View = View.SPLASH
 var selected_map_id := "MP_DS_01"
@@ -49,6 +50,8 @@ func _ready() -> void:
 		call_deferred("_begin_headless_handoff_test")
 	elif OS.get_cmdline_user_args().has(SETTINGS_MENU_TEST_ARGUMENT):
 		call_deferred("_begin_settings_menu_test")
+	elif OS.get_cmdline_user_args().has(MAP_SELECT_TEST_ARGUMENT):
+		call_deferred("_begin_map_select_test")
 
 func _begin_headless_handoff_test() -> void:
 	_show_menu()
@@ -75,6 +78,25 @@ func _begin_settings_menu_test() -> void:
 		return
 	SettingsService.set_setting("quality_tier", original_tier)
 	print("SETTINGS_MENU_PASS section=", settings_menu.current_section)
+	get_tree().quit()
+
+func _begin_map_select_test() -> void:
+	_show_menu()
+	_show_map_select()
+	await get_tree().process_frame
+	var maps: Array[RedlineMapData] = MapRegistry.get_all_maps()
+	var highrise: RedlineMapData = MapRegistry.get_map("MP_RF_02")
+	if maps.size() < 2 or highrise == null or highrise.can_launch():
+		push_error("Map-select verification did not register the locked Highrise card.")
+		get_tree().quit(1)
+		return
+	_select_map(highrise.id)
+	await get_tree().process_frame
+	if selected_map_id != highrise.id or _selected_map_is_playable():
+		push_error("Map-select verification exposed a launch route for a locked map.")
+		get_tree().quit(1)
+		return
+	print("MAP_SELECT_PASS maps=", maps.size(), " selected=", selected_map_id)
 	get_tree().quit()
 
 func _process(delta: float) -> void:
@@ -236,17 +258,21 @@ func _show_map_select() -> void:
 	margin.add_theme_constant_override("margin_bottom", 18)
 	content.add_child(margin)
 	var layout := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 14)
+	layout.add_theme_constant_override("separation", 12)
 	margin.add_child(layout)
 	var heading := Label.new()
 	heading.text = tr("menu.map_select")
 	heading.add_theme_font_override("font", REDLINE_THEME.get_font("font", "Button"))
 	heading.add_theme_font_size_override("font_size", 29)
 	layout.add_child(heading)
+	var cards_scroll := ScrollContainer.new()
+	cards_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	cards_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	cards_scroll.custom_minimum_size = Vector2(0, 238)
+	layout.add_child(cards_scroll)
 	var cards := HBoxContainer.new()
-	cards.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	cards.add_theme_constant_override("separation", 16)
-	layout.add_child(cards)
+	cards.add_theme_constant_override("separation", 14)
+	cards_scroll.add_child(cards)
 	var maps: Array[RedlineMapData] = MapRegistry.get_all_maps()
 	for map_data in maps:
 		cards.add_child(_make_map_card(map_data))
@@ -254,9 +280,11 @@ func _show_map_select() -> void:
 		var empty := Label.new()
 		empty.text = tr("menu.no_maps")
 		empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		empty.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		empty.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		empty.custom_minimum_size = Vector2(420, 0)
 		cards.add_child(empty)
+	var selected_map := MapRegistry.get_map(selected_map_id)
+	if selected_map != null:
+		layout.add_child(_make_map_detail(selected_map))
 	var actions := HBoxContainer.new()
 	actions.alignment = BoxContainer.ALIGNMENT_END
 	actions.add_theme_constant_override("separation", 12)
@@ -267,6 +295,8 @@ func _show_map_select() -> void:
 	var deploy_button := _make_menu_button("menu.start_mission", _start_selected_map, "Load selected map")
 	deploy_button.custom_minimum_size = Vector2(260, MIN_TOUCH_TARGET.y)
 	deploy_button.disabled = not _selected_map_is_playable()
+	if deploy_button.disabled:
+		deploy_button.text = tr("menu.coming_soon") if selected_map != null and selected_map.is_coming_soon() else tr("menu.locked")
 	actions.add_child(deploy_button)
 	_focus_first_button(cards)
 
@@ -316,22 +346,21 @@ func _show_loading(map_data: RedlineMapData) -> void:
 
 func _make_map_card(map_data: RedlineMapData) -> PanelContainer:
 	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(320, 300)
-	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.custom_minimum_size = Vector2(282, 224)
 	var padding := MarginContainer.new()
-	padding.add_theme_constant_override("margin_left", 16)
-	padding.add_theme_constant_override("margin_top", 16)
-	padding.add_theme_constant_override("margin_right", 16)
-	padding.add_theme_constant_override("margin_bottom", 16)
+	padding.add_theme_constant_override("margin_left", 14)
+	padding.add_theme_constant_override("margin_top", 14)
+	padding.add_theme_constant_override("margin_right", 14)
+	padding.add_theme_constant_override("margin_bottom", 14)
 	card.add_child(padding)
 	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 10)
+	column.add_theme_constant_override("separation", 8)
 	padding.add_child(column)
 	var name_label := Label.new()
 	name_label.text = map_data.localized_name(LocalizationService.active_locale)
 	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	name_label.add_theme_font_override("font", REDLINE_THEME.get_font("font", "Button"))
-	name_label.add_theme_font_size_override("font_size", 25)
+	name_label.add_theme_font_size_override("font_size", 23)
 	column.add_child(name_label)
 	var environment := Label.new()
 	environment.text = map_data.localized_environment(LocalizationService.active_locale)
@@ -343,15 +372,89 @@ func _make_map_card(map_data: RedlineMapData) -> PanelContainer:
 	description.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	column.add_child(description)
 	var details := Label.new()
-	details.text = "%s  •  %s  •  %d %s" % [map_data.size_label, "★".repeat(map_data.difficulty_stars), map_data.max_waves, tr("map.waves")]
+	details.text = _map_card_details(map_data)
 	details.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	details.add_theme_color_override("font_color", Color("f7b06e"))
 	column.add_child(details)
 	var select_button := _make_menu_button("", _select_map.bind(map_data.id), "Select %s" % map_data.id)
-	select_button.text = tr("menu.selected") if map_data.id == selected_map_id else tr("menu.select")
-	select_button.disabled = not map_data.playable or not SaveService.is_map_unlocked(map_data.id)
+	if map_data.id == selected_map_id:
+		select_button.text = tr("menu.selected")
+	elif map_data.is_coming_soon():
+		select_button.text = tr("menu.coming_soon")
+	elif not SaveService.is_map_unlocked(map_data.id):
+		select_button.text = tr("menu.locked")
+	else:
+		select_button.text = tr("menu.select")
 	column.add_child(select_button)
 	return card
+
+func _make_map_detail(map_data: RedlineMapData) -> PanelContainer:
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(0, 220)
+	var padding := MarginContainer.new()
+	padding.add_theme_constant_override("margin_left", 16)
+	padding.add_theme_constant_override("margin_top", 14)
+	padding.add_theme_constant_override("margin_right", 16)
+	padding.add_theme_constant_override("margin_bottom", 14)
+	panel.add_child(padding)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 8)
+	padding.add_child(column)
+	var map_heading := Label.new()
+	map_heading.text = "%s  ·  %s" % [tr("map.deployment"), map_data.localized_name(LocalizationService.active_locale)]
+	map_heading.add_theme_font_override("font", REDLINE_THEME.get_font("font", "Button"))
+	map_heading.add_theme_font_size_override("font_size", 24)
+	map_heading.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	column.add_child(map_heading)
+	var status := Label.new()
+	status.text = tr("menu.coming_soon") if map_data.is_coming_soon() else (tr("menu.locked") if not SaveService.is_map_unlocked(map_data.id) else tr("map.ready"))
+	status.add_theme_color_override("font_color", Color("f7b06e"))
+	column.add_child(status)
+	var legend_title := Label.new()
+	legend_title.text = tr("map.legend")
+	legend_title.add_theme_font_size_override("font_size", 18)
+	column.add_child(legend_title)
+	var legend := Label.new()
+	legend.text = "\n".join(_localized_legend(map_data))
+	legend.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	legend.modulate.a = 0.83
+	column.add_child(legend)
+	if map_data.can_launch() and SaveService.is_map_unlocked(map_data.id):
+		column.add_child(_make_session_selector(tr("map.difficulty"), [tr("game.easy"), tr("game.normal"), tr("game.hard"), tr("game.nightmare")], ["EASY", "NORMAL", "HARD", "NIGHTMARE"], GameManager.selected_difficulty, _set_difficulty))
+		column.add_child(_make_session_selector(tr("map.mode"), [tr("game.survival"), tr("game.endless")], ["SURVIVAL", "ENDLESS"], GameManager.selected_mode, _set_mode))
+	else:
+		var unavailable := Label.new()
+		unavailable.text = tr("map.unavailable_detail")
+		unavailable.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		unavailable.modulate.a = 0.76
+		column.add_child(unavailable)
+	return panel
+
+func _make_session_selector(title: String, labels: Array[String], values: Array[String], selected_value: String, callback: Callable) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	var label := Label.new()
+	label.text = title
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.custom_minimum_size = Vector2(132, 0)
+	row.add_child(label)
+	for index in range(labels.size()):
+		var choice := Button.new()
+		choice.text = labels[index]
+		choice.toggle_mode = true
+		choice.button_pressed = values[index] == selected_value
+		choice.custom_minimum_size = Vector2(124, 48)
+		choice.pressed.connect(callback.bind(values[index]))
+		row.add_child(choice)
+	return row
+
+func _map_card_details(map_data: RedlineMapData) -> String:
+	if map_data.is_coming_soon():
+		return "%s  •  %s" % [map_data.size_label, tr("menu.coming_soon")]
+	return "%s  •  %s  •  %d %s" % [map_data.size_label, "★".repeat(map_data.difficulty_stars), map_data.max_waves, tr("map.waves")]
+
+func _localized_legend(map_data: RedlineMapData) -> PackedStringArray:
+	return map_data.legend_bn if LocalizationService.is_bengali() else map_data.legend_en
 
 func _make_menu_button(key: String, callback: Callable, accessible_name: String) -> Button:
 	var button := Button.new()
@@ -367,6 +470,14 @@ func _select_map(map_id: String) -> void:
 	GameManager.select_map(map_id)
 	_show_map_select()
 
+func _set_difficulty(difficulty: String) -> void:
+	GameManager.set_session_options(difficulty, GameManager.selected_mode)
+	_show_map_select()
+
+func _set_mode(mode: String) -> void:
+	GameManager.set_session_options(GameManager.selected_difficulty, mode)
+	_show_map_select()
+
 func _continue_last_map() -> void:
 	selected_map_id = SaveService.get_last_map()
 	if not _selected_map_is_playable():
@@ -376,7 +487,7 @@ func _continue_last_map() -> void:
 
 func _start_selected_map() -> void:
 	var map_data := MapRegistry.get_map(selected_map_id)
-	if map_data == null or not map_data.playable or not SaveService.is_map_unlocked(map_data.id):
+	if map_data == null or not map_data.can_launch() or not SaveService.is_map_unlocked(map_data.id):
 		_show_map_select()
 		return
 	SaveService.set_last_map(map_data.id)
@@ -388,7 +499,7 @@ func _start_selected_map() -> void:
 
 func _selected_map_is_playable() -> bool:
 	var map_data := MapRegistry.get_map(selected_map_id)
-	return map_data != null and map_data.playable and SaveService.is_map_unlocked(map_data.id)
+	return map_data != null and map_data.can_launch() and SaveService.is_map_unlocked(map_data.id)
 
 func _on_load_progress(_scene_path: String, progress: float) -> void:
 	if active_view != View.LOADING or loading_bar == null:

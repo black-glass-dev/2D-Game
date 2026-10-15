@@ -105,3 +105,23 @@
 **Alternative considered:** Commit generated translation binaries.
 
 **Why not selected:** Generated import artifacts are editor/version dependent and violate the source-only repository convention.
+
+## D-012 — Highrise appears as an honest pre-production card
+
+**Decision:** Register `MP_RF_02` as a valid `COMING_SOON` metadata resource with no scene path and `playable = false`. The Map Select screen may display and inspect it but cannot launch it.
+
+**Reason:** The director needs the future operation visible in the data-driven UI, while the Highrise graybox, navigation validation, and Gate 2 approval have not happened. The registry treats locked metadata as valid but requires a resolvable scene for any playable map.
+
+**Alternative considered:** Omit the Highrise resource until its graybox scene is complete.
+
+**Why not selected:** The map-select and data-registry acceptance criteria require locked future-map handling. Hiding it would leave that critical flow untested.
+
+## D-013 — Difficulty and mode are session state before combat modifiers
+
+**Decision:** Let the player choose difficulty and survival/endless mode in the map detail panel and store them in `GameManager`, but do not claim their gameplay modifiers are implemented until the legacy wave director consumes them.
+
+**Reason:** It validates data flow, input, localization, and launch selection without altering the preserved 6/9/12 Desert wave behavior in the same batch.
+
+**Alternative considered:** Add modifiers directly to `SurvivalDirector` now.
+
+**Why not selected:** Wave size, score, HP, and balance are explicit non-regression requirements. Those changes need their own tested compatibility adapter and QA matrix.

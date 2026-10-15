@@ -80,5 +80,11 @@ game.normal,NORMAL,সাধারণ
 game.hard,HARD,কঠিন
 game.nightmare,NIGHTMARE,নাইটমেয়ার
 map.waves,WAVES,ওয়েভ
+map.deployment,DEPLOYMENT,মোতায়েন
+map.legend,TACTICAL NOTES,কৌশলগত নোট
+map.difficulty,DIFFICULTY,কঠিনতা
+map.mode,MODE,মোড
+map.ready,READY TO DEPLOY,মোতায়েনের জন্য প্রস্তুত
+map.unavailable_detail,This operation cannot launch until its planned systems and review gate are complete.,পরিকল্পিত সিস্টেম ও review gate সম্পূর্ণ না হওয়া পর্যন্ত এই অপারেশন চালু করা যাবে না।
 map.desert_outpost,Desert Outpost,ডেজার্ট আউটপোস্ট
 map.rooftop_highrise,Rooftop Highrise,রুফটপ হাইরাইজ
