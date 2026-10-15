@@ -29,7 +29,8 @@
 | Resource links and original texture dimensions | `python3 tools/validate_project.py` | PASS — 47 `res://` links and 4 128×128 textures | M1 Batch 2 terminal log |
 | Native survival core | `./scripts/run_native_tests.sh` | PASS — 3 waves, 27 spawns, completion | M1 Batch 2 terminal log |
 | Asset manifest syntax and font hashes | `python3 -m json.tool assets_manifest.json`; `sha256sum` | PASS — manifest parses; Regular/SemiBold match the recorded hashes | M1 Batch 2 terminal log |
-| Godot import, Android export, and headless Boot route | GitHub Actions run 38684364680 | PASS | `https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/38684364680` — import/export/headless/capture steps succeeded on `2fadc30` |
+| Godot import, Android export, and default headless Boot launch | GitHub Actions run 38684364680 | PASS | `https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/38684364680` — import/export/headless/capture steps succeeded on `2fadc30` |
+| Actual Boot → `SceneLoader` → `Main.tscn` hand-off | `tools/verify_boot_flow.gd`, queued in CI after this test harness was added | Pending | The prior run launched Boot but did not drive a menu selection; the new harness must produce `BOOT_FLOW_PASS` before the complete route is called verified |
 | Android emulator install/launch | GitHub Actions run 38684364680 | BLOCKED — emulator boot timeout | APK candidate and build evidence uploaded, but the hosted emulator did not boot before timeout; this is not a device-pass result |
 
 ## Outstanding test requirements
