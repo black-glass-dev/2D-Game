@@ -800,7 +800,12 @@ func _pause_capture_directory() -> String:
 	return ""
 
 func _capture_pause_frame(path: String) -> bool:
-	await RenderingServer.frame_post_draw
+	# A paused SceneTree can stop `RenderingServer.frame_post_draw` from emitting
+	# on CI's Xvfb/llvmpipe path. The normal frame boundary still presents the
+	# newly visible Control tree, so two process frames produce the authentic
+	# overlay without an unbounded renderer-signal wait.
+	await get_tree().process_frame
+	await get_tree().process_frame
 	var image := get_viewport().get_texture().get_image()
 	var result := image.save_png(path)
 	if result != OK or image.get_width() < 1280 or image.get_height() < 720:
