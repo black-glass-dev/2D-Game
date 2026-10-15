@@ -1,10 +1,24 @@
 Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
 
+ERROR: Failed loading resource: res://data/localization/redline.csv.
+   at: _load (core/io/resource_loader.cpp:317)
+ERROR: Resource file not found:  (expected type: Translation)
+   at: _load (core/io/resource_loader.cpp:325)
+ERROR: Resource file not found:  (expected type: Translation)
+   at: _load (core/io/resource_loader.cpp:325)
+ERROR: Failed loading resource: res://data/localization/redline.csv.
+   at: _load (core/io/resource_loader.cpp:317)
 [   0% ] [90m[1mfirst_scan_filesystem[22m | Started Project initialization (5 steps)[39m[0m
 [   0% ] [90m[1mfirst_scan_filesystem[22m | Scanning file structure...[39m[0m
 [  16% ] [90m[1mfirst_scan_filesystem[22m | Loading global class names...[39m[0m
 [  33% ] [90m[1mfirst_scan_filesystem[22m | Verifying GDExtensions...[39m[0m
 [  50% ] [90m[1mfirst_scan_filesystem[22m | Creating autoload scripts...[39m[0m
+SCRIPT ERROR: Parse Error: Assigned value for constant "MAP_DIRECTORY" isn't a constant expression.
+          at: GDScript::reload (res://scripts/services/map_registry.gd:9)
+ERROR: Failed to load script "res://scripts/services/map_registry.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript_resource_format.cpp:46)
+ERROR: Failed to create an autoload, script 'res://scripts/services/map_registry.gd' is not compiling.
+   at: _create_autoload (editor/settings/editor_autoload_settings.cpp:340)
 [  66% ] [90m[1mfirst_scan_filesystem[22m | Initializing plugins...[39m[0m
 [  83% ] [90m[1mfirst_scan_filesystem[22m | Starting file scan...[39m[0m
 [92m[ DONE ][39m [1mfirst_scan_filesystem[22m
@@ -106,6 +120,10 @@ ADDING: res/mipmap/icon_background.webp
 ADDING: res/mipmap/icon_foreground.webp
 ADDING: res/mipmap/icon_monochrome.webp
 ADDING: res/xml/godot_provider_paths.xml
+ERROR: Resource file not found:  (expected type: Translation)
+   at: _load (core/io/resource_loader.cpp:325)
+ERROR: Failed loading resource: res://data/localization/redline.csv.
+   at: _load (core/io/resource_loader.cpp:317)
 ADDING: resources.arsc
 ADDING: DebugProbesKt.bin
 ADDING: kotlin/annotation/annotation.kotlin_builtins
@@ -117,6 +135,16 @@ ADDING: kotlin/kotlin.kotlin_builtins
 ADDING: kotlin/ranges/ranges.kotlin_builtins
 ADDING: kotlin/reflect/reflect.kotlin_builtins
 [   0% ] [90m[1mexport[22m | Adding files...[39m[0m
+ERROR: res://data/maps/MP_DS_01.tres:26 - Parse Error: Expected string.
+   at: _printerr (scene/resources/resource_format_text.cpp:41)
+ERROR: Failed loading resource: res://data/maps/MP_DS_01.tres.
+   at: _load (core/io/resource_loader.cpp:317)
+ERROR: Condition "res.is_null()" is true. Returning: p_path
+   at: _export_customize (editor/export/editor_export_platform.cpp:1102)
+ERROR: Resource file not found:  (expected type: Translation)
+   at: _load (core/io/resource_loader.cpp:325)
+ERROR: Failed loading resource: res://data/localization/redline.csv.
+   at: _load (core/io/resource_loader.cpp:317)
 [  97% ] [90m[1mexport[22m | Aligning APK...[39m[0m
 [  98% ] [90m[1mexport[22m | Signing debug APK...[39m[0m
 Signing binary using: 
