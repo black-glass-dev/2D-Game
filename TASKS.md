@@ -26,6 +26,13 @@
 - [x] Add map detail, difficulty/mode session selection, and a locked `MP_RF_02` future-map card without exposing a launch route.
 - [ ] Add loading telemetry, make difficulty/mode affect the Desert compatibility adapter, and add the visual menu background fallback.
 
+## M3 — Deliverable A regression QA
+
+- [x] Add a state-authoritative pause/back/focus-loss lifecycle with shared settings and renderer-backed Bengali UI evidence.
+- [x] Persist Desert operation best score/furthest wave; show result summary and Map Select record without changing the wave director balance.
+- [ ] Validate the complete touch, mouse, keyboard, gamepad, Android Back, focus-mute/restore, quality-tier, and language matrix on real devices where available.
+- [ ] Add menu/UI audio bus feedback plus accessible fallback validation.
+
 ## Guardrails
 
 - [ ] Preserve the existing playable Desert Outpost at every commit.

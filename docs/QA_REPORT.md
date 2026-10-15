@@ -77,6 +77,17 @@ Candidate #67 is not treated as a tested delivery because the Android emulator i
 | Godot import, debug APK export/signature, and graphics capture | CI pipeline | PASS | CI run 38754873297 passed import/export, APK archive/signature verification, and the 12-before/12-after renderer capture gate. |
 | Android emulator install/launch | GitHub Actions run 38754873297 | BLOCKED — emulator boot timeout | The source/export/UI gates passed and a debug candidate was published, but the hosted emulator did not boot. This is not device-launch evidence. |
 
+## M3 batch 2 — operation results and retry contract
+
+| Test | Command / method | Result | Evidence |
+| --- | --- | --- | --- |
+| GDScript static analysis | `npm run test:gdscript` | PASS — 23 scripts, 0 errors, 0 warnings | M3 Batch 2 terminal log and CI run 38759649992 source-test step |
+| Resource links and original texture dimensions | `python3 tools/validate_project.py` | PASS — 50 `res://` links and 4 128×128 textures | M3 Batch 2 terminal log |
+| Native survival core | `./scripts/run_native_tests.sh` | PASS — 3 waves, 27 spawns, completion | M3 Batch 2 terminal log |
+| Normal Boot → mission-complete result overlay → durable map record | Normal project launch with `--verify-result-flow` | PASS | [GitHub Actions run 38759649992](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/38759649992) passed the headless launch gate. It requires `RESULT_FLOW_PASS` only after a real Main scene reaches `MISSION_COMPLETE`, creates the result panel, and writes/reads score 275 and wave 3 through `SaveService`. |
+| Existing pause/settings visual regression | Normal Boot launch under Xvfb/OpenGL | PASS | CI run 38759649992 passed the pause overlay/Bengali settings capture step again, preserving the M3 Batch 1 visual route while result code was added. |
+| Android emulator install/launch | GitHub Actions run 38759649992 | BLOCKED — emulator boot timeout | Source, import/export, result-flow, pause visual, and graphics gates passed; the hosted emulator timed out before boot. This is not device-launch evidence. |
+
 ## Outstanding test requirements
 
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.

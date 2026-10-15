@@ -17,6 +17,8 @@ All notable production changes are documented here.
 - `MP_RF_02` Rooftop Highrise metadata-only map resource, a locked/coming-soon Map Select card, tactical detail panel, and pre-deployment difficulty/mode session selection state.
 - State-authoritative gameplay pause overlay with touch PAUSE target, resume, shared five-section settings, restart, map-select, and desktop-quit routes; localized English/Bengali pause copy.
 - Normal-Boot pause lifecycle verifier plus Xvfb renderer capture of the pause overlay and Bengali pause-settings surface.
+- Per-map durable operation records for best score and furthest wave, a localized end-of-operation summary (score, wave, accuracy, best record), and Map Select record display.
+- Normal-Boot `--verify-result-flow` harness that validates mission-complete state, result panel creation, and SaveService score/wave round-trip.
 
 ### Changed
 
