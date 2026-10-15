@@ -18,6 +18,7 @@ const MIN_TOUCH_TARGET := Vector2(320, 58)
 const BOOT_FLOW_TEST_ARGUMENT := "--verify-boot-flow"
 const SETTINGS_MENU_TEST_ARGUMENT := "--verify-settings-menu"
 const MAP_SELECT_TEST_ARGUMENT := "--verify-map-select"
+const PAUSE_FLOW_TEST_ARGUMENT := "--verify-pause-flow"
 
 var active_view: View = View.SPLASH
 var selected_map_id := "MP_DS_01"
@@ -46,7 +47,7 @@ func _ready() -> void:
 	LocalizationService.locale_changed.connect(_on_locale_changed)
 	_build_shell()
 	_show_splash()
-	if OS.get_cmdline_user_args().has(BOOT_FLOW_TEST_ARGUMENT):
+	if OS.get_cmdline_user_args().has(BOOT_FLOW_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(PAUSE_FLOW_TEST_ARGUMENT):
 		call_deferred("_begin_headless_handoff_test")
 	elif OS.get_cmdline_user_args().has(SETTINGS_MENU_TEST_ARGUMENT):
 		call_deferred("_begin_settings_menu_test")

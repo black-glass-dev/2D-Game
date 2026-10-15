@@ -9,6 +9,10 @@ const SPAWN_POINTS := [
 const HUD_LAYOUT_FILE := "user://operation_redline_hud.cfg"
 const HUD_KEYS := ["joystick", "fire", "fire_mode", "aim", "reload", "jump", "crouch", "swap", "minimap"]
 const ADS_GLASS_SHADER := preload("res://assets/shaders/ads_glass.gdshader")
+const REDLINE_THEME := preload("res://ui/theme/redline_theme.tres")
+const PAUSE_FLOW_TEST_ARGUMENT := "--verify-pause-flow"
+const PAUSE_CAPTURE_BENGALI_ARGUMENT := "--capture-pause-bengali"
+const PAUSE_CAPTURE_OUTPUT_ARGUMENT := "--pause-screenshot-dir"
 
 var player: OutpostPlayer
 var rifle: ServiceRifle
@@ -40,6 +44,12 @@ var minimap: TacticalRadar
 var settings := RedlineSettings.new()
 var performance_governor: PerformanceGovernor
 var settings_button: Button
+var pause_button: Button
+var pause_overlay: Control
+var pause_panel: PanelContainer
+var pause_resume_button: Button
+var pause_settings_center: CenterContainer
+var pause_settings_menu: RedlineSettingsMenu
 var settings_panel: Panel
 var settings_summary: Label
 var aim_button: Button
@@ -73,7 +83,14 @@ var respawn_last_second := -1
 func _ready() -> void:
 	# Main remains independently runnable; BootFlow sets Loading, then this
 	# compatibility hand-off marks the legacy Desert session as actively playing.
+	# It must keep receiving pause/back/focus input while the simulation tree is
+	# paused, so gameplay work explicitly early-outs in _process below.
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	GameManager.set_state(GameManager.State.PLAYING)
+	if OS.get_cmdline_user_args().has(PAUSE_CAPTURE_BENGALI_ARGUMENT):
+		# Screenshot-only CI route: initialize all newly created gameplay/pause
+		# controls in Bengali without mutating the player's saved preference.
+		LocalizationService.apply_preference("BN")
 	settings.load_from_disk()
 	WorldBuilder.build(self)
 	performance_governor = PerformanceGovernor.new()
@@ -116,6 +133,7 @@ func _ready() -> void:
 	director.operation_complete.connect(_on_operation_complete)
 
 	_build_hud()
+	_build_pause_overlay()
 	_build_loading_splash()
 	_refresh_active_ammo()
 	_apply_settings()
@@ -125,6 +143,8 @@ func _ready() -> void:
 	director.start_operation()
 	if OS.get_cmdline_user_args().has("--verify-boot-flow"):
 		call_deferred("_finish_boot_flow_verification")
+	elif OS.get_cmdline_user_args().has(PAUSE_FLOW_TEST_ARGUMENT):
+		call_deferred("_run_pause_flow_verification")
 
 func _finish_boot_flow_verification() -> void:
 	if GameManager.state != GameManager.State.PLAYING or GameManager.selected_map_id != "MP_DS_01":
@@ -135,6 +155,8 @@ func _finish_boot_flow_verification() -> void:
 	get_tree().quit()
 
 func _process(delta: float) -> void:
+	if get_tree().paused:
+		return
 	weapon_switch_left = maxf(weapon_switch_left - delta, 0.0)
 	if player != null and player.can_control:
 		# Android maps every screen press to a mouse click on some devices. Restrict
@@ -289,12 +311,14 @@ func _on_wave_cleared(wave_number: int) -> void:
 		_show_alert("AREA SECURED  •  RELOAD NOW", 2.1)
 
 func _on_operation_complete() -> void:
+	GameManager.set_state(GameManager.State.MISSION_COMPLETE)
 	_set_status("OPERATION COMPLETE")
 	_show_alert("OUTPOST SECURED", 100.0)
 	player.can_control = false
 	_show_end_panel("MISSION COMPLETE", "The cargo is secured. Final score: %05d" % score, Color("8fcf9a"))
 
 func _on_player_down() -> void:
+	GameManager.set_state(GameManager.State.GAME_OVER)
 	director.stop_operation()
 	damage_flash = 1.0
 	respawn_left = 2.8
@@ -572,6 +596,9 @@ func _build_hud() -> void:
 	settings_button = _button("SET", Vector2(326, 9), Vector2(64, 34), Control.PRESET_TOP_LEFT, Color("605b72"))
 	settings_button.add_theme_font_size_override("font_size", 14)
 	settings_button.pressed.connect(_open_settings)
+	pause_button = _button("PAUSE", Vector2(402, 7), Vector2(82, 44), Control.PRESET_TOP_LEFT, Color("4b6678"))
+	pause_button.add_theme_font_size_override("font_size", 13)
+	pause_button.pressed.connect(_toggle_pause)
 	_build_hud_editor()
 	_build_settings_panel()
 
@@ -583,6 +610,204 @@ func _build_hud() -> void:
 	hud.add_child(damage_overlay)
 	_build_damage_edges()
 	call_deferred("_load_hud_layout")
+
+func _build_pause_overlay() -> void:
+	pause_overlay = Control.new()
+	pause_overlay.name = "Pause overlay"
+	pause_overlay.theme = REDLINE_THEME
+	pause_overlay.process_mode = Node.PROCESS_MODE_WHEN_PAUSED
+	pause_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	pause_overlay.visible = false
+	hud.add_child(pause_overlay)
+	var shade := ColorRect.new()
+	shade.color = Color(0.012, 0.028, 0.04, 0.88)
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	pause_overlay.add_child(shade)
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	pause_overlay.add_child(center)
+	pause_panel = PanelContainer.new()
+	pause_panel.custom_minimum_size = Vector2(430, 0)
+	center.add_child(pause_panel)
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 26)
+	margin.add_theme_constant_override("margin_top", 22)
+	margin.add_theme_constant_override("margin_right", 26)
+	margin.add_theme_constant_override("margin_bottom", 22)
+	pause_panel.add_child(margin)
+	var column := VBoxContainer.new()
+	column.alignment = BoxContainer.ALIGNMENT_CENTER
+	column.add_theme_constant_override("separation", 12)
+	margin.add_child(column)
+	var title := Label.new()
+	title.text = tr("pause.title")
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_override("font", REDLINE_THEME.get_font("font", "Button"))
+	title.add_theme_font_size_override("font_size", 32)
+	title.add_theme_color_override("font_color", Color("8ef7ff"))
+	column.add_child(title)
+	var note := Label.new()
+	note.text = tr("pause.subtitle")
+	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	note.modulate.a = 0.78
+	column.add_child(note)
+	pause_resume_button = _make_pause_button("pause.resume", _close_pause)
+	column.add_child(pause_resume_button)
+	column.add_child(_make_pause_button("menu.settings", _show_pause_settings))
+	column.add_child(_make_pause_button("pause.restart_operation", _restart_from_pause))
+	column.add_child(_make_pause_button("pause.map_select", _return_to_map_select))
+	column.add_child(_make_pause_button("pause.quit_to_desktop", _quit_from_pause))
+	pause_settings_center = CenterContainer.new()
+	pause_settings_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	pause_settings_center.visible = false
+	pause_overlay.add_child(pause_settings_center)
+	pause_settings_menu = RedlineSettingsMenu.new()
+	pause_settings_menu.close_requested.connect(_hide_pause_settings)
+	pause_settings_center.add_child(pause_settings_menu)
+
+func _make_pause_button(key: String, callback: Callable) -> Button:
+	var button := Button.new()
+	button.text = tr(key)
+	button.custom_minimum_size = Vector2(350, 58)
+	button.pressed.connect(callback)
+	return button
+
+func _toggle_pause() -> void:
+	if GameManager.state == GameManager.State.PLAYING:
+		_open_pause()
+	elif GameManager.state == GameManager.State.PAUSED:
+		_close_pause()
+
+func _open_pause() -> void:
+	if not GameManager.enter_pause():
+		return
+	mobile_fire_held = false
+	_cancel_aim()
+	pause_overlay.visible = true
+	pause_panel.visible = true
+	pause_settings_center.visible = false
+	pause_resume_button.call_deferred("grab_focus")
+
+func _close_pause() -> void:
+	if GameManager.state != GameManager.State.PAUSED:
+		return
+	pause_overlay.visible = false
+	pause_settings_center.visible = false
+	GameManager.leave_pause()
+	if not OS.has_feature("mobile"):
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+func _show_pause_settings() -> void:
+	pause_panel.visible = false
+	pause_settings_center.visible = true
+	pause_settings_menu.call_deferred("focus_initial_control")
+
+func _hide_pause_settings() -> void:
+	pause_settings_center.visible = false
+	pause_panel.visible = true
+	pause_resume_button.call_deferred("grab_focus")
+
+func _restart_from_pause() -> void:
+	if GameManager.state == GameManager.State.PAUSED:
+		GameManager.leave_pause()
+	get_tree().reload_current_scene()
+
+func _return_to_map_select() -> void:
+	if GameManager.state == GameManager.State.PAUSED:
+		GameManager.leave_pause()
+	var result := SceneLoader.load_scene("res://scenes/Boot.tscn")
+	if result != OK:
+		push_warning("Pause menu could not return to Boot.tscn: %s" % result)
+
+func _quit_from_pause() -> void:
+	get_tree().quit()
+
+func _handle_pause_back() -> void:
+	if GameManager.state == GameManager.State.PAUSED and pause_settings_center != null and pause_settings_center.visible:
+		_hide_pause_settings()
+	else:
+		_toggle_pause()
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed(InputService.ACTION_PAUSE):
+		_handle_pause_back()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed(InputService.ACTION_MENU_BACK):
+		_handle_pause_back()
+		get_viewport().set_input_as_handled()
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and GameManager.state == GameManager.State.PLAYING:
+		_open_pause()
+	elif what == NOTIFICATION_WM_GO_BACK_REQUEST:
+		_handle_pause_back()
+
+func _run_pause_flow_verification() -> void:
+	# Normal headless validation needs only state transitions. The same real
+	# Boot → Main route optionally saves two renderer-backed frames under Xvfb:
+	# the active pause menu and its shared Bengali settings surface.
+	var capture_directory := _pause_capture_directory()
+	if not capture_directory.is_empty():
+		await get_tree().create_timer(1.5, true).timeout
+	else:
+		await get_tree().process_frame
+	_open_pause()
+	await get_tree().process_frame
+	if GameManager.state != GameManager.State.PAUSED or not get_tree().paused or pause_overlay == null or not pause_overlay.visible:
+		push_error("Pause-flow verification could not enter paused state.")
+		get_tree().quit(1)
+		return
+	if not capture_directory.is_empty():
+		var pause_capture_ok := await _capture_pause_frame(capture_directory.path_join("pause-overlay.png"))
+		if not pause_capture_ok:
+			get_tree().quit(1)
+			return
+	_show_pause_settings()
+	await get_tree().process_frame
+	if not pause_settings_center.visible or pause_panel.visible:
+		push_error("Pause-flow verification could not open shared settings.")
+		get_tree().quit(1)
+		return
+	if not capture_directory.is_empty():
+		var settings_capture_ok := await _capture_pause_frame(capture_directory.path_join("pause-settings-bn.png"))
+		if not settings_capture_ok:
+			get_tree().quit(1)
+			return
+	_handle_pause_back()
+	if not pause_panel.visible or pause_settings_center.visible:
+		push_error("Pause-flow verification could not return from shared settings.")
+		get_tree().quit(1)
+		return
+	_close_pause()
+	await get_tree().process_frame
+	if GameManager.state != GameManager.State.PLAYING or get_tree().paused or pause_overlay.visible:
+		push_error("Pause-flow verification could not resume gameplay state.")
+		get_tree().quit(1)
+		return
+	print("PAUSE_FLOW_PASS state=", GameManager.state)
+	get_tree().quit()
+
+func _pause_capture_directory() -> String:
+	var args := OS.get_cmdline_user_args()
+	for index in range(args.size() - 1):
+		if args[index] == PAUSE_CAPTURE_OUTPUT_ARGUMENT:
+			var directory := args[index + 1]
+			if DirAccess.make_dir_recursive_absolute(directory) == OK:
+				return directory
+			push_error("Pause screenshot directory could not be created: %s" % directory)
+			return ""
+	return ""
+
+func _capture_pause_frame(path: String) -> bool:
+	await RenderingServer.frame_post_draw
+	var image := get_viewport().get_texture().get_image()
+	var result := image.save_png(path)
+	if result != OK or image.get_width() < 1280 or image.get_height() < 720:
+		push_error("Pause screenshot capture failed: %s result=%s size=%sx%s" % [path, result, image.get_width(), image.get_height()])
+		return false
+	print("PAUSE_VISUAL_CAPTURE ", path, " size=", image.get_width(), "x", image.get_height())
+	return true
 
 func _build_loading_splash() -> void:
 	# There is no separate menu scene in this survival build, so an in-engine

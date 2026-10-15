@@ -176,6 +176,34 @@ jobs:
           grep -q "SETTINGS_MENU_PASS" build/godot-settings-menu.log
           timeout 30s godot --headless --path . -- --verify-map-select 2>&1 | tee build/godot-map-select.log
           grep -q "MAP_SELECT_PASS" build/godot-map-select.log
+          timeout 30s godot --headless --path . -- --verify-pause-flow 2>&1 | tee build/godot-pause-flow.log
+          grep -q "PAUSE_FLOW_PASS" build/godot-pause-flow.log
+
+      - name: Capture pause and Bengali settings through normal Boot flow
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.local/bin:$PATH"
+          mkdir -p build/screenshots/pause
+          timeout 75s xvfb-run --auto-servernum godot \
+            --path . --rendering-driver opengl3 -- \
+            --verify-pause-flow --capture-pause-bengali \
+            --pause-screenshot-dir "$GITHUB_WORKSPACE/build/screenshots/pause" \
+            2>&1 | tee build/godot-pause-capture.log
+          grep -q "PAUSE_FLOW_PASS" build/godot-pause-capture.log
+          grep -q "PAUSE_VISUAL_CAPTURE" build/godot-pause-capture.log
+          test "$(find build/screenshots/pause -name '*.png' | wc -l)" -eq 2
+          python3 - <<'PY'
+          from pathlib import Path
+          import struct
+          for path in sorted(Path("build/screenshots/pause").glob("*.png")):
+              header = path.read_bytes()[:24]
+              if header[:8] != b"\x89PNG\r\n\x1a\n":
+                  raise SystemExit(f"not a PNG: {path}")
+              width, height = struct.unpack(">II", header[16:24])
+              if width < 1280 or height < 720 or path.stat().st_size < 4096:
+                  raise SystemExit(f"invalid pause capture: {path} ({width}x{height}, {path.stat().st_size} bytes)")
+          PY
 
       - name: Capture genuine before and after graphics frames
         id: graphics_capture

@@ -125,3 +125,13 @@
 **Alternative considered:** Add modifiers directly to `SurvivalDirector` now.
 
 **Why not selected:** Wave size, score, HP, and balance are explicit non-regression requirements. Those changes need their own tested compatibility adapter and QA matrix.
+
+## D-014 — Pause is a state transition with a live shared-settings child surface
+
+**Decision:** Keep `Main` processable while the tree is paused, gate its gameplay work on `SceneTree.paused`, and use `GameManager.enter_pause()` / `leave_pause()` as the only pause-state transitions. The paused overlay hosts the existing `RedlineSettingsMenu` instead of a second settings implementation.
+
+**Reason:** This freezes the current Desert simulation without losing Esc, Android Back, focus-loss, or touch pause access. It preserves the legacy wave/score/HP scene while keeping a single immediate-persistence settings contract. Pause, settings return, resume, restart, map-select, and desktop-quit routes are all explicit. The normal Boot hand-off test route additionally checks pause → settings → back → resume, and the Xvfb route captures the pause plus Bengali settings surfaces from the real game.
+
+**Alternative considered:** Pause only the player/director and leave the scene tree running, or duplicate a compact pause settings panel.
+
+**Why not selected:** Partial pausing risks background UI/timers and missed state ownership; duplicated settings would diverge from the already reviewed category UI, persistence behavior, and Bengali localization.
