@@ -123,6 +123,16 @@ func _ready() -> void:
 	_set_status("SECURE THE OUTPOST")
 	_show_alert("OPERATION REDLINE", 2.1)
 	director.start_operation()
+	if OS.get_cmdline_user_args().has("--verify-boot-flow"):
+		call_deferred("_finish_boot_flow_verification")
+
+func _finish_boot_flow_verification() -> void:
+	if GameManager.state != GameManager.State.PLAYING or GameManager.selected_map_id != "MP_DS_01":
+		push_error("Boot-flow verification reached Main with invalid game state.")
+		get_tree().quit(1)
+		return
+	print("BOOT_FLOW_PASS map=", GameManager.selected_map_id)
+	get_tree().quit()
 
 func _process(delta: float) -> void:
 	weapon_switch_left = maxf(weapon_switch_left - delta, 0.0)

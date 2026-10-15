@@ -15,6 +15,7 @@ enum View {
 const REDLINE_THEME := preload("res://ui/theme/redline_theme.tres")
 const SPLASH_SECONDS := 1.35
 const MIN_TOUCH_TARGET := Vector2(320, 58)
+const BOOT_FLOW_TEST_ARGUMENT := "--verify-boot-flow"
 
 var active_view: View = View.SPLASH
 var selected_map_id := "MP_DS_01"
@@ -42,6 +43,12 @@ func _ready() -> void:
 	SceneLoader.load_failed.connect(_on_load_failed)
 	_build_shell()
 	_show_splash()
+	if OS.get_cmdline_user_args().has(BOOT_FLOW_TEST_ARGUMENT):
+		call_deferred("_begin_headless_handoff_test")
+
+func _begin_headless_handoff_test() -> void:
+	_show_menu()
+	_start_selected_map()
 
 func _process(delta: float) -> void:
 	if active_view == View.SPLASH:

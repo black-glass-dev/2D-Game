@@ -30,7 +30,7 @@
 | Native survival core | `./scripts/run_native_tests.sh` | PASS — 3 waves, 27 spawns, completion | M1 Batch 2 terminal log |
 | Asset manifest syntax and font hashes | `python3 -m json.tool assets_manifest.json`; `sha256sum` | PASS — manifest parses; Regular/SemiBold match the recorded hashes | M1 Batch 2 terminal log |
 | Godot import, Android export, and default headless Boot launch | GitHub Actions run 38684364680 | PASS | `https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/38684364680` — import/export/headless/capture steps succeeded on `2fadc30` |
-| Actual Boot → `SceneLoader` → `Main.tscn` hand-off | `tools/verify_boot_flow.gd`, re-queued after parser/runtime fixes | Pending | CI run 38685720708 exposed the issues below before the route could be verified; the harness must produce `BOOT_FLOW_PASS` before the complete route is called verified |
+| Actual Boot → `SceneLoader` → `Main.tscn` hand-off | Normal project launch with the test-only `--verify-boot-flow` user argument, re-queued after parser/runtime fixes | Pending | CI run 38685720708 showed that a custom `--script` runner does not register autoload singletons; the normal launch must produce `BOOT_FLOW_PASS` before the complete route is called verified |
 | Android emulator install/launch | GitHub Actions run 38684364680 | BLOCKED — emulator boot timeout | APK candidate and build evidence uploaded, but the hosted emulator did not boot before timeout; this is not a device-pass result |
 
 ## M2 entry-flow repair — CI run 38685720708
@@ -40,6 +40,7 @@
 | `MapRegistry` used a method call in a `const` expression, preventing its autoload from compiling | Fixed locally; re-queued | Use constant `res://data/maps`; extend the static validator to accept an existing resource directory for `DirAccess.open()`. |
 | `MP_DS_01.tres` used array syntax inside `PackedStringArray`, causing a resource parse error | Fixed locally; re-queued | Use Godot text-resource `PackedStringArray("…", "…")` syntax. |
 | Project settings attempted to load the raw CSV as a `Translation` resource | Fixed locally; re-queued | Remove the invalid setting and have `LocalizationService` parse the reviewed CSV and register `Translation` objects at runtime. |
+| The first harness used Godot `--script`, which does not register project autoload singletons for dependent scene compilation | Fixed locally; re-queued | Launch the normal project with a test-only `--verify-boot-flow` user argument; Boot starts the real load and Main emits `BOOT_FLOW_PASS` only after it owns Playing state. |
 
 The Android export itself passed before the headless route failed; no APK candidate from this failed route is treated as a tested delivery.
 

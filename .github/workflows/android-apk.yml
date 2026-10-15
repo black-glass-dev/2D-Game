@@ -170,7 +170,7 @@ jobs:
           set -euo pipefail
           export PATH="$HOME/.local/bin:$PATH"
           godot --headless --path . --quit-after 180 2>&1 | tee build/godot-runtime.log
-          godot --headless --path . --script tools/verify_boot_flow.gd 2>&1 | tee build/godot-boot-flow.log
+          timeout 30s godot --headless --path . -- --verify-boot-flow 2>&1 | tee build/godot-boot-flow.log
           grep -q "BOOT_FLOW_PASS" build/godot-boot-flow.log
 
       - name: Capture genuine before and after graphics frames
