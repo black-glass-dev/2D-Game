@@ -6,7 +6,7 @@ extends Node
 signal maps_refreshed(map_count: int)
 signal invalid_map_skipped(resource_path: String)
 
-const MAP_DIRECTORY := "res://data/map_data.gd".get_base_dir().path_join("maps")
+const MAP_DIRECTORY := "res://data/maps"
 
 var maps_by_id: Dictionary = {}
 var ordered_maps: Array[RedlineMapData] = []

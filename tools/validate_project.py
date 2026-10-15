@@ -39,7 +39,9 @@ def main() -> None:
         for resource in re.findall(r"res://([A-Za-z0-9_./-]+)", content):
             checked_links += 1
             candidate = ROOT / resource
-            if not candidate.is_file():
+            # Godot accepts both files and packed-resource directories in APIs
+            # such as DirAccess.open(). A path must exist, but need not be a file.
+            if not candidate.exists():
                 error(f"{source.relative_to(ROOT)} refers to missing resource res://{resource}")
 
     textures = sorted((ROOT / "assets/textures").glob("*_128.png"))

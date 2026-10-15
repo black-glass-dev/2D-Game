@@ -16,6 +16,6 @@ All notable production changes are documented here.
 
 ### Changed
 
-- `project.godot` now boots `Boot.tscn`, registers the foundation services as autoloads, and registers the CSV catalog for Godot localization import.
+- `project.godot` now boots `Boot.tscn` and registers the foundation services as autoloads; `LocalizationService` loads the reviewed CSV catalog at runtime into Godot Translation resources without committing generated import artifacts.
 - `Main.tscn` remains directly runnable; it now marks the global game state as Playing when the legacy Desert runtime takes ownership after loading.
 - Existing Desert gameplay, direct touch/keyboard input, runtime world builder, Android package/signing, and current HUD remain intact during the boot-flow migration.

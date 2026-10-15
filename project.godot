@@ -18,9 +18,6 @@ LocalizationService="*res://scripts/services/localization_service.gd"
 SceneLoader="*res://scripts/services/scene_loader.gd"
 GameManager="*res://scripts/services/game_manager.gd"
 
-[internationalization]
-locale/translations=PackedStringArray("res://data/localization/redline.csv")
-
 [display/window]
 # Landscape-native design resolution. Canvas-items stretch fills every supported
 # device aspect ratio; dynamic 3D scaling is applied by PerformanceGovernor.

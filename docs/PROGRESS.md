@@ -14,4 +14,4 @@ Last updated: 2026-10-15 (Asia/Dhaka)
 
 ## Current batch
 
-**M1 Batch 2 / M2 entry-flow hand-off:** the default boot scene is now a lightweight UI shell. It shows splash/menu/map selection before using `SceneLoader` to load the unchanged `Main.tscn` Desert runtime. Godot import, Android export, and default Boot launch passed in CI run 38684364680. The newly added direct Boot → SceneLoader → Main integration harness is queued for verification; hosted emulator boot remains an evidence blocker.
+**M1 Batch 2 / M2 entry-flow hand-off:** the default boot scene is now a lightweight UI shell. It shows splash/menu/map selection before using `SceneLoader` to load the unchanged `Main.tscn` Desert runtime. Godot import, Android export, and default Boot launch passed in CI run 38684364680. The first direct integration test (run 38685720708) correctly exposed a MapRegistry constant, Translation-resource, and `.tres` syntax defect; all three are corrected and the full Boot → SceneLoader → Main harness is re-queued. Hosted emulator boot remains an evidence blocker.
