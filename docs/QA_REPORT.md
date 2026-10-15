@@ -65,6 +65,18 @@ Candidate #67 is not treated as a tested delivery because the Android emulator i
 | Locked Highrise map card | Normal project launch with `--verify-map-select` | PASS | [GitHub Actions run 38747901596](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/38747901596) passed the headless launch step; CI requires `MAP_SELECT_PASS` only when `MP_RF_02` is registered, selectable for inspection, and cannot launch |
 | Android emulator install/launch | GitHub Actions run 38747901596 | BLOCKED — emulator boot timeout | Candidate #69 was uploaded, but the hosted emulator did not boot before timeout; this is not a device-pass result |
 
+## M3 batch 1 — pause lifecycle and visual evidence
+
+| Test | Command / method | Result | Evidence |
+| --- | --- | --- | --- |
+| GDScript static analysis | `npm run test:gdscript` | PASS — 23 scripts, 0 errors, 0 warnings | M3 Batch 1 terminal log and CI run 38754873297 source-test step |
+| Resource links and original texture dimensions | `python3 tools/validate_project.py` | PASS — 50 `res://` links and 4 128×128 textures | M3 Batch 1 terminal log |
+| Native survival core | `./scripts/run_native_tests.sh` | PASS — 3 waves, 27 spawns, completion | M3 Batch 1 terminal log |
+| Normal Boot → pause → shared settings → pause → resume route | Normal project launch with test-only `--verify-pause-flow` user argument | PASS | [GitHub Actions run 38754873297](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/38754873297) passed `Launch Boot and gameplay flow headlessly`; it requires `PAUSE_FLOW_PASS` after checking `GameManager`/tree pause state, overlay visibility, shared-settings return, and resumed gameplay state. |
+| Genuine pause and Bengali settings frames | Normal `Boot.tscn` launch under Xvfb/OpenGL with `--verify-pause-flow --capture-pause-bengali` | PASS — two 1280×720 PNGs | CI run 38754873297 passed `Capture pause and Bengali settings through normal Boot flow`; output paths are `build/screenshots/pause/pause-overlay.png` and `build/screenshots/pause/pause-settings-bn.png` in the `operation-redline-android-debug` build artifact. The sandbox could not download the Azure-backed artifact URL, so this records capture/size evidence rather than a local pixel review. |
+| Godot import, debug APK export/signature, and graphics capture | CI pipeline | PASS | CI run 38754873297 passed import/export, APK archive/signature verification, and the 12-before/12-after renderer capture gate. |
+| Android emulator install/launch | GitHub Actions run 38754873297 | BLOCKED — emulator boot timeout | The source/export/UI gates passed and a debug candidate was published, but the hosted emulator did not boot. This is not device-launch evidence. |
+
 ## Outstanding test requirements
 
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.
