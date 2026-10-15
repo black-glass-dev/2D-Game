@@ -52,7 +52,8 @@ Candidate #67 is not treated as a tested delivery because the Android emulator i
 | GDScript static analysis | `npm run test:gdscript` | PASS — 23 scripts, 0 errors, 0 warnings | M2 Batch 2 terminal log |
 | Resource links and original texture dimensions | `python3 tools/validate_project.py` | PASS — 48 `res://` links and 4 128×128 textures | M2 Batch 2 terminal log |
 | Native survival core | `./scripts/run_native_tests.sh` | PASS — 3 waves, 27 spawns, completion | M2 Batch 2 terminal log |
-| Godot import/export/headless settings route | Normal project launch with test-only `--verify-settings-menu` user argument | Pending after push | CI requires `SETTINGS_MENU_PASS` after it instantiates the reusable menu and persists/restores an explicit quality value |
+| Godot import/export/headless settings route | Normal project launch with test-only `--verify-settings-menu` user argument | PASS | [GitHub Actions run 38744384858](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/38744384858) passed the launch step; CI requires `SETTINGS_MENU_PASS` after instantiating the reusable menu and persisting/restoring an explicit quality value |
+| Android emulator install/launch | GitHub Actions run 38744384858 | BLOCKED — emulator boot timeout | Candidate #68 was uploaded, but the hosted emulator did not boot before timeout; this is not a device-pass result |
 
 ## Outstanding test requirements
 

@@ -14,4 +14,4 @@ Last updated: 2026-10-15 (Asia/Dhaka)
 
 ## Current batch
 
-**M2 Batch 2 in progress:** `RedlineSettingsMenu` provides graphics, audio, controls, accessibility, and other sections with automatic persistence and reset confirmation. Audio volumes apply immediately; current Desert consumers receive explicit quality tier, look sensitivity, aim-assist, fire-mode, and screen-effects compatibility values on the next map hand-off. Real Godot export/headless verification is required after this settings batch. Hosted emulator boot remains the physical-device evidence blocker.
+**M2 Batch 2 validated:** `RedlineSettingsMenu` provides graphics, audio, controls, accessibility, and other sections with automatic persistence and reset confirmation. Audio volumes apply immediately; current Desert consumers receive explicit quality tier, look sensitivity, aim-assist, fire-mode, and screen-effects compatibility values on the next map hand-off. CI run 38744384858 passed source checks, Godot import, Android export, boot-flow validation, settings-menu validation, and renderer capture. Hosted emulator boot remains the physical-device evidence blocker.
