@@ -1,20 +1,10 @@
 Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
 
-ERROR: No loader found for resource: res://data/localization/redline.csv (expected type: unknown)
-   at: _load (core/io/resource_loader.cpp:332)
-ERROR: Failed loading resource: res://data/localization/redline.csv.
-   at: _load (core/io/resource_loader.cpp:317)
 [   0% ] [90m[1mfirst_scan_filesystem[22m | Started Project initialization (5 steps)[39m[0m
 [   0% ] [90m[1mfirst_scan_filesystem[22m | Scanning file structure...[39m[0m
 [  16% ] [90m[1mfirst_scan_filesystem[22m | Loading global class names...[39m[0m
 [  33% ] [90m[1mfirst_scan_filesystem[22m | Verifying GDExtensions...[39m[0m
 [  50% ] [90m[1mfirst_scan_filesystem[22m | Creating autoload scripts...[39m[0m
-SCRIPT ERROR: Parse Error: Assigned value for constant "MAP_DIRECTORY" isn't a constant expression.
-          at: GDScript::reload (res://scripts/services/map_registry.gd:9)
-ERROR: Failed to load script "res://scripts/services/map_registry.gd" with error "Parse error".
-   at: load (modules/gdscript/gdscript_resource_format.cpp:46)
-ERROR: Failed to create an autoload, script 'res://scripts/services/map_registry.gd' is not compiling.
-   at: _create_autoload (editor/settings/editor_autoload_settings.cpp:340)
 [  66% ] [90m[1mfirst_scan_filesystem[22m | Initializing plugins...[39m[0m
 [  83% ] [90m[1mfirst_scan_filesystem[22m | Starting file scan...[39m[0m
 [92m[ DONE ][39m [1mfirst_scan_filesystem[22m
