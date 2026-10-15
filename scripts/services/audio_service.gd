@@ -13,6 +13,7 @@ func _ready() -> void:
 	_ensure_bus(BUS_MUSIC)
 	_ensure_bus(BUS_SFX)
 	_ensure_bus(BUS_UI)
+	SettingsService.setting_changed.connect(_on_setting_changed)
 	_apply_saved_volumes()
 
 func set_bus_linear_volume(bus_name: String, linear_volume: float) -> void:
@@ -45,3 +46,14 @@ func _apply_saved_volumes() -> void:
 	set_bus_linear_volume(BUS_MUSIC, float(SettingsService.get_setting("music_volume", 0.75)))
 	set_bus_linear_volume(BUS_SFX, float(SettingsService.get_setting("sfx_volume", 0.85)))
 	set_bus_linear_volume(BUS_UI, float(SettingsService.get_setting("ui_volume", 0.85)))
+
+func _on_setting_changed(key: String, value: Variant) -> void:
+	match key:
+		"master_volume":
+			set_bus_linear_volume("Master", float(value))
+		"music_volume":
+			set_bus_linear_volume(BUS_MUSIC, float(value))
+		"sfx_volume":
+			set_bus_linear_volume(BUS_SFX, float(value))
+		"ui_volume":
+			set_bus_linear_volume(BUS_UI, float(value))

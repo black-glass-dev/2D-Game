@@ -172,6 +172,8 @@ jobs:
           godot --headless --path . --quit-after 180 2>&1 | tee build/godot-runtime.log
           timeout 30s godot --headless --path . -- --verify-boot-flow 2>&1 | tee build/godot-boot-flow.log
           grep -q "BOOT_FLOW_PASS" build/godot-boot-flow.log
+          timeout 30s godot --headless --path . -- --verify-settings-menu 2>&1 | tee build/godot-settings-menu.log
+          grep -q "SETTINGS_MENU_PASS" build/godot-settings-menu.log
 
       - name: Capture genuine before and after graphics frames
         id: graphics_capture

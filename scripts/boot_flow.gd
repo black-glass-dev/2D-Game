@@ -16,6 +16,7 @@ const REDLINE_THEME := preload("res://ui/theme/redline_theme.tres")
 const SPLASH_SECONDS := 1.35
 const MIN_TOUCH_TARGET := Vector2(320, 58)
 const BOOT_FLOW_TEST_ARGUMENT := "--verify-boot-flow"
+const SETTINGS_MENU_TEST_ARGUMENT := "--verify-settings-menu"
 
 var active_view: View = View.SPLASH
 var selected_map_id := "MP_DS_01"
@@ -41,14 +42,40 @@ func _ready() -> void:
 	GameManager.set_state(GameManager.State.SPLASH)
 	SceneLoader.load_progress.connect(_on_load_progress)
 	SceneLoader.load_failed.connect(_on_load_failed)
+	LocalizationService.locale_changed.connect(_on_locale_changed)
 	_build_shell()
 	_show_splash()
 	if OS.get_cmdline_user_args().has(BOOT_FLOW_TEST_ARGUMENT):
 		call_deferred("_begin_headless_handoff_test")
+	elif OS.get_cmdline_user_args().has(SETTINGS_MENU_TEST_ARGUMENT):
+		call_deferred("_begin_settings_menu_test")
 
 func _begin_headless_handoff_test() -> void:
 	_show_menu()
 	_start_selected_map()
+
+func _begin_settings_menu_test() -> void:
+	_show_menu()
+	_show_settings()
+	await get_tree().process_frame
+	var settings_menu: RedlineSettingsMenu
+	for child in content.get_children():
+		settings_menu = child as RedlineSettingsMenu
+		if settings_menu != null:
+			break
+	if settings_menu == null:
+		push_error("Settings-menu verification could not create RedlineSettingsMenu.")
+		get_tree().quit(1)
+		return
+	var original_tier := str(SettingsService.get_setting("quality_tier", "AUTO"))
+	SettingsService.set_setting("quality_tier", "HIGH")
+	if str(SettingsService.get_setting("quality_tier", "")) != "HIGH":
+		push_error("Settings-menu verification could not persist quality selection.")
+		get_tree().quit(1)
+		return
+	SettingsService.set_setting("quality_tier", original_tier)
+	print("SETTINGS_MENU_PASS section=", settings_menu.current_section)
+	get_tree().quit()
 
 func _process(delta: float) -> void:
 	if active_view == View.SPLASH:
@@ -248,34 +275,10 @@ func _show_settings() -> void:
 	GameManager.set_state(GameManager.State.MAIN_MENU)
 	footer_label.text = tr("menu.back_hint")
 	_clear_content()
-	var center := CenterContainer.new()
-	content.add_child(center)
-	var settings_box := VBoxContainer.new()
-	settings_box.custom_minimum_size = Vector2(470, 0)
-	settings_box.add_theme_constant_override("separation", 14)
-	center.add_child(settings_box)
-	var heading := Label.new()
-	heading.text = tr("menu.settings")
-	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	heading.add_theme_font_override("font", REDLINE_THEME.get_font("font", "Button"))
-	heading.add_theme_font_size_override("font_size", 29)
-	settings_box.add_child(heading)
-	var language_button := _make_menu_button("", _cycle_language, "Change interface language")
-	language_button.text = "%s: %s" % [tr("settings.language"), _language_label()]
-	settings_box.add_child(language_button)
-	var quality := Label.new()
-	quality.text = "%s: %s" % [tr("settings.graphics"), str(SettingsService.get_setting("quality_tier", "AUTO"))]
-	quality.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	quality.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	settings_box.add_child(quality)
-	var deferred_note := Label.new()
-	deferred_note.text = tr("settings.full_panel_coming")
-	deferred_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	deferred_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	deferred_note.modulate.a = 0.78
-	settings_box.add_child(deferred_note)
-	settings_box.add_child(_make_menu_button("menu.back", _show_menu, "Return to main menu"))
-	language_button.grab_focus()
+	var settings_menu := RedlineSettingsMenu.new()
+	settings_menu.close_requested.connect(_show_menu)
+	content.add_child(settings_menu)
+	settings_menu.call_deferred("focus_initial_control")
 
 func _show_loading(map_data: RedlineMapData) -> void:
 	active_view = View.LOADING
@@ -397,24 +400,18 @@ func _on_load_failed(_scene_path: String, _error_code: Error) -> void:
 		return
 	_show_map_select()
 
-func _cycle_language() -> void:
-	var current := str(SettingsService.get_setting("language", LocalizationService.AUTO)).to_upper()
-	var next: String = LocalizationService.ENGLISH.to_upper()
-	if current == LocalizationService.ENGLISH.to_upper():
-		next = LocalizationService.BENGALI.to_upper()
-	elif current == LocalizationService.BENGALI.to_upper():
-		next = LocalizationService.AUTO
-	LocalizationService.set_language_preference(next)
-	_refresh_translated_shell()
-	_show_settings()
+func _on_locale_changed(_locale: String) -> void:
+	call_deferred("_refresh_view_for_locale")
 
-func _language_label() -> String:
-	var preference := str(SettingsService.get_setting("language", LocalizationService.AUTO)).to_upper()
-	if preference == LocalizationService.BENGALI.to_upper():
-		return "বাংলা"
-	if preference == LocalizationService.ENGLISH.to_upper():
-		return "English"
-	return tr("settings.auto")
+func _refresh_view_for_locale() -> void:
+	_refresh_translated_shell()
+	match active_view:
+		View.MENU:
+			_show_menu()
+		View.MAP_SELECT:
+			_show_map_select()
+		View.SETTINGS:
+			_show_settings()
 
 func _refresh_translated_shell() -> void:
 	title_label.text = tr("app.title")

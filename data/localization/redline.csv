@@ -31,8 +31,48 @@ settings.audio,AUDIO,অডিও
 settings.controls,CONTROLS,কন্ট্রোল
 settings.accessibility,ACCESSIBILITY,অ্যাক্সেসিবিলিটি
 settings.other,OTHER,অন্যান্য
+settings.graphics_hint,Choose an explicit tier or tune visual preferences for the next deployment.,পরের মোতায়েনের জন্য নির্দিষ্ট মান বেছে নিন বা দৃশ্যমানতা ঠিক করুন।
+settings.audio_hint,Volume changes apply immediately.,ভলিউম পরিবর্তন সঙ্গে সঙ্গে কার্যকর হয়।
+settings.controls_hint,Core combat settings persist into the Desert hand-off.,মূল যুদ্ধ সেটিংস Desert map-এও সংরক্ষিত থাকে।
+settings.accessibility_hint,Reduce visual strain and choose readable feedback.,দৃশ্যমান চাপ কমান ও সহজে পড়া যায় এমন প্রতিক্রিয়া বেছে নিন।
+settings.other_hint,Language and auxiliary preferences are stored on this device.,ভাষা ও সহায়ক পছন্দ এই ডিভাইসে সংরক্ষিত থাকে।
+settings.quality_tier,QUALITY TIER,কোয়ালিটি স্তর
+settings.render_scale,RENDER SCALE,রেন্ডার স্কেল
+settings.shadows,SHADOWS,ছায়া
+settings.anti_aliasing,ANTI-ALIASING,অ্যান্টি-অ্যালিয়াসিং
+settings.fov,FIELD OF VIEW,দৃষ্টিক্ষেত্র
+settings.brightness,BRIGHTNESS,উজ্জ্বলতা
+settings.fps_limit,FPS LIMIT,FPS সীমা
+settings.show_fps,SHOW FPS,FPS দেখান
+settings.off,OFF,বন্ধ
+settings.unlimited,UNLIMITED,সীমাহীন
+settings.master_volume,MASTER VOLUME,মাস্টার ভলিউম
+settings.music_volume,MUSIC VOLUME,মিউজিক ভলিউম
+settings.sfx_volume,SFX VOLUME,SFX ভলিউম
+settings.ui_volume,UI VOLUME,UI ভলিউম
+settings.mute_unfocused,MUTE WHEN UNFOCUSED,ফোকাস না থাকলে মিউট
+settings.look_sensitivity,LOOK SENSITIVITY,লুক সেনসিটিভিটি
+settings.aim_assist,AIM ASSIST,এম অ্যাসিস্ট
+settings.aim_assist_strength,AIM ASSIST STRENGTH,এম অ্যাসিস্ট শক্তি
+settings.fire_mode,FIRE MODE,ফায়ার মোড
+settings.single,SINGLE,সিঙ্গেল
+settings.auto_fire,AUTO,অটো
+settings.joystick_scale,JOYSTICK SCALE,জয়স্টিক স্কেল
+settings.touch_opacity,TOUCH OPACITY,টাচ স্বচ্ছতা
+settings.button_scale,BUTTON SCALE,বাটন স্কেল
+settings.left_handed,LEFT-HANDED LAYOUT,বাঁ-হাতি লেআউট
+settings.hud_layout_note,Move and resize the HUD from the in-game HUD button. This panel preserves the preference for the next layout pass.,ইন-গেম HUD বোতাম থেকে HUD সরান ও আকার বদলান। এই প্যানেল পরের লেআউট ধাপের জন্য পছন্দ সংরক্ষণ করে।
+settings.subtitles,SUBTITLES,সাবটাইটেল
+settings.damage_numbers,DAMAGE NUMBERS,ড্যামেজ সংখ্যা
+settings.reduce_shake,REDUCE SCREEN SHAKE,স্ক্রিন শেক কমান
+settings.colorblind,COLORBLIND MODE,কালারব্লাইন্ড মোড
+settings.haptics,HAPTICS,হ্যাপটিক্স
+settings.persistence_note,Changes are saved automatically to this device.,পরিবর্তন স্বয়ংক্রিয়ভাবে এই ডিভাইসে সংরক্ষিত হয়।
 settings.full_panel_coming,More settings will be available before mission deployment.,মিশন শুরু করার আগে আরও সেটিংস যোগ করা হবে।
 settings.reset_defaults,RESET DEFAULTS,ডিফল্টে রিসেট
+settings.reset_title,RESET SETTINGS?,সেটিংস রিসেট করবেন?
+settings.reset_warning,This restores all settings to their default values.,এতে সব সেটিংস ডিফল্ট মানে ফিরে যাবে।
+settings.confirm_reset,RESET,রিসেট করুন
 game.survival,SURVIVAL,সারভাইভাল
 game.endless,ENDLESS,এন্ডলেস
 game.easy,EASY,সহজ

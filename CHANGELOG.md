@@ -13,9 +13,11 @@ All notable production changes are documented here.
 - `Boot.tscn` and a responsive Boot → Splash → Menu → Map Select → Loading shell that dynamically reads `MapRegistry` and hands off through `SceneLoader`.
 - Noto Sans Bengali Regular/SemiBold under SIL OFL 1.1 with pinned source, copied license, and SHA-256 evidence.
 - Shared Redline theme and original play, settings, back, and lock SVG source icons.
+- Reusable five-section settings menu covering graphics, audio, controls, accessibility, and other preferences, including automatic persistence and reset confirmation.
 
 ### Changed
 
 - `project.godot` now boots `Boot.tscn` and registers the foundation services as autoloads; `LocalizationService` loads the reviewed CSV catalog at runtime into Godot Translation resources without committing generated import artifacts.
 - `Main.tscn` remains directly runnable; it now marks the global game state as Playing when the legacy Desert runtime takes ownership after loading.
 - Existing Desert gameplay, direct touch/keyboard input, runtime world builder, Android package/signing, and current HUD remain intact during the boot-flow migration.
+- Settings changes now synchronize quality tier, look sensitivity, aim assist, fire mode, and screen-effect compatibility values to the legacy Desert settings file for the next map hand-off; audio bus volumes apply immediately.

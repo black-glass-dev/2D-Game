@@ -20,7 +20,8 @@
 - [x] Add an independently runnable Boot → Splash → Main Menu shell.
 - [x] Add a data-driven Desert map card and threaded `SceneLoader` hand-off.
 - [x] Add a touch/keyboard/gamepad navigation baseline plus Android Back route in the shell.
-- [ ] Add the full settings sections, live preview controls, reset confirmation, and control-layout hand-off.
+- [x] Add five categorized settings sections, persistence, reset confirmation, immediate audio/FPS application, and legacy Desert compatibility write-through.
+- [ ] Connect the shared settings surface to pause, add live in-game visual/control-layout previews, and complete conflict-aware rebinding.
 - [ ] Add map difficulty/mode selection, locked future-map card, loading telemetry, and visual menu background fallback.
 
 ## Guardrails

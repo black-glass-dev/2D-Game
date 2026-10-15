@@ -85,3 +85,23 @@
 **Alternative considered:** Depend on a device system font or retrieve the upstream release ZIP at build time.
 
 **Why not selected:** System glyph coverage varies by device; the release ZIP redirect was unavailable in the restricted build network. Sparse Git retrieval from the pinned source safely produced reproducible vendor files.
+
+## D-010 — Settings UI is reusable and writes through the compatibility seam
+
+**Decision:** Build one `RedlineSettingsMenu` surface for the front end and future pause-menu host. Persist edits immediately in `SettingsService`, live-apply audio bus volume/FPS choices, and mirror the legacy Desert-owned settings that already have a consumer.
+
+**Reason:** This establishes complete categorized settings UI without rewriting the current player, performance governor, HUD editor, or combat settings in the same change. Explicit manual quality tiers remain the authority for the next Desert hand-off; AUTO remains the only adaptive mode.
+
+**Alternative considered:** Duplicate a small menu settings panel and the existing in-game settings panel.
+
+**Why not selected:** Duplicated controls would drift in labels, persistence, behavior, and localization. A shared surface makes the later pause integration additive.
+
+## D-011 — Reviewed CSV remains the localization source of truth
+
+**Decision:** Parse the committed `redline.csv` at runtime and register transient Godot `Translation` resources instead of committing generated importer output or pointing project settings at a raw CSV as a Translation resource.
+
+**Reason:** The raw CSV is reviewable, bilingual, and stable in source control. The direct project-setting approach produced an engine resource-load error in CI; runtime registration fixes it without generated caches.
+
+**Alternative considered:** Commit generated translation binaries.
+
+**Why not selected:** Generated import artifacts are editor/version dependent and violate the source-only repository convention.

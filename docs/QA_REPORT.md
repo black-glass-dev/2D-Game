@@ -45,6 +45,15 @@
 
 Candidate #67 is not treated as a tested delivery because the Android emulator install/launch gate is still blocked.
 
+## M2 batch 2 — settings surface
+
+| Test | Command / method | Result | Evidence |
+| --- | --- | --- | --- |
+| GDScript static analysis | `npm run test:gdscript` | PASS — 23 scripts, 0 errors, 0 warnings | M2 Batch 2 terminal log |
+| Resource links and original texture dimensions | `python3 tools/validate_project.py` | PASS — 48 `res://` links and 4 128×128 textures | M2 Batch 2 terminal log |
+| Native survival core | `./scripts/run_native_tests.sh` | PASS — 3 waves, 27 spawns, completion | M2 Batch 2 terminal log |
+| Godot import/export/headless settings route | Normal project launch with test-only `--verify-settings-menu` user argument | Pending after push | CI requires `SETTINGS_MENU_PASS` after it instantiates the reusable menu and persists/restores an explicit quality value |
+
 ## Outstanding test requirements
 
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.

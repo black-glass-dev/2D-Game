@@ -53,6 +53,7 @@ func load_from_disk() -> void:
 		_load_current_schema(config)
 	else:
 		_migrate_legacy_settings()
+	Engine.max_fps = int(values.get("fps_limit", 0))
 	_save_to_disk()
 	settings_loaded.emit()
 
@@ -61,12 +62,15 @@ func get_setting(key: String, fallback: Variant = null) -> Variant:
 
 func set_setting(key: String, value: Variant, persist := true) -> void:
 	values[key] = value
+	if key == "fps_limit":
+		Engine.max_fps = int(value)
 	if persist:
 		_save_to_disk()
 	setting_changed.emit(key, value)
 
 func reset_to_defaults() -> void:
 	values = DEFAULTS.duplicate(true)
+	Engine.max_fps = int(values.get("fps_limit", 0))
 	_save_to_disk()
 	for key in values:
 		setting_changed.emit(str(key), values[key])
@@ -101,3 +105,20 @@ func _save_to_disk() -> void:
 	var result := config.save(SETTINGS_PATH)
 	if result != OK:
 		push_warning("SettingsService could not save settings.cfg: %s" % result)
+	_sync_legacy_runtime_settings()
+
+func _sync_legacy_runtime_settings() -> void:
+	# The current Desert scene still owns its local RedlineSettings reader. Keep
+	# those existing keys synchronized until gameplay adopts SettingsService
+	# directly, so explicit quality, sensitivity, aim, and fire-mode choices work
+	# on the next real map hand-off without removing legacy persistence.
+	var legacy := ConfigFile.new()
+	legacy.load(LEGACY_SETTINGS_PATH)
+	legacy.set_value("settings", "look_sensitivity", float(values.get("look_sensitivity", 1.0)))
+	legacy.set_value("settings", "aim_assist", bool(values.get("aim_assist", true)))
+	legacy.set_value("settings", "quality_tier", str(values.get("quality_tier", "AUTO")))
+	legacy.set_value("settings", "fire_mode", str(values.get("fire_mode", "SINGLE")))
+	legacy.set_value("settings", "screen_effects", not bool(values.get("reduce_screen_shake", false)))
+	var result := legacy.save(LEGACY_SETTINGS_PATH)
+	if result != OK:
+		push_warning("SettingsService could not synchronize legacy settings: %s" % result)
