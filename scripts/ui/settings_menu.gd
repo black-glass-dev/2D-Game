@@ -67,6 +67,7 @@ func _build_shell() -> void:
 		tab.toggle_mode = true
 		tab.button_pressed = section == current_section
 		tab.pressed.connect(_select_section.bind(section))
+		tab.pressed.connect(AudioService.play_ui_confirm)
 		tabs.add_child(tab)
 		tab_buttons.append(tab)
 
@@ -178,6 +179,7 @@ func _add_choice(label_key: String, setting_key: String, labels: Array[String], 
 		if str(values[index]) == str(selected_value):
 			choice.select(index)
 	choice.item_selected.connect(_set_choice.bind(setting_key, values))
+	choice.item_selected.connect(AudioService.play_ui_confirm)
 	row.add_child(choice)
 
 func _add_toggle(label_key: String, setting_key: String) -> void:
@@ -186,6 +188,7 @@ func _add_toggle(label_key: String, setting_key: String) -> void:
 	toggle.button_pressed = bool(SettingsService.get_setting(setting_key, false))
 	toggle.custom_minimum_size = Vector2(0, 48)
 	toggle.toggled.connect(_set_toggle.bind(setting_key))
+	toggle.toggled.connect(AudioService.play_ui_confirm)
 	section_body.add_child(toggle)
 
 func _add_slider(label_key: String, setting_key: String, minimum: float, maximum: float, step: float, suffix: String) -> void:
@@ -260,6 +263,7 @@ func _make_button(key: String, callback: Callable, hint: String) -> Button:
 	button.tooltip_text = hint
 	button.custom_minimum_size = MIN_TARGET
 	button.pressed.connect(callback)
+	button.pressed.connect(AudioService.play_ui_confirm)
 	return button
 
 func _section_title(section: Section) -> String:

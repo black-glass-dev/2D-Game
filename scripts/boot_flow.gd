@@ -20,6 +20,7 @@ const SETTINGS_MENU_TEST_ARGUMENT := "--verify-settings-menu"
 const MAP_SELECT_TEST_ARGUMENT := "--verify-map-select"
 const PAUSE_FLOW_TEST_ARGUMENT := "--verify-pause-flow"
 const RESULT_FLOW_TEST_ARGUMENT := "--verify-result-flow"
+const AUDIO_FLOW_TEST_ARGUMENT := "--verify-audio-flow"
 
 var active_view: View = View.SPLASH
 var selected_map_id := "MP_DS_01"
@@ -48,7 +49,7 @@ func _ready() -> void:
 	LocalizationService.locale_changed.connect(_on_locale_changed)
 	_build_shell()
 	_show_splash()
-	if OS.get_cmdline_user_args().has(BOOT_FLOW_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(PAUSE_FLOW_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(RESULT_FLOW_TEST_ARGUMENT):
+	if OS.get_cmdline_user_args().has(BOOT_FLOW_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(PAUSE_FLOW_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(RESULT_FLOW_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(AUDIO_FLOW_TEST_ARGUMENT):
 		call_deferred("_begin_headless_handoff_test")
 	elif OS.get_cmdline_user_args().has(SETTINGS_MENU_TEST_ARGUMENT):
 		call_deferred("_begin_settings_menu_test")
@@ -473,6 +474,7 @@ func _make_menu_button(key: String, callback: Callable, accessible_name: String)
 	button.custom_minimum_size = MIN_TOUCH_TARGET
 	button.focus_mode = Control.FOCUS_ALL
 	button.pressed.connect(callback)
+	button.pressed.connect(AudioService.play_ui_confirm)
 	return button
 
 func _select_map(map_id: String) -> void:

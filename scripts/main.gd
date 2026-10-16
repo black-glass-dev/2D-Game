@@ -12,6 +12,7 @@ const ADS_GLASS_SHADER := preload("res://assets/shaders/ads_glass.gdshader")
 const REDLINE_THEME := preload("res://ui/theme/redline_theme.tres")
 const PAUSE_FLOW_TEST_ARGUMENT := "--verify-pause-flow"
 const RESULT_FLOW_TEST_ARGUMENT := "--verify-result-flow"
+const AUDIO_FLOW_TEST_ARGUMENT := "--verify-audio-flow"
 const PAUSE_CAPTURE_BENGALI_ARGUMENT := "--capture-pause-bengali"
 const PAUSE_CAPTURE_OUTPUT_ARGUMENT := "--pause-screenshot-dir"
 
@@ -150,6 +151,8 @@ func _ready() -> void:
 		call_deferred("_run_pause_flow_verification")
 	elif OS.get_cmdline_user_args().has(RESULT_FLOW_TEST_ARGUMENT):
 		call_deferred("_run_result_flow_verification")
+	elif OS.get_cmdline_user_args().has(AUDIO_FLOW_TEST_ARGUMENT):
+		call_deferred("_run_audio_flow_verification")
 
 func _finish_boot_flow_verification() -> void:
 	if GameManager.state != GameManager.State.PLAYING or GameManager.selected_map_id != "MP_DS_01":
@@ -712,6 +715,7 @@ func _make_pause_button(key: String, callback: Callable) -> Button:
 	button.text = tr(key)
 	button.custom_minimum_size = Vector2(350, 58)
 	button.pressed.connect(callback)
+	button.pressed.connect(AudioService.play_ui_confirm)
 	return button
 
 func _toggle_pause() -> void:
@@ -848,6 +852,46 @@ func _run_result_flow_verification() -> void:
 		get_tree().quit(1)
 		return
 	print("RESULT_FLOW_PASS score=", saved_result.get("score", 0), " wave=", saved_result.get("wave", 0))
+	get_tree().quit()
+
+func _run_audio_flow_verification() -> void:
+	await get_tree().process_frame
+	var master_index := AudioServer.get_bus_index("Master")
+	var sfx_index := AudioServer.get_bus_index(AudioService.BUS_SFX)
+	var ui_index := AudioServer.get_bus_index(AudioService.BUS_UI)
+	if master_index < 0 or sfx_index < 0 or ui_index < 0:
+		push_error("Audio-flow verification could not resolve the required audio buses.")
+		get_tree().quit(1)
+		return
+	var original_master_volume := float(SettingsService.get_setting("master_volume", 1.0))
+	var original_focus_mute := bool(SettingsService.get_setting("mute_when_unfocused", true))
+	var original_sfx_volume := float(SettingsService.get_setting("sfx_volume", 0.85))
+	SettingsService.set_setting("master_volume", 1.0, false)
+	SettingsService.set_setting("mute_when_unfocused", true, false)
+	AudioService.set_application_focus(false)
+	if not AudioServer.is_bus_mute(master_index) or not AudioService.muted_for_focus:
+		push_error("Audio-flow verification could not mute Master on focus loss.")
+		get_tree().quit(1)
+		return
+	AudioService.set_application_focus(true)
+	if AudioServer.is_bus_mute(master_index) or AudioService.muted_for_focus:
+		push_error("Audio-flow verification could not restore Master on focus return.")
+		get_tree().quit(1)
+		return
+	AudioService.set_bus_linear_volume(AudioService.BUS_SFX, 0.40)
+	if is_zero_approx(AudioServer.get_bus_volume_db(sfx_index)) or str(rifle.shot_audio.bus) != AudioService.BUS_SFX or str(pistol.shot_audio.bus) != AudioService.BUS_SFX:
+		push_error("Audio-flow verification could not route combat audio through SFX.")
+		get_tree().quit(1)
+		return
+	if str(player.landing_audio.bus) != AudioService.BUS_SFX or AudioService.ui_feedback == null or str(AudioService.ui_feedback.bus) != AudioService.BUS_UI:
+		push_error("Audio-flow verification could not route landing or UI feedback audio.")
+		get_tree().quit(1)
+		return
+	AudioService.play_ui_confirm()
+	SettingsService.set_setting("mute_when_unfocused", original_focus_mute, false)
+	SettingsService.set_setting("master_volume", original_master_volume, false)
+	AudioService.set_bus_linear_volume(AudioService.BUS_SFX, original_sfx_volume)
+	print("AUDIO_FLOW_PASS sfx_bus=", sfx_index, " ui_bus=", ui_index)
 	get_tree().quit()
 
 func _pause_capture_directory() -> String:
@@ -1348,6 +1392,8 @@ func _button(text_value: String, position_offset: Vector2, control_size: Vector2
 		button.pivot_offset = control_size * 0.5
 		button.button_down.connect(_pulse_action_control.bind(button))
 		button.button_up.connect(_release_action_control.bind(button))
+	else:
+		button.pressed.connect(AudioService.play_ui_confirm)
 	return button
 
 func _pulse_action_control(button: Button) -> void:

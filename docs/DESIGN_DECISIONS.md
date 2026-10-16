@@ -145,3 +145,13 @@
 **Alternative considered:** Add XP, currencies, a new profile scene, unlock rewards, or modify wave difficulty after a result.
 
 **Why not selected:** Those systems would introduce progression and balance decisions outside the M3 regression scope. They also risk changing the existing Desert survival loop before its base results flow is fully validated.
+
+## D-016 — Audio uses buses and focus policy before introducing music content
+
+**Decision:** Route existing rifle, pistol, reload, and landing audio to the SFX bus; use a quiet existing original click for menu/settings confirmation on the UI bus; and centralize application focus muting in `AudioService`. On focus return, reapply the saved Master-volume mute state rather than blindly unmuting.
+
+**Reason:** This makes the reviewed Audio settings functional for current combat and UI feedback while avoiding new music or licensed sound acquisition in a regression batch. The focus policy respects a player who deliberately set Master volume to zero, and does not write settings or emit recursive preference changes during focus transitions.
+
+**Alternative considered:** Add an untracked background-music loop now, or have each weapon/menu individually mute itself on focus loss.
+
+**Why not selected:** New music needs provenance, a mix pass, and mobile memory review. Distributed focus logic would let one player restore audio while another remains muted and would make the player preference unreliable.

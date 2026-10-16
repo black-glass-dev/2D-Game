@@ -121,6 +121,7 @@ func _ready() -> void:
 	landing_audio = AudioStreamPlayer.new()
 	landing_audio.name = "Landing thump"
 	landing_audio.stream = LANDING_SOUND
+	landing_audio.bus = AudioService.BUS_SFX
 	landing_audio.volume_db = -12.0
 	add_child(landing_audio)
 	if not _is_mobile():

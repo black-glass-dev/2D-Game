@@ -254,11 +254,13 @@ func _build_audio() -> void:
 	shot_audio = AudioStreamPlayer.new()
 	shot_audio.name = "Rifle report"
 	shot_audio.stream = SHOT_SOUND
+	shot_audio.bus = AudioService.BUS_SFX
 	shot_audio.volume_db = -5.0
 	add_child(shot_audio)
 	reload_audio = AudioStreamPlayer.new()
 	reload_audio.name = "Reload click"
 	reload_audio.stream = RELOAD_SOUND
+	reload_audio.bus = AudioService.BUS_SFX
 	reload_audio.volume_db = -8.0
 	add_child(reload_audio)
 
