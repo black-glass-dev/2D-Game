@@ -17,6 +17,12 @@ const ACTION_PAUSE := "redline_pause"
 const ACTION_MENU_ACCEPT := "redline_menu_accept"
 const ACTION_MENU_BACK := "redline_menu_back"
 
+const GAMEPLAY_ACTIONS := [
+	ACTION_MOVE_FORWARD, ACTION_MOVE_BACK, ACTION_MOVE_LEFT, ACTION_MOVE_RIGHT,
+	ACTION_FIRE, ACTION_AIM, ACTION_JUMP, ACTION_CROUCH, ACTION_SWAP,
+	ACTION_RELOAD, ACTION_PAUSE,
+]
+
 func _ready() -> void:
 	_register_defaults()
 
@@ -48,6 +54,7 @@ func _register_defaults() -> void:
 	_add_joy_button("ui_left", JOY_BUTTON_DPAD_LEFT)
 	_add_joy_button("ui_right", JOY_BUTTON_DPAD_RIGHT)
 	_add_joy_button(ACTION_JUMP, JOY_BUTTON_A)
+	_add_joy_button(ACTION_CROUCH, JOY_BUTTON_RIGHT_STICK)
 	_add_joy_button(ACTION_RELOAD, JOY_BUTTON_X)
 	_add_joy_button(ACTION_SWAP, JOY_BUTTON_Y)
 	_add_joy_button(ACTION_PAUSE, JOY_BUTTON_START)
@@ -57,6 +64,23 @@ func _register_defaults() -> void:
 	_add_joy_motion(ACTION_MOVE_RIGHT, JOY_AXIS_LEFT_X, 1.0)
 	_add_joy_motion(ACTION_MOVE_FORWARD, JOY_AXIS_LEFT_Y, -1.0)
 	_add_joy_motion(ACTION_MOVE_BACK, JOY_AXIS_LEFT_Y, 1.0)
+
+func gameplay_bindings_ready() -> bool:
+	for action in GAMEPLAY_ACTIONS:
+		if not InputMap.has_action(action) or InputMap.action_get_events(action).is_empty():
+			return false
+	return true
+
+func gamepad_bindings_ready() -> bool:
+	for action in GAMEPLAY_ACTIONS:
+		var has_gamepad_event := false
+		for event in InputMap.action_get_events(action):
+			if event is InputEventJoypadButton or event is InputEventJoypadMotion:
+				has_gamepad_event = true
+				break
+		if not has_gamepad_event:
+			return false
+	return true
 
 func _ensure_action(action: String) -> void:
 	if not InputMap.has_action(action):

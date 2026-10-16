@@ -182,6 +182,8 @@ jobs:
           grep -q "RESULT_FLOW_PASS" build/godot-result-flow.log
           timeout 30s godot --headless --path . -- --verify-audio-flow 2>&1 | tee build/godot-audio-flow.log
           grep -q "AUDIO_FLOW_PASS" build/godot-audio-flow.log
+          timeout 30s godot --headless --path . -- --verify-input-accessibility-flow 2>&1 | tee build/godot-input-accessibility.log
+          grep -q "INPUT_ACCESSIBILITY_PASS" build/godot-input-accessibility.log
 
       - name: Capture pause and Bengali settings through normal Boot flow
         shell: bash

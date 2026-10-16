@@ -13,6 +13,7 @@ const REDLINE_THEME := preload("res://ui/theme/redline_theme.tres")
 const PAUSE_FLOW_TEST_ARGUMENT := "--verify-pause-flow"
 const RESULT_FLOW_TEST_ARGUMENT := "--verify-result-flow"
 const AUDIO_FLOW_TEST_ARGUMENT := "--verify-audio-flow"
+const INPUT_ACCESSIBILITY_TEST_ARGUMENT := "--verify-input-accessibility-flow"
 const PAUSE_CAPTURE_BENGALI_ARGUMENT := "--capture-pause-bengali"
 const PAUSE_CAPTURE_OUTPUT_ARGUMENT := "--pause-screenshot-dir"
 
@@ -81,6 +82,8 @@ var hits := 0
 var touch_aim := false
 var damage_flash := 0.0
 var damage_indicator_left := 0.0
+var displayed_health := 100
+var displayed_health_maximum := 100
 var respawn_left := -1.0
 var respawn_last_second := -1
 
@@ -105,6 +108,7 @@ func _ready() -> void:
 	add_child(player)
 	player.fire_requested.connect(_fire)
 	player.weapon_swap_requested.connect(_switch_weapon)
+	player.reload_requested.connect(_reload_active_weapon)
 	player.movement_touch_changed.connect(_update_movement_stick)
 	player.health_changed.connect(_on_health_changed)
 	player.damage_taken.connect(_on_player_damage)
@@ -141,6 +145,8 @@ func _ready() -> void:
 	_build_loading_splash()
 	_refresh_active_ammo()
 	_apply_settings()
+	SettingsService.setting_changed.connect(_on_runtime_setting_changed)
+	_apply_accessibility_settings()
 	get_viewport().size_changed.connect(_on_viewport_size_changed)
 	_set_status("SECURE THE OUTPOST")
 	_show_alert("OPERATION REDLINE", 2.1)
@@ -153,6 +159,8 @@ func _ready() -> void:
 		call_deferred("_run_result_flow_verification")
 	elif OS.get_cmdline_user_args().has(AUDIO_FLOW_TEST_ARGUMENT):
 		call_deferred("_run_audio_flow_verification")
+	elif OS.get_cmdline_user_args().has(INPUT_ACCESSIBILITY_TEST_ARGUMENT):
+		call_deferred("_run_input_accessibility_verification")
 
 func _finish_boot_flow_verification() -> void:
 	if GameManager.state != GameManager.State.PLAYING or GameManager.selected_map_id != "MP_DS_01":
@@ -173,9 +181,10 @@ func _process(delta: float) -> void:
 		# Desktop retains its existing held-mouse automatic path. On mobile, the
 		# default SINGLE mode fires once per tap; AUTO samples the same held FIRE
 		# button every frame and weapon cooldowns remain the rate authority.
-		if (desktop_mouse and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)) or (settings.fire_mode == "AUTO" and mobile_fire_held):
+		var action_fire_held := Input.is_action_pressed(InputService.ACTION_FIRE)
+		if (desktop_mouse and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)) or (settings.fire_mode == "AUTO" and (mobile_fire_held or action_fire_held)):
 			_fire()
-		_set_aim_state(touch_aim or (desktop_mouse and Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)))
+		_set_aim_state(touch_aim or Input.is_action_pressed(InputService.ACTION_AIM) or (desktop_mouse and Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)))
 	_update_respawn(delta)
 	damage_flash = maxf(damage_flash - delta * 1.8, 0.0)
 	damage_indicator_left = maxf(damage_indicator_left - delta, 0.0)
@@ -301,7 +310,32 @@ func _spawn_raider(serial: int) -> void:
 	var lateral := Vector3(float((serial * 7) % 5 - 2) * 0.9, 0, float((serial * 3) % 5 - 2) * 0.7)
 	enemy.position = candidate + lateral
 	add_child(enemy)
+	enemy.damaged.connect(_on_raider_damaged)
 	enemy.eliminated.connect(_on_raider_eliminated)
+
+func _on_raider_damaged(enemy: Raider, amount: int, headshot: bool) -> void:
+	if not bool(SettingsService.get_setting("damage_numbers", true)) or player == null or player.camera == null:
+		return
+	var camera := player.camera
+	var point := enemy.global_position + Vector3(0, 1.55, 0)
+	if camera.is_position_behind(point):
+		return
+	var number := Label.new()
+	number.name = "Damage number"
+	number.text = "%d" % amount
+	number.position = camera.unproject_position(point) + Vector2(-22, -18)
+	number.size = Vector2(44, 28)
+	number.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	number.add_theme_font_size_override("font_size", 20 if headshot else 16)
+	number.add_theme_color_override("font_color", _hud_color("headshot" if headshot else "damage_number"))
+	number.add_theme_color_override("font_outline_color", Color("07161a"))
+	number.add_theme_constant_override("outline_size", 3)
+	number.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud.add_child(number)
+	var tween := create_tween()
+	tween.tween_property(number, "position:y", number.position.y - 30.0, 0.38)
+	tween.parallel().tween_property(number, "modulate:a", 0.0, 0.38)
+	tween.tween_callback(number.queue_free)
 
 func _on_raider_eliminated(_enemy: Raider, points: int) -> void:
 	score += points
@@ -384,11 +418,64 @@ func _update_respawn(delta: float) -> void:
 		_restart()
 
 func _on_health_changed(current: int, maximum: int) -> void:
+	displayed_health = current
+	displayed_health_maximum = maximum
 	if health_label != null:
 		health_label.text = "VITALS  %03d / %03d" % [current, maximum]
-	if health_bar_fill != null:
-		health_bar_fill.size.x = 188.0 * clampf(float(current) / float(maximum), 0.0, 1.0)
-		health_bar_fill.color = Color("80d88a") if current > maximum * .42 else Color("ef7c62")
+	_refresh_health_presentation()
+
+func _refresh_health_presentation() -> void:
+	if health_bar_fill == null:
+		return
+	health_bar_fill.size.x = 188.0 * clampf(float(displayed_health) / float(maxi(displayed_health_maximum, 1)), 0.0, 1.0)
+	health_bar_fill.color = _hud_color("health_good" if displayed_health > displayed_health_maximum * .42 else "health_low")
+
+func _on_runtime_setting_changed(key: String, _value: Variant) -> void:
+	if key in ["reduce_screen_shake", "colorblind_mode", "damage_numbers", "haptics", "gamepad_deadzone"]:
+		_apply_accessibility_settings()
+
+func _apply_accessibility_settings() -> void:
+	if player != null:
+		player.set_reduce_screen_shake(bool(SettingsService.get_setting("reduce_screen_shake", false)))
+	_refresh_health_presentation()
+	if damage_overlay != null:
+		var overlay_color := _hud_color("damage")
+		overlay_color.a = damage_overlay.color.a
+		damage_overlay.color = overlay_color
+	for edge in damage_edges:
+		var edge_color := _hud_color("damage")
+		edge_color.a = edge.color.a
+		edge.color = edge_color
+	for segment in reticle_segments:
+		segment.color = _hud_color("reticle")
+
+func _hud_color(role: String) -> Color:
+	var mode := str(SettingsService.get_setting("colorblind_mode", "OFF"))
+	if mode == "PROTANOPIA" or mode == "DEUTERANOPIA":
+		match role:
+			"health_good", "reticle":
+				return Color("67dbe9")
+			"health_low", "damage", "damage_number":
+				return Color("ffb85c")
+			"headshot":
+				return Color("fff1a1")
+	if mode == "TRITANOPIA":
+		match role:
+			"health_good", "reticle":
+				return Color("73e2b0")
+			"health_low", "damage", "damage_number":
+				return Color("ff7f69")
+			"headshot":
+				return Color("ffd56e")
+	match role:
+		"health_good":
+			return Color("80d88a")
+		"health_low", "damage", "damage_number":
+			return Color("ef7c62")
+		"headshot":
+			return Color("ffda78")
+		_:
+			return Color("fff1cf")
 
 func _on_player_damage(amount: int, source_position: Vector3) -> void:
 	damage_flash = maxf(damage_flash, clampf(float(amount) / 14.0, 0.30, 0.85))
@@ -452,7 +539,7 @@ func _show_hit_marker(headshot: bool, eliminated: bool) -> void:
 	if hit_marker == null:
 		return
 	hit_marker.text = "✕"
-	hit_marker.add_theme_color_override("font_color", Color("ffda78") if headshot else (Color("ff8069") if eliminated else Color("ffdf9a")))
+	hit_marker.add_theme_color_override("font_color", _hud_color("headshot") if headshot else (_hud_color("damage_number") if eliminated else _hud_color("reticle")))
 	hit_marker.add_theme_font_size_override("font_size", 50 if headshot or eliminated else 42)
 	hit_marker.modulate.a = 1.0
 	var tween := create_tween()
@@ -464,7 +551,7 @@ func _push_kill_feed(message: String, headshot: bool) -> void:
 	var entry := Label.new()
 	entry.text = message
 	entry.add_theme_font_size_override("font_size", 14)
-	entry.add_theme_color_override("font_color", Color("ffdb7b") if headshot else Color("f1ded0"))
+	entry.add_theme_color_override("font_color", _hud_color("headshot") if headshot else Color("f1ded0"))
 	entry.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	entry.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	kill_feed.add_child(entry)
@@ -484,7 +571,7 @@ func _build_dynamic_reticle() -> void:
 	for index in range(4):
 		var segment := ColorRect.new()
 		segment.name = "Reticle segment"
-		segment.color = Color("fff1cf")
+		segment.color = _hud_color("reticle")
 		segment.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		segment.size = Vector2(10, 2) if index < 2 else Vector2(2, 10)
 		root.add_child(segment)
@@ -893,6 +980,61 @@ func _run_audio_flow_verification() -> void:
 	AudioService.set_bus_linear_volume(AudioService.BUS_SFX, original_sfx_volume)
 	print("AUDIO_FLOW_PASS sfx_bus=", sfx_index, " ui_bus=", ui_index)
 	get_tree().quit()
+
+func _run_input_accessibility_verification() -> void:
+	await get_tree().process_frame
+	if not InputService.gameplay_bindings_ready() or not InputService.gamepad_bindings_ready():
+		push_error("Input-accessibility verification found an incomplete named input map.")
+		get_tree().quit(1)
+		return
+	var original_reduce_shake := bool(SettingsService.get_setting("reduce_screen_shake", false))
+	var original_colorblind := str(SettingsService.get_setting("colorblind_mode", "OFF"))
+	var original_damage_numbers := bool(SettingsService.get_setting("damage_numbers", true))
+	var original_haptics := bool(SettingsService.get_setting("haptics", true))
+	var original_deadzone := float(SettingsService.get_setting("gamepad_deadzone", 0.20))
+	SettingsService.set_setting("reduce_screen_shake", true, false)
+	SettingsService.set_setting("colorblind_mode", "DEUTERANOPIA", false)
+	SettingsService.set_setting("haptics", false, false)
+	SettingsService.set_setting("gamepad_deadzone", 0.35, false)
+	if player == null or not player.reduce_screen_shake or reticle_segments.is_empty() or reticle_segments[0].color != _hud_color("reticle"):
+		push_error("Input-accessibility verification could not apply reduced-motion or palette settings.")
+		get_tree().quit(1)
+		return
+	_on_health_changed(20, 100)
+	if health_bar_fill == null or health_bar_fill.color != _hud_color("health_low"):
+		push_error("Input-accessibility verification could not apply the critical-health palette.")
+		get_tree().quit(1)
+		return
+	var probe := Raider.new()
+	probe.global_position = player.camera.global_position + -player.camera.global_transform.basis.z * 5.0
+	SettingsService.set_setting("damage_numbers", true, false)
+	var before_count := _damage_number_count()
+	_on_raider_damaged(probe, 42, true)
+	if _damage_number_count() != before_count + 1:
+		push_error("Input-accessibility verification could not create an enabled damage number.")
+		get_tree().quit(1)
+		return
+	SettingsService.set_setting("damage_numbers", false, false)
+	_on_raider_damaged(probe, 42, false)
+	if _damage_number_count() != before_count + 1:
+		push_error("Input-accessibility verification did not suppress disabled damage numbers.")
+		get_tree().quit(1)
+		return
+	SettingsService.set_setting("reduce_screen_shake", original_reduce_shake, false)
+	SettingsService.set_setting("colorblind_mode", original_colorblind, false)
+	SettingsService.set_setting("damage_numbers", original_damage_numbers, false)
+	SettingsService.set_setting("haptics", original_haptics, false)
+	SettingsService.set_setting("gamepad_deadzone", original_deadzone, false)
+	_on_health_changed(player.health, OutpostPlayer.MAX_HEALTH)
+	print("INPUT_ACCESSIBILITY_PASS actions=", InputService.GAMEPLAY_ACTIONS.size(), " damage_numbers=", before_count + 1)
+	get_tree().quit()
+
+func _damage_number_count() -> int:
+	var count := 0
+	for child in hud.get_children():
+		if child.name == "Damage number":
+			count += 1
+	return count
 
 func _pause_capture_directory() -> String:
 	var args := OS.get_cmdline_user_args()
@@ -1402,7 +1544,7 @@ func _pulse_action_control(button: Button) -> void:
 	button.pivot_offset = button.size * 0.5
 	var tween := create_tween()
 	tween.tween_property(button, "scale", Vector2(.92, .92), .055)
-	if OS.has_feature("mobile"):
+	if OS.has_feature("mobile") and bool(SettingsService.get_setting("haptics", true)):
 		Input.vibrate_handheld(14)
 
 func _release_action_control(button: Button) -> void:

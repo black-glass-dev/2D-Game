@@ -72,6 +72,7 @@ settings.auto_fire,AUTO,অটো
 settings.joystick_scale,JOYSTICK SCALE,জয়স্টিক স্কেল
 settings.touch_opacity,TOUCH OPACITY,টাচ স্বচ্ছতা
 settings.button_scale,BUTTON SCALE,বাটন স্কেল
+settings.gamepad_deadzone,GAMEPAD DEADZONE,গেমপ্যাড ডেডজোন
 settings.left_handed,LEFT-HANDED LAYOUT,বাঁ-হাতি লেআউট
 settings.hud_layout_note,Move and resize the HUD from the in-game HUD button. This panel preserves the preference for the next layout pass.,ইন-গেম HUD বোতাম থেকে HUD সরান ও আকার বদলান। এই প্যানেল পরের লেআউট ধাপের জন্য পছন্দ সংরক্ষণ করে।
 settings.subtitles,SUBTITLES,সাবটাইটেল

@@ -155,3 +155,13 @@
 **Alternative considered:** Add an untracked background-music loop now, or have each weapon/menu individually mute itself on focus loss.
 
 **Why not selected:** New music needs provenance, a mix pass, and mobile memory review. Distributed focus logic would let one player restore audio while another remains muted and would make the player preference unreliable.
+
+## D-017 — Accessibility preferences modify the live Desert adapter
+
+**Decision:** Make the existing accessibility settings directly affect the current Desert: reduce view recoil/bob/landing motion, use a colorblind-safe HUD palette, gate floating damage numbers, respect the haptics toggle, and expose a configurable analog-stick deadzone. Adopt the named `InputService` actions in `OutpostPlayer` so keyboard and gamepad use one gameplay route while visible touch controls remain explicit input sources.
+
+**Reason:** The settings panel previously persisted these choices without reliable gameplay consumers. These narrow adapters improve readability and control comfort without changing enemy health, score, wave balance, touch-fire boundaries, or the player’s base movement model. A deterministic normal-Boot harness verifies action coverage plus the live reduced-motion, palette, and damage-number behaviors.
+
+**Alternative considered:** Build a broad rebinding/keymap editor or add aim/auto-fire behavior to arbitrary touchscreen areas.
+
+**Why not selected:** Conflict-aware rebinding needs its own UI, conflict-resolution policy, and device QA. Arbitrary-screen firing violates the explicit touch-control safety requirement and would regress the current visible-FIRE-only mobile contract.

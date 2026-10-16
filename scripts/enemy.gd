@@ -1,6 +1,7 @@
 class_name Raider
 extends CharacterBody3D
 
+signal damaged(raider: Raider, amount: int, was_headshot: bool)
 signal eliminated(raider: Raider, score_value: int)
 
 const MAX_HEALTH := 100
@@ -108,6 +109,7 @@ func take_damage(amount: int, was_headshot := false) -> bool:
 	if not active:
 		return false
 	health -= amount
+	damaged.emit(self, amount, was_headshot)
 	radar_reveal_left = 2.4
 	tactics.receive_hit()
 	hit_react = 1.0

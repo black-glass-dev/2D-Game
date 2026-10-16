@@ -147,6 +147,7 @@ func _build_controls() -> void:
 	_add_slider("settings.joystick_scale", "touch_joystick_scale", 0.75, 1.35, 0.05, "×")
 	_add_slider("settings.touch_opacity", "touch_opacity", 0.35, 1.0, 0.05, "%")
 	_add_slider("settings.button_scale", "button_scale", 0.75, 1.35, 0.05, "×")
+	_add_slider("settings.gamepad_deadzone", "gamepad_deadzone", 0.05, 0.50, 0.01, "%")
 	_add_toggle("settings.left_handed", "touch_left_handed")
 	_add_note("settings.hud_layout_note")
 

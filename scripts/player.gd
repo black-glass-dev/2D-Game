@@ -5,6 +5,7 @@ extends CharacterBody3D
 ## forwards button state, keeping desktop and touch play on the same movement path.
 signal fire_requested
 signal weapon_swap_requested
+signal reload_requested
 signal health_changed(current: int, maximum: int)
 signal damage_taken(amount: int, source_position: Vector3)
 signal player_down
@@ -51,6 +52,7 @@ var is_sprinting := false
 var is_crouching := false
 var is_sliding := false
 var is_mantling := false
+var reduce_screen_shake := false
 var move_touch := -1
 var look_touch := -1
 var move_touch_origin := Vector2.ZERO
@@ -131,28 +133,24 @@ func _ready() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not can_control:
 		return
-	if not _is_mobile() and event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-		_rotate_look(event.relative * mouse_sensitivity)
-	elif not _is_mobile() and event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+	if event.is_action_pressed(InputService.ACTION_FIRE):
 		fire_requested.emit()
-	elif event is InputEventKey:
-		_handle_keyboard_event(event)
+	elif event.is_action_pressed(InputService.ACTION_JUMP):
+		request_jump()
+	elif event.is_action_released(InputService.ACTION_JUMP):
+		set_jump_held(false)
+	elif event.is_action_pressed(InputService.ACTION_CROUCH):
+		request_crouch()
+	elif event.is_action_pressed(InputService.ACTION_SWAP):
+		weapon_swap_requested.emit()
+	elif event.is_action_pressed(InputService.ACTION_RELOAD):
+		reload_requested.emit()
+	elif not _is_mobile() and event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		_rotate_look(event.relative * mouse_sensitivity)
 	elif event is InputEventScreenTouch:
 		_handle_touch_press(event)
 	elif event is InputEventScreenDrag:
 		_handle_touch_drag(event)
-
-func _handle_keyboard_event(event: InputEventKey) -> void:
-	if event.keycode == KEY_ESCAPE and event.pressed:
-		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	elif event.keycode == KEY_SPACE:
-		if event.pressed and not event.echo:
-			request_jump()
-		set_jump_held(event.pressed)
-	elif event.keycode == KEY_C and event.pressed and not event.echo:
-		request_crouch()
-	elif event.keycode == KEY_Q and event.pressed and not event.echo:
-		weapon_swap_requested.emit()
 
 func _handle_touch_press(event: InputEventScreenTouch) -> void:
 	if event.pressed:
@@ -186,6 +184,9 @@ func set_movement_touch_region(region: Rect2, input_radius: float = TOUCH_RADIUS
 func set_look_sensitivity(multiplier: float) -> void:
 	touch_look_sensitivity = clampf(0.0055 * multiplier, 0.0025, 0.011)
 	mouse_sensitivity = clampf(0.0028 * multiplier, 0.0014, 0.006)
+
+func set_reduce_screen_shake(enabled: bool) -> void:
+	reduce_screen_shake = enabled
 
 func request_jump() -> void:
 	if not can_control:
@@ -262,7 +263,7 @@ func _physics_process(delta: float) -> void:
 	var grounded_now := is_on_floor()
 	if not previous_floor and grounded_now and vertical_before_move < -2.0:
 		var impact := clampf(-vertical_before_move / 13.0, 0.0, 1.0)
-		landing_dip = -lerpf(0.018, 0.09, impact)
+		landing_dip = -lerpf(0.018, 0.09, impact) * (0.38 if reduce_screen_shake else 1.0)
 		if landing_audio != null:
 			landing_audio.volume_db = lerpf(-19.0, -8.0, impact)
 			landing_audio.play()
@@ -271,10 +272,17 @@ func _physics_process(delta: float) -> void:
 	_update_view(delta)
 
 func _read_move_input() -> Vector2:
-	var keyboard := Vector2.ZERO
-	keyboard.x = float(Input.is_key_pressed(KEY_D)) - float(Input.is_key_pressed(KEY_A))
-	keyboard.y = float(Input.is_key_pressed(KEY_S)) - float(Input.is_key_pressed(KEY_W))
-	var input_axis := keyboard
+	# The named actions retain WASD/arrow movement while adding the configured
+	# gamepad stick. A user-selected deadzone filters analog drift without
+	# affecting a full-strength keyboard direction.
+	var deadzone := clampf(float(SettingsService.get_setting("gamepad_deadzone", 0.20)), 0.05, 0.85)
+	var input_axis := Input.get_vector(
+		InputService.ACTION_MOVE_LEFT,
+		InputService.ACTION_MOVE_RIGHT,
+		InputService.ACTION_MOVE_FORWARD,
+		InputService.ACTION_MOVE_BACK,
+		deadzone
+	)
 	if touch_move.length() > 0.05:
 		input_axis = touch_move
 	return input_axis.limit_length(1.0)
@@ -397,6 +405,8 @@ func _update_view(delta: float) -> void:
 	var bob_speed := 7.0 + horizontal_speed * 1.35
 	bob_phase += delta * bob_speed
 	var bob_scale := 0.018 * moving_factor
+	if reduce_screen_shake:
+		bob_scale *= 0.45
 	if is_crouching:
 		bob_scale *= 0.58
 	if is_aiming:
@@ -439,8 +449,10 @@ func set_aim(enabled: bool) -> void:
 
 func add_recoil(vertical_degrees: float, horizontal_degrees: float) -> void:
 	# Recoil is an independent pivot, so recovery never fights direct look input.
-	recoil_rotation.x = clampf(recoil_rotation.x - deg_to_rad(vertical_degrees), deg_to_rad(-13.0), deg_to_rad(2.0))
-	recoil_rotation.y = clampf(recoil_rotation.y + deg_to_rad(horizontal_degrees), deg_to_rad(-5.0), deg_to_rad(5.0))
+	# Reduced-shake keeps weapon handling legible while retaining combat feedback.
+	var recoil_scale := 0.42 if reduce_screen_shake else 1.0
+	recoil_rotation.x = clampf(recoil_rotation.x - deg_to_rad(vertical_degrees * recoil_scale), deg_to_rad(-13.0), deg_to_rad(2.0))
+	recoil_rotation.y = clampf(recoil_rotation.y + deg_to_rad(horizontal_degrees * recoil_scale), deg_to_rad(-5.0), deg_to_rad(5.0))
 
 func get_move_amount() -> float:
 	return current_move_input.length()
