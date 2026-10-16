@@ -165,3 +165,13 @@
 **Alternative considered:** Build a broad rebinding/keymap editor or add aim/auto-fire behavior to arbitrary touchscreen areas.
 
 **Why not selected:** Conflict-aware rebinding needs its own UI, conflict-resolution policy, and device QA. Arbitrary-screen firing violates the explicit touch-control safety requirement and would regress the current visible-FIRE-only mobile contract.
+
+## D-018 — Subtitles become concise tactical sound captions
+
+**Decision:** Use the existing `subtitles` preference for brief, localized on-screen captions of player-owned audible combat cues: rifle fire, pistol fire, reload, and landing. Render a separate, non-interactive HUD label and immediately suppress it when the preference is disabled.
+
+**Reason:** Desert currently has no voiced dialogue to transcribe, but it does have gameplay-relevant combat and movement sounds. Captioning those cues makes the setting operational for players who cannot rely on audio while avoiding a false claim that dialogue subtitles exist. The wording is localization-CSV backed in English and Bengali and the normal-Boot accessibility gate verifies both enabled and disabled behavior.
+
+**Alternative considered:** Leave the setting stored until a narrative dialogue system is built, or place captions in the persistent status line.
+
+**Why not selected:** An inert visible setting offers no present player benefit. Reusing the status line would overwrite mission/reload feedback and make audio captions hard to distinguish from objective state.
