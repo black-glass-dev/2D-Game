@@ -23,7 +23,8 @@ All notable production changes are documented here.
 - Normal-Boot `--verify-audio-flow` harness covering bus availability, focus mute/restore, combat/landing SFX assignment, and UI feedback routing.
 - Live accessibility adapters: reduced camera bob/recoil/landing motion, colorblind-safe HUD palettes, preference-gated floating damage numbers, haptics enforcement, and a configurable gamepad deadzone.
 - Named gameplay-action consumption in the Desert player for keyboard/gamepad movement, fire, jump, crouch, weapon swap, reload, aim, and pause; visible touch controls remain the only touchscreen fire route.
-- Normal-Boot `--verify-input-accessibility-flow` harness for named gamepad bindings and the live reduced-motion, palette, and damage-number contracts.
+- Normal-Boot `--verify-input-accessibility-flow` harness for named gamepad bindings and the live reduced-motion, palette, damage-number, and sound-caption contracts.
+- Localized tactical sound captions for rifle fire, pistol fire, reload, and landing, controlled by the existing subtitles preference.
 
 ### Changed
 

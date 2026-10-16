@@ -112,6 +112,20 @@ Candidate #67 is not treated as a tested delivery because the Android emulator i
 | Genuine renderer frames | Xvfb/OpenGL real-scene capture | PASS — 12 before + 12 after PNGs | CI run 38859413030 passed the full graphics capture. Commit `f9efcaf` records refreshed `screenshots/before/` and `screenshots/after/` evidence. |
 | Android emulator install/launch | GitHub Actions run 38859413030 | BLOCKED — emulator boot timeout | The export, normal-Boot, pause, and renderer gates passed, but the hosted emulator did not boot before timeout. The candidate APK is not physical-device-tested delivery. |
 
+## M3 batch 5 — live tactical sound captions
+
+| Test | Command / method | Result | Evidence |
+| --- | --- | --- | --- |
+| GDScript static analysis | `npm run test:gdscript` | PASS — 23 scripts, 0 errors, 0 warnings | M3 Batch 5 local terminal log; CI run 38872610433 source-test step |
+| Resource links and original texture dimensions | `python3 tools/validate_project.py` | PASS — 51 `res://` links and 4 128×128 textures | M3 Batch 5 local terminal log |
+| Native survival core | `./scripts/run_native_tests.sh` | PASS — 3 waves, 27 spawns, completion state | M3 Batch 5 local terminal log |
+| Whitespace | `git diff --check` | PASS | M3 Batch 5 local terminal log |
+| Subtitle setting → tactical sound caption | Normal project launch with `--verify-input-accessibility-flow` | PASS | [GitHub Actions run 38872610433](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/38872610433) passed the headless flow suite. The existing gate now requires `INPUT_ACCESSIBILITY_PASS` after verifying disabled captions stay hidden and enabled captions render the localized rifle-fire cue, alongside the prior input/accessibility checks. |
+| Existing Boot/audio/pause/result contracts | Normal project launch under the CI flow-gate suite | PASS | CI run 38872610433 passed all normal-Boot gates and the pause/Bengali settings capture after caption wiring. |
+| Genuine renderer frames | Xvfb/OpenGL real-scene capture | PASS — 12 before + 12 after PNGs | CI run 38872610433 passed the full capture; commit `2360443` records refreshed renderer evidence. |
+| Android emulator install/launch | GitHub Actions run 38872610433 | BLOCKED — emulator boot timeout | Export and all headless/renderer gates passed, but the hosted emulator did not boot before timeout. |
+| Tested-build evidence archive | GitHub Actions run 38872610433 | BLOCKED — Actions artifact-storage quota | GitHub reported `Failed to CreateArtifact: Artifact storage quota has been hit`; this is a CI-storage blocker, not an APK/device-pass result. |
+
 ## Outstanding test requirements
 
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.
