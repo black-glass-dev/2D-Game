@@ -175,3 +175,13 @@
 **Alternative considered:** Leave the setting stored until a narrative dialogue system is built, or place captions in the persistent status line.
 
 **Why not selected:** An inert visible setting offers no present player benefit. Reusing the status line would overwrite mission/reload feedback and make audio captions hard to distinguish from objective state.
+
+## D-019 — Android Back is one tested return/resume contract
+
+**Decision:** Treat Android's `NOTIFICATION_WM_GO_BACK_REQUEST`, Escape, and controller B as equivalent return inputs. In Boot they leave Splash, Settings, or Map Select for the main menu; while Desert is paused they first leave shared settings and then resume the operation.
+
+**Reason:** The visible routes already shared this intent but had no dedicated contract proving their notification and device-action paths. A normal-Boot gate now drives the native Back notification plus keyboard and gamepad menu events, while the pause gate uses the same Android notification to leave settings and resume.
+
+**Alternative considered:** Keep separate Android-only Back paths or let Back quit whenever no modal is open.
+
+**Why not selected:** Parallel routing can drift between controllers and mobile. Immediate gameplay exit conflicts with the expected pause/resume behaviour and makes accidental Android Back input destructive.

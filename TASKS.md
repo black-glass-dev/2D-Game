@@ -32,6 +32,7 @@
 - [x] Persist Desert operation best score/furthest wave; show result summary and Map Select record without changing the wave director balance.
 - [x] Route current combat and menu/settings feedback through SFX/UI buses; implement saved-volume-safe focus mute/restore and headless regression coverage.
 - [x] Make subtitles, reduced-motion, colorblind HUD, damage-number, haptic, and gamepad-deadzone preferences operational in Desert; add normal-Boot input/accessibility coverage.
+- [x] Add normal-Boot Android Back, Escape, controller-B, and paused-settings return/resume route coverage.
 - [ ] Validate the complete touch, mouse, keyboard, gamepad, Android Back, focus-mute/restore, quality-tier, language, and audible mix matrix on real devices where available.
 - [ ] Add licensed/original background music only after a separate provenance, mix, and mobile-memory review.
 

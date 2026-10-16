@@ -25,6 +25,7 @@ All notable production changes are documented here.
 - Named gameplay-action consumption in the Desert player for keyboard/gamepad movement, fire, jump, crouch, weapon swap, reload, aim, and pause; visible touch controls remain the only touchscreen fire route.
 - Normal-Boot `--verify-input-accessibility-flow` harness for named gamepad bindings and the live reduced-motion, palette, damage-number, and sound-caption contracts.
 - Localized tactical sound captions for rifle fire, pistol fire, reload, and landing, controlled by the existing subtitles preference.
+- Normal-Boot `--verify-back-flow` coverage for Android Back from Splash, keyboard Escape from Settings, and controller B from Map Select; pause regression now drives Android's actual Back notification when leaving shared settings and resuming.
 
 ### Changed
 

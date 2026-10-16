@@ -126,6 +126,20 @@ Candidate #67 is not treated as a tested delivery because the Android emulator i
 | Android emulator install/launch | GitHub Actions run 38872610433 | BLOCKED — emulator boot timeout | Export and all headless/renderer gates passed, but the hosted emulator did not boot before timeout. |
 | Tested-build evidence archive | GitHub Actions run 38872610433 | BLOCKED — Actions artifact-storage quota | GitHub reported `Failed to CreateArtifact: Artifact storage quota has been hit`; this is a CI-storage blocker, not an APK/device-pass result. |
 
+## M3 batch 6 — Back navigation and pause-return contract
+
+| Test | Command / method | Result | Evidence |
+| --- | --- | --- | --- |
+| GDScript static analysis | `npm run test:gdscript` | PASS — 23 scripts, 0 errors, 0 warnings | M3 Batch 6 local terminal log; CI run 38875741554 source-test step |
+| Resource links and original texture dimensions | `python3 tools/validate_project.py` | PASS — 51 `res://` links and 4 128×128 textures | M3 Batch 6 local terminal log |
+| Native survival core | `./scripts/run_native_tests.sh` | PASS — 3 waves, 27 spawns, completion state | M3 Batch 6 local terminal log |
+| Whitespace | `git diff --check` | PASS | M3 Batch 6 local terminal log |
+| Back notification, Escape, and controller-B routes | Normal project launch with `--verify-back-flow` | PASS | [GitHub Actions run 38875741554](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/38875741554) passed the headless flow suite. The gate requires `BACK_FLOW_PASS` after native Android Back returns from Splash, Escape returns from Settings, controller B returns from Map Select, and both keyboard/gamepad menu-back bindings exist. |
+| Paused-settings → resume with Android Back | Normal project launch with `--verify-pause-flow` | PASS | CI run 38875741554 passed `PAUSE_FLOW_PASS` after invoking `NOTIFICATION_WM_GO_BACK_REQUEST` to leave shared paused settings, then invoking it again to resume Desert. |
+| Existing Boot/audio/result/input-accessibility contracts | Normal project launch under the CI flow-gate suite | PASS | CI run 38875741554 passed all normal-Boot gates, pause/Bengali settings capture, and full renderer capture after Back-route wiring. Commit `a92010a` records refreshed renderer frames. |
+| Android emulator install/launch | GitHub Actions run 38875741554 | BLOCKED — emulator boot timeout | Export and all source/headless/renderer gates passed, but the hosted emulator did not boot before timeout. |
+| Tested-build evidence archive | GitHub Actions run 38875741554 | BLOCKED — Actions artifact-storage quota | GitHub again reported `Failed to CreateArtifact: Artifact storage quota has been hit`; no build archive is presented as delivery. |
+
 ## Outstanding test requirements
 
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.
