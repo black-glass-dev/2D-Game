@@ -22,7 +22,8 @@
 - [x] Add a touch/keyboard/gamepad navigation baseline plus Android Back route in the shell.
 - [x] Add five categorized settings sections, persistence, reset confirmation, immediate audio/FPS application, and legacy Desert compatibility write-through.
 - [x] Connect the shared settings surface to a state-authoritative pause overlay with renderer-backed Bengali evidence.
-- [ ] Add live in-game visual/control-layout previews and complete conflict-aware rebinding.
+- [x] Apply live joystick scale, action-button scale, opacity, and left-handed layout preferences without overwriting HUD-editor positions/sizes.
+- [ ] Complete conflict-aware input rebinding.
 - [x] Add map detail, difficulty/mode session selection, and a locked `MP_RF_02` future-map card without exposing a launch route.
 - [ ] Add loading telemetry, make difficulty/mode affect the Desert compatibility adapter, and add the visual menu background fallback.
 

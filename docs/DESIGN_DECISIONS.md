@@ -185,3 +185,13 @@
 **Alternative considered:** Keep separate Android-only Back paths or let Back quit whenever no modal is open.
 
 **Why not selected:** Parallel routing can drift between controllers and mobile. Immediate gameplay exit conflicts with the expected pause/resume behaviour and makes accidental Android Back input destructive.
+
+## D-020 — Touch preferences transform, rather than overwrite, player HUD layouts
+
+**Decision:** Store HUD-editor rectangles as a player-authored base layout. Apply joystick scale, action-button scale, opacity, and left-handed placement as a separate live presentation layer; keep the minimap anchor and scale unchanged.
+
+**Reason:** This makes the existing Controls settings visibly operational while preserving a player's manually positioned/resized controls. Persisting only base rectangles prevents scale/mirroring from compounding whenever the player saves a layout, changes preference, or rotates/resizes the viewport. The controller verifies scaling, opacity, mirroring, minimap stability, and base-rect round-trip in a normal Boot path.
+
+**Alternative considered:** Persist already-scaled display rectangles, or only apply the Controls settings before a player enters HUD edit mode.
+
+**Why not selected:** Display-rect persistence would multiply size and mirror offsets over successive sessions. Limiting preferences to first launch would leave visible saved settings inert for players with a customized layout.
