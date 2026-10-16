@@ -19,6 +19,8 @@ All notable production changes are documented here.
 - Normal-Boot pause lifecycle verifier plus Xvfb renderer capture of the pause overlay and Bengali pause-settings surface.
 - Per-map durable operation records for best score and furthest wave, a localized end-of-operation summary (score, wave, accuracy, best record), and Map Select record display.
 - Normal-Boot `--verify-result-flow` harness that validates mission-complete state, result panel creation, and SaveService score/wave round-trip.
+- SFX routing for rifle, pistol, reload, and landing audio; UI-bus confirmation feedback for menus/settings; and a Master-volume-safe focus mute/restore policy.
+- Normal-Boot `--verify-audio-flow` harness covering bus availability, focus mute/restore, combat/landing SFX assignment, and UI feedback routing.
 
 ### Changed
 

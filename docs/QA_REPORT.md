@@ -88,6 +88,17 @@ Candidate #67 is not treated as a tested delivery because the Android emulator i
 | Existing pause/settings visual regression | Normal Boot launch under Xvfb/OpenGL | PASS | CI run 38759649992 passed the pause overlay/Bengali settings capture step again, preserving the M3 Batch 1 visual route while result code was added. |
 | Android emulator install/launch | GitHub Actions run 38759649992 | BLOCKED — emulator boot timeout | Source, import/export, result-flow, pause visual, and graphics gates passed; the hosted emulator timed out before boot. This is not device-launch evidence. |
 
+## M3 batch 3 — audio buses and focus policy
+
+| Test | Command / method | Result | Evidence |
+| --- | --- | --- | --- |
+| GDScript static analysis | `npm run test:gdscript` | PASS — 23 scripts, 0 errors, 0 warnings | M3 Batch 3 terminal log and CI run 38846049446 source-test step |
+| Resource links and original texture dimensions | `python3 tools/validate_project.py` | PASS — 51 `res://` links and 4 128×128 textures | M3 Batch 3 terminal log |
+| Native survival core | `./scripts/run_native_tests.sh` | PASS — 3 waves, 27 spawns, completion | M3 Batch 3 terminal log |
+| Normal Boot → focus mute/restore → SFX/UI routing | Normal project launch with `--verify-audio-flow` | PASS | [GitHub Actions run 38846049446](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/38846049446) passed the headless launch gate. It requires `AUDIO_FLOW_PASS` after verifying Master mute on focus loss, saved-volume-aware restore, SFX routing for rifle/pistol/landing, and UI-bus feedback availability. |
+| Pause/settings visual regression | Normal Boot launch under Xvfb/OpenGL | PASS | CI run 38846049446 passed the real pause overlay/Bengali settings capture after the audio-routing change. |
+| Android emulator install/launch | GitHub Actions run 38846049446 | BLOCKED — emulator boot timeout | Source, import/export, audio-flow, pause visual, and graphics gates passed; the hosted emulator timed out before boot. This is not device-launch evidence. |
+
 ## Outstanding test requirements
 
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.
