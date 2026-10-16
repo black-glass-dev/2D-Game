@@ -195,3 +195,13 @@
 **Alternative considered:** Persist already-scaled display rectangles, or only apply the Controls settings before a player enters HUD edit mode.
 
 **Why not selected:** Display-rect persistence would multiply size and mirror offsets over successive sessions. Limiting preferences to first launch would leave visible saved settings inert for players with a customized layout.
+
+## D-021 — Rebinding is scoped, conflict-rejecting, and independently persisted
+
+**Decision:** Expose conflict-aware rebinding in Controls for all named gameplay keyboard actions and for the seven gameplay gamepad buttons (fire, aim, jump, crouch, weapon swap, reload, and pause). Store custom physical-key and gamepad-button values in `user://input_bindings.cfg`, independently of general settings. A proposed input already used by another action on the same rebind surface is rejected with the conflicting action named; Escape cancels keyboard capture and controller B cancels gamepad capture. Reset restores the reviewed defaults. Mouse bindings, touchscreen controls, left-stick axes, menu navigation, and controller Back remain fixed.
+
+**Reason:** This gives keyboard and controller players an understandable, durable customization path without allowing an accidental duplicate gameplay mapping, breaking the established left-stick/mobile convention, or turning arbitrary screen touch into a firing route. A dedicated binding file lets reset and migration stay narrow while `InputService` remains the sole owner of named action maps.
+
+**Alternative considered:** Swap the two conflicting action bindings automatically, allow arbitrary duplicate mappings, or expose every device event including touch, mouse, analog axes, and system menu controls.
+
+**Why not selected:** Automatic swaps can silently remove an intentional binding; duplicates make action ownership ambiguous. Full device/event editing would endanger Android Back, focused-menu navigation, visible-control-only touch safety, and the verified Desert movement convention without a larger device QA matrix.

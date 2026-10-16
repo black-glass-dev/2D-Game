@@ -2,8 +2,8 @@ class_name RedlineSettingsMenu
 extends PanelContainer
 
 ## Reusable settings surface for front-end and future pause-menu hosting. It
-## edits SettingsService only; compatibility persistence keeps the existing
-## Desert runtime's RedlineSettings path in sync for the next map hand-off.
+## edits SettingsService plus the dedicated InputService binding store; settings
+## compatibility keeps the existing Desert runtime's RedlineSettings path in sync.
 signal close_requested
 
 const MIN_TARGET := Vector2(210, 52)
@@ -20,9 +20,14 @@ var current_section: Section = Section.GRAPHICS
 var section_body: VBoxContainer
 var tab_buttons: Array[Button] = []
 var reset_dialog: ConfirmationDialog
+var pending_rebind_action := ""
+var pending_rebind_device := ""
+var pending_rebind_button: Button
+var rebind_feedback: Label
 
 func _ready() -> void:
 	name = "Settings Menu"
+	set_process_unhandled_input(true)
 	custom_minimum_size = Vector2(760, 470)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -97,6 +102,7 @@ func _build_shell() -> void:
 	add_child(reset_dialog)
 
 func _select_section(section: Section) -> void:
+	_cancel_rebind()
 	current_section = section
 	for index in range(tab_buttons.size()):
 		tab_buttons[index].button_pressed = index == current_section
@@ -150,6 +156,149 @@ func _build_controls() -> void:
 	_add_slider("settings.gamepad_deadzone", "gamepad_deadzone", 0.05, 0.50, 0.01, "%")
 	_add_toggle("settings.left_handed", "touch_left_handed")
 	_add_note("settings.hud_layout_note")
+	_add_rebind_controls()
+
+func _add_rebind_controls() -> void:
+	var separator := HSeparator.new()
+	separator.add_theme_constant_override("separation", 8)
+	section_body.add_child(separator)
+	var title := Label.new()
+	title.text = tr("settings.keyboard_bindings")
+	title.add_theme_font_size_override("font_size", 18)
+	section_body.add_child(title)
+	_add_note("settings.rebind_note")
+	rebind_feedback = Label.new()
+	rebind_feedback.name = "Rebind feedback"
+	rebind_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	rebind_feedback.modulate = Color("f3d189")
+	section_body.add_child(rebind_feedback)
+	for action in InputService.get_rebindable_actions():
+		var row := HBoxContainer.new()
+		row.custom_minimum_size = Vector2(0, 46)
+		section_body.add_child(row)
+		var label := Label.new()
+		label.text = tr(InputService.action_label_key(action))
+		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(label)
+		var binding_button := Button.new()
+		binding_button.name = "Bind %s" % action
+		binding_button.text = InputService.keyboard_binding_display(action)
+		binding_button.custom_minimum_size = Vector2(220, 42)
+		binding_button.tooltip_text = tr("settings.press_key")
+		binding_button.pressed.connect(_begin_rebind.bind(action, binding_button))
+		binding_button.pressed.connect(AudioService.play_ui_confirm)
+		row.add_child(binding_button)
+	var reset_bindings := Button.new()
+	reset_bindings.text = tr("settings.reset_bindings")
+	reset_bindings.custom_minimum_size = Vector2(260, 46)
+	reset_bindings.pressed.connect(_reset_keyboard_bindings)
+	reset_bindings.pressed.connect(AudioService.play_ui_confirm)
+	section_body.add_child(reset_bindings)
+	var gamepad_separator := HSeparator.new()
+	section_body.add_child(gamepad_separator)
+	var gamepad_title := Label.new()
+	gamepad_title.text = tr("settings.gamepad_bindings")
+	gamepad_title.add_theme_font_size_override("font_size", 18)
+	section_body.add_child(gamepad_title)
+	_add_note("settings.gamepad_rebind_note")
+	for action in InputService.get_rebindable_gamepad_actions():
+		var gamepad_row := HBoxContainer.new()
+		gamepad_row.custom_minimum_size = Vector2(0, 46)
+		section_body.add_child(gamepad_row)
+		var gamepad_label := Label.new()
+		gamepad_label.text = tr(InputService.action_label_key(action))
+		gamepad_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		gamepad_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		gamepad_row.add_child(gamepad_label)
+		var gamepad_button := Button.new()
+		gamepad_button.name = "Gamepad bind %s" % action
+		gamepad_button.text = InputService.gamepad_binding_display(action)
+		gamepad_button.custom_minimum_size = Vector2(220, 42)
+		gamepad_button.tooltip_text = tr("settings.press_gamepad")
+		gamepad_button.pressed.connect(_begin_rebind.bind(action, gamepad_button, "gamepad"))
+		gamepad_button.pressed.connect(AudioService.play_ui_confirm)
+		gamepad_row.add_child(gamepad_button)
+
+func _begin_rebind(action: String, button: Button, device := "keyboard") -> void:
+	_cancel_rebind()
+	pending_rebind_action = action
+	pending_rebind_device = device
+	pending_rebind_button = button
+	pending_rebind_button.text = tr("settings.press_gamepad") if device == "gamepad" else tr("settings.press_key")
+	if rebind_feedback != null:
+		var prompt_key := "settings.press_gamepad_for" if device == "gamepad" else "settings.press_key_for"
+		rebind_feedback.text = tr(prompt_key) % tr(InputService.action_label_key(action))
+
+func _cancel_rebind() -> void:
+	if pending_rebind_action.is_empty():
+		return
+	if pending_rebind_button != null and is_instance_valid(pending_rebind_button):
+		pending_rebind_button.text = _binding_display(pending_rebind_action, pending_rebind_device)
+	pending_rebind_action = ""
+	pending_rebind_device = ""
+	pending_rebind_button = null
+
+func _binding_display(action: String, device: String) -> String:
+	return InputService.gamepad_binding_display(action) if device == "gamepad" else InputService.keyboard_binding_display(action)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if pending_rebind_action.is_empty():
+		return
+	var result: Dictionary
+	if pending_rebind_device == "keyboard":
+		if not (event is InputEventKey):
+			return
+		var key_event := event as InputEventKey
+		if not key_event.pressed or key_event.echo:
+			return
+		var keycode: Key = key_event.physical_keycode if key_event.physical_keycode != KEY_NONE else key_event.keycode
+		if keycode == KEY_ESCAPE:
+			_cancel_rebind()
+			if rebind_feedback != null:
+				rebind_feedback.text = tr("settings.binding_cancelled")
+			get_viewport().set_input_as_handled()
+			return
+		result = InputService.try_rebind_keyboard(pending_rebind_action, keycode)
+	elif pending_rebind_device == "gamepad":
+		if not (event is InputEventJoypadButton):
+			return
+		var gamepad_event := event as InputEventJoypadButton
+		if not gamepad_event.pressed:
+			return
+		if gamepad_event.button_index == JOY_BUTTON_B:
+			_cancel_rebind()
+			if rebind_feedback != null:
+				rebind_feedback.text = tr("settings.binding_cancelled")
+			get_viewport().set_input_as_handled()
+			return
+		result = InputService.try_rebind_gamepad(pending_rebind_action, gamepad_event.button_index)
+	else:
+		return
+	if bool(result.get("ok", false)):
+		if pending_rebind_button != null and is_instance_valid(pending_rebind_button):
+			pending_rebind_button.text = _binding_display(pending_rebind_action, pending_rebind_device)
+		if rebind_feedback != null:
+			rebind_feedback.text = tr("settings.binding_updated") % [tr(InputService.action_label_key(pending_rebind_action)), _binding_display(pending_rebind_action, pending_rebind_device)]
+		pending_rebind_action = ""
+		pending_rebind_device = ""
+		pending_rebind_button = null
+	else:
+		var conflict_action := str(result.get("conflict_action", ""))
+		if rebind_feedback != null:
+			if conflict_action.is_empty():
+				rebind_feedback.text = tr("settings.binding_invalid")
+			else:
+				rebind_feedback.text = tr("settings.binding_conflict") % tr(InputService.action_label_key(conflict_action))
+	get_viewport().set_input_as_handled()
+
+func _reset_keyboard_bindings() -> void:
+	_cancel_rebind()
+	InputService.reset_keyboard_bindings()
+	InputService.reset_gamepad_bindings()
+	_render_section()
+	if rebind_feedback != null:
+		rebind_feedback.text = tr("settings.bindings_reset")
 
 func _build_accessibility() -> void:
 	_add_toggle("settings.subtitles", "subtitles")
@@ -250,12 +399,16 @@ func _ask_reset() -> void:
 	reset_dialog.popup_centered(Vector2i(520, 220))
 
 func _reset_defaults() -> void:
+	_cancel_rebind()
 	SettingsService.reset_to_defaults()
+	InputService.reset_keyboard_bindings()
+	InputService.reset_gamepad_bindings()
 	LocalizationService.set_language_preference(str(SettingsService.get_setting("language", "AUTO")))
 	Engine.max_fps = int(SettingsService.get_setting("fps_limit", 0))
 	_render_section()
 
 func _close() -> void:
+	_cancel_rebind()
 	close_requested.emit()
 
 func _make_button(key: String, callback: Callable, hint: String) -> Button:

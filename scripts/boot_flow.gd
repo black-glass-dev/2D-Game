@@ -23,6 +23,7 @@ const RESULT_FLOW_TEST_ARGUMENT := "--verify-result-flow"
 const AUDIO_FLOW_TEST_ARGUMENT := "--verify-audio-flow"
 const INPUT_ACCESSIBILITY_TEST_ARGUMENT := "--verify-input-accessibility-flow"
 const CONTROL_LAYOUT_TEST_ARGUMENT := "--verify-control-layout-flow"
+const REBIND_FLOW_TEST_ARGUMENT := "--verify-rebind-flow"
 const BACK_FLOW_TEST_ARGUMENT := "--verify-back-flow"
 
 var active_view: View = View.SPLASH
@@ -54,7 +55,7 @@ func _ready() -> void:
 	_show_splash()
 	if OS.get_cmdline_user_args().has(BACK_FLOW_TEST_ARGUMENT):
 		call_deferred("_begin_back_flow_test")
-	elif OS.get_cmdline_user_args().has(BOOT_FLOW_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(PAUSE_FLOW_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(RESULT_FLOW_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(AUDIO_FLOW_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(INPUT_ACCESSIBILITY_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(CONTROL_LAYOUT_TEST_ARGUMENT):
+	elif OS.get_cmdline_user_args().has(BOOT_FLOW_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(PAUSE_FLOW_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(RESULT_FLOW_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(AUDIO_FLOW_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(INPUT_ACCESSIBILITY_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(CONTROL_LAYOUT_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(REBIND_FLOW_TEST_ARGUMENT):
 		call_deferred("_begin_headless_handoff_test")
 	elif OS.get_cmdline_user_args().has(SETTINGS_MENU_TEST_ARGUMENT):
 		call_deferred("_begin_settings_menu_test")

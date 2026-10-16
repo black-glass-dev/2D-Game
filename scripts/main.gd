@@ -15,6 +15,7 @@ const RESULT_FLOW_TEST_ARGUMENT := "--verify-result-flow"
 const AUDIO_FLOW_TEST_ARGUMENT := "--verify-audio-flow"
 const INPUT_ACCESSIBILITY_TEST_ARGUMENT := "--verify-input-accessibility-flow"
 const CONTROL_LAYOUT_TEST_ARGUMENT := "--verify-control-layout-flow"
+const REBIND_FLOW_TEST_ARGUMENT := "--verify-rebind-flow"
 const PAUSE_CAPTURE_BENGALI_ARGUMENT := "--capture-pause-bengali"
 const PAUSE_CAPTURE_OUTPUT_ARGUMENT := "--pause-screenshot-dir"
 
@@ -170,6 +171,8 @@ func _ready() -> void:
 		call_deferred("_run_input_accessibility_verification")
 	elif OS.get_cmdline_user_args().has(CONTROL_LAYOUT_TEST_ARGUMENT):
 		call_deferred("_run_control_layout_verification")
+	elif OS.get_cmdline_user_args().has(REBIND_FLOW_TEST_ARGUMENT):
+		call_deferred("_run_rebind_flow_verification")
 
 func _finish_boot_flow_verification() -> void:
 	if GameManager.state != GameManager.State.PLAYING or GameManager.selected_map_id != "MP_DS_01":
@@ -1083,6 +1086,81 @@ func _run_input_accessibility_verification() -> void:
 	_on_health_changed(player.health, OutpostPlayer.MAX_HEALTH)
 	print("INPUT_ACCESSIBILITY_PASS actions=", InputService.GAMEPLAY_ACTIONS.size(), " damage_numbers=", before_count + 1, " captions=1")
 	get_tree().quit()
+
+func _run_rebind_flow_verification() -> void:
+	await get_tree().process_frame
+	var original_bindings: Dictionary = InputService.keyboard_binding_snapshot()
+	var original_gamepad_bindings: Dictionary = InputService.gamepad_binding_snapshot()
+	var probe_action: String = InputService.ACTION_FIRE
+	var probe_key: Key = KEY_F10
+	var applied: Dictionary = InputService.try_rebind_keyboard(probe_action, probe_key, true)
+	if not bool(applied.get("ok", false)) or not InputService.get_keyboard_binding_keys(probe_action).has(probe_key):
+		_fail_rebind_flow_verification(original_bindings, original_gamepad_bindings, "Rebind-flow verification could not capture the new FIRE key.")
+		return
+	# Rebuild from the saved config after removing the in-memory binding: this
+	# proves persistence without requiring a process restart during normal Boot.
+	InputService.reset_keyboard_bindings(false)
+	InputService._load_custom_bindings()
+	if not InputService.get_keyboard_binding_keys(probe_action).has(probe_key):
+		_fail_rebind_flow_verification(original_bindings, original_gamepad_bindings, "Rebind-flow verification could not reload the saved key.")
+		return
+	var conflict: Dictionary = InputService.try_rebind_keyboard(InputService.ACTION_AIM, probe_key, false)
+	if bool(conflict.get("ok", false)) or str(conflict.get("conflict_action", "")) != probe_action:
+		_fail_rebind_flow_verification(original_bindings, original_gamepad_bindings, "Rebind-flow verification did not reject an action conflict.")
+		return
+	var gamepad_probe_action: String = InputService.ACTION_AIM
+	var gamepad_probe_button: JoyButton = JOY_BUTTON_LEFT_STICK
+	var gamepad_applied: Dictionary = InputService.try_rebind_gamepad(gamepad_probe_action, gamepad_probe_button, true)
+	if not bool(gamepad_applied.get("ok", false)) or not InputService.get_gamepad_binding_buttons(gamepad_probe_action).has(gamepad_probe_button):
+		_fail_rebind_flow_verification(original_bindings, original_gamepad_bindings, "Rebind-flow verification could not capture the new AIM gamepad button.")
+		return
+	InputService.reset_gamepad_bindings(false)
+	InputService._load_custom_bindings()
+	if not InputService.get_gamepad_binding_buttons(gamepad_probe_action).has(gamepad_probe_button):
+		_fail_rebind_flow_verification(original_bindings, original_gamepad_bindings, "Rebind-flow verification could not reload the saved gamepad button.")
+		return
+	var gamepad_conflict: Dictionary = InputService.try_rebind_gamepad(probe_action, gamepad_probe_button, false)
+	if bool(gamepad_conflict.get("ok", false)) or str(gamepad_conflict.get("conflict_action", "")) != gamepad_probe_action:
+		_fail_rebind_flow_verification(original_bindings, original_gamepad_bindings, "Rebind-flow verification did not reject a gamepad action conflict.")
+		return
+	var verification_menu := RedlineSettingsMenu.new()
+	hud.add_child(verification_menu)
+	await get_tree().process_frame
+	verification_menu._select_section(RedlineSettingsMenu.Section.CONTROLS)
+	var bind_button := verification_menu.find_child("Bind %s" % probe_action, true, false) as Button
+	if bind_button == null:
+		verification_menu.queue_free()
+		_fail_rebind_flow_verification(original_bindings, original_gamepad_bindings, "Rebind-flow verification could not build the Controls binding row.")
+		return
+	verification_menu._begin_rebind(probe_action, bind_button)
+	verification_menu._cancel_rebind()
+	var gamepad_bind_button := verification_menu.find_child("Gamepad bind %s" % gamepad_probe_action, true, false) as Button
+	if gamepad_bind_button == null:
+		verification_menu.queue_free()
+		_fail_rebind_flow_verification(original_bindings, original_gamepad_bindings, "Rebind-flow verification could not build the gamepad binding row.")
+		return
+	verification_menu._begin_rebind(gamepad_probe_action, gamepad_bind_button, "gamepad")
+	verification_menu._cancel_rebind()
+	if not verification_menu.pending_rebind_action.is_empty() or not InputService.get_keyboard_binding_keys(probe_action).has(probe_key) or not InputService.get_gamepad_binding_buttons(gamepad_probe_action).has(gamepad_probe_button):
+		verification_menu.queue_free()
+		_fail_rebind_flow_verification(original_bindings, original_gamepad_bindings, "Rebind-flow verification could not cancel capture without changing bindings.")
+		return
+	verification_menu.queue_free()
+	InputService.reset_keyboard_bindings(false)
+	InputService.reset_gamepad_bindings(false)
+	if not InputService.get_keyboard_binding_keys(InputService.ACTION_MOVE_FORWARD).has(KEY_W) or not InputService.get_keyboard_binding_keys(probe_action).is_empty() or not InputService.get_gamepad_binding_buttons(gamepad_probe_action).has(JOY_BUTTON_LEFT_SHOULDER):
+		_fail_rebind_flow_verification(original_bindings, original_gamepad_bindings, "Rebind-flow verification could not restore default keyboard/gamepad bindings.")
+		return
+	InputService.restore_keyboard_binding_snapshot(original_bindings, false)
+	InputService.restore_gamepad_binding_snapshot(original_gamepad_bindings, true)
+	print("REBIND_FLOW_PASS keyboard=F10 gamepad=L3 conflicts=2 cancelled=1 reset=1 persisted=2")
+	get_tree().quit()
+
+func _fail_rebind_flow_verification(original_bindings: Dictionary, original_gamepad_bindings: Dictionary, message: String) -> void:
+	InputService.restore_keyboard_binding_snapshot(original_bindings, false)
+	InputService.restore_gamepad_binding_snapshot(original_gamepad_bindings, true)
+	push_error(message)
+	get_tree().quit(1)
 
 func _damage_number_count() -> int:
 	var count := 0

@@ -188,6 +188,8 @@ jobs:
           grep -q "BACK_FLOW_PASS" build/godot-back-flow.log
           timeout 30s godot --headless --path . -- --verify-control-layout-flow 2>&1 | tee build/godot-control-layout.log
           grep -q "CONTROL_LAYOUT_PASS" build/godot-control-layout.log
+          timeout 30s godot --headless --path . -- --verify-rebind-flow 2>&1 | tee build/godot-rebind-flow.log
+          grep -q "REBIND_FLOW_PASS" build/godot-rebind-flow.log
 
       - name: Capture pause and Bengali settings through normal Boot flow
         shell: bash

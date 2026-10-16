@@ -78,7 +78,33 @@ settings.touch_opacity,TOUCH OPACITY,টাচ স্বচ্ছতা
 settings.button_scale,BUTTON SCALE,বাটন স্কেল
 settings.gamepad_deadzone,GAMEPAD DEADZONE,গেমপ্যাড ডেডজোন
 settings.left_handed,LEFT-HANDED LAYOUT,বাঁ-হাতি লেআউট
-settings.hud_layout_note,Move and resize the HUD from the in-game HUD button. This panel preserves the preference for the next layout pass.,ইন-গেম HUD বোতাম থেকে HUD সরান ও আকার বদলান। এই প্যানেল পরের লেআউট ধাপের জন্য পছন্দ সংরক্ষণ করে।
+settings.hud_layout_note,Move and resize the HUD from the in-game HUD button. Layout preferences update live without replacing your saved control positions.,ইন-গেম HUD বোতাম থেকে HUD সরান ও আকার বদলান। লেআউট পছন্দ আপনার সংরক্ষিত কন্ট্রোল অবস্থান বদলায় না।
+settings.key_bindings,INPUT BINDINGS,ইনপুট বাইন্ডিং
+settings.keyboard_bindings,KEYBOARD BINDINGS,কিবোর্ড বাইন্ডিং
+settings.gamepad_bindings,GAMEPAD BINDINGS,গেমপ্যাড বাইন্ডিং
+settings.rebind_note,Select a keyboard binding. Then press one key. A key already assigned to another gameplay action is rejected.,একটি কিবোর্ড বাইন্ডিং নির্বাচন করুন। তারপর একটি কী চাপুন। অন্য gameplay action-এ থাকা কী গ্রহণ করা হবে না।
+settings.gamepad_rebind_note,Select a gameplay button binding. Then press one gamepad button. Left-stick movement remains fixed.,একটি gameplay button binding নির্বাচন করুন। তারপর একটি গেমপ্যাড বোতাম চাপুন। লেফট-স্টিক মুভমেন্ট স্থির থাকবে।
+settings.press_key,PRESS A KEY,একটি কী চাপুন
+settings.press_gamepad,PRESS A GAMEPAD BUTTON,একটি গেমপ্যাড বোতাম চাপুন
+settings.press_gamepad_for,Press a gamepad button for %s,%s-এর জন্য একটি গেমপ্যাড বোতাম চাপুন
+settings.press_key_for,Press a key for %s,%s-এর জন্য একটি কী চাপুন
+settings.binding_updated,%s is now %s,%s এখন %s
+settings.binding_conflict,That input is already assigned to %s,ইনপুটটি ইতিমধ্যে %s-এ নির্ধারিত
+settings.binding_invalid,That input cannot be used for this action.,এই action-এর জন্য ইনপুটটি ব্যবহার করা যাবে না।
+settings.binding_cancelled,Key binding cancelled.,কী বাইন্ডিং বাতিল করা হয়েছে।
+settings.reset_bindings,RESET INPUT BINDINGS,ইনপুট বাইন্ডিং রিসেট
+settings.bindings_reset,Keyboard and gamepad bindings restored to defaults.,কিবোর্ড ও গেমপ্যাড বাইন্ডিং ডিফল্টে ফিরেছে।
+bindings.move_forward,MOVE FORWARD,সামনে চলুন
+bindings.move_back,MOVE BACK,পেছনে চলুন
+bindings.move_left,MOVE LEFT,বাঁয়ে চলুন
+bindings.move_right,MOVE RIGHT,ডানে চলুন
+bindings.fire,FIRE,ফায়ার
+bindings.aim,AIM,এম
+bindings.jump,JUMP,লাফ
+bindings.crouch,CROUCH,বসুন
+bindings.swap,SWAP WEAPON,অস্ত্র বদলান
+bindings.reload,RELOAD,রিলোড
+bindings.pause,PAUSE,বিরতি
 settings.subtitles,SUBTITLES,সাবটাইটেল
 settings.damage_numbers,DAMAGE NUMBERS,ড্যামেজ সংখ্যা
 settings.reduce_shake,REDUCE SCREEN SHAKE,স্ক্রিন শেক কমান
