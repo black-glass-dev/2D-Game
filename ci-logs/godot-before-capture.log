@@ -17,6 +17,10 @@ ERROR: Condition "status < 0" is true. Returning: ERR_CANT_OPEN
 WARNING: All audio drivers failed, falling back to the dummy driver.
      at: initialize (servers/audio/audio_server.cpp:258)
 
+ERROR: Condition "p_scene && p_scene->get_parent() != root" is true.
+   at: set_current_scene (scene/main/scene_tree.cpp:1665)
+   GDScript backtrace (most recent call first):
+       [0] _initialize (/home/runner/work/2D-Game/2D-Game/tools/capture_graphics.gd:20)
 WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
 If you want to set size, change the anchors or consider using set_deferred().
      at: _set_size (scene/gui/control.cpp:1519)
@@ -66,23 +70,23 @@ SCRIPT ERROR: Out of bounds get index '0' (on base: 'Array[MeshInstance3D]')
               [0] _spawn_tracer (res://scripts/weapon_effects.gd:118)
               [1] emit_shot (res://scripts/weapon_effects.gd:32)
               [2] try_fire (res://scripts/rifle.gd:125)
-              [3] _initialize (/home/runner/work/2D-Game/2D-Game/tools/capture_graphics.gd:76)
-              [4] _frames (/home/runner/work/2D-Game/2D-Game/tools/capture_graphics.gd:106)
+              [3] _initialize (/home/runner/work/2D-Game/2D-Game/tools/capture_graphics.gd:82)
+              [4] _frames (/home/runner/work/2D-Game/2D-Game/tools/capture_graphics.gd:112)
 SCRIPT ERROR: Out of bounds get index '0' (on base: 'Array[MeshInstance3D]')
           at: WeaponEffects._spawn_impact (res://scripts/weapon_effects.gd:130)
           GDScript backtrace (most recent call first):
               [0] _spawn_impact (res://scripts/weapon_effects.gd:130)
               [1] emit_shot (res://scripts/weapon_effects.gd:34)
               [2] try_fire (res://scripts/rifle.gd:125)
-              [3] _initialize (/home/runner/work/2D-Game/2D-Game/tools/capture_graphics.gd:76)
-              [4] _frames (/home/runner/work/2D-Game/2D-Game/tools/capture_graphics.gd:106)
+              [3] _initialize (/home/runner/work/2D-Game/2D-Game/tools/capture_graphics.gd:82)
+              [4] _frames (/home/runner/work/2D-Game/2D-Game/tools/capture_graphics.gd:112)
 SCRIPT ERROR: Out of bounds get index '0' (on base: 'Array[MeshInstance3D]')
           at: WeaponEffects.emit_casing (res://scripts/weapon_effects.gd:41)
           GDScript backtrace (most recent call first):
               [0] emit_casing (res://scripts/weapon_effects.gd:41)
               [1] try_fire (res://scripts/rifle.gd:127)
-              [2] _initialize (/home/runner/work/2D-Game/2D-Game/tools/capture_graphics.gd:76)
-              [3] _frames (/home/runner/work/2D-Game/2D-Game/tools/capture_graphics.gd:106)
+              [2] _initialize (/home/runner/work/2D-Game/2D-Game/tools/capture_graphics.gd:82)
+              [3] _frames (/home/runner/work/2D-Game/2D-Game/tools/capture_graphics.gd:112)
 GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/before/10_firing.png result=0 size=800x450
 GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/before/11_low_hp.png result=0 size=800x450
 GRAPHICS_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/before/12_reload_crouch.png result=0 size=800x450
