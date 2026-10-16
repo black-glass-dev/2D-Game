@@ -28,6 +28,8 @@ All notable production changes are documented here.
 - Normal-Boot `--verify-back-flow` coverage for Android Back from Splash, keyboard Escape from Settings, and controller B from Map Select; pause regression now drives Android's actual Back notification when leaving shared settings and resuming.
 - Live touch-control preferences: joystick scale, action-button scale, opacity, and left-handed mirroring apply immediately without overwriting player-authored HUD editor rectangles.
 - Normal-Boot `--verify-control-layout-flow` harness for scaled/mirrored controls, opacity, fixed minimap placement, and base-layout preservation.
+- Conflict-aware Controls rebinding for named gameplay keyboard actions and selected gameplay gamepad buttons, with localized capture UI, conflicting-action feedback, Escape/controller-B cancellation, reset, and `user://input_bindings.cfg` persistence.
+- Normal-Boot `--verify-rebind-flow` gate for keyboard/gamepad capture and persistence, conflict rejection, UI-row creation/cancellation, and default restoration.
 
 ### Changed
 

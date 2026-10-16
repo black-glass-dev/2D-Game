@@ -153,6 +153,20 @@ Candidate #67 is not treated as a tested delivery because the Android emulator i
 | Android emulator install/launch | GitHub Actions run 38905133721 | BLOCKED — emulator boot timeout | Export and all source/headless/renderer gates passed, but the hosted emulator did not boot before timeout. |
 | Tested-build evidence archive | GitHub Actions run 38905133721 | BLOCKED — Actions artifact-storage quota | GitHub again reported `Failed to CreateArtifact: Artifact storage quota has been hit`; no build archive is presented as delivery. |
 
+## M3 batch 8 — conflict-aware input rebinding
+
+| Test | Command / method | Result | Evidence |
+| --- | --- | --- | --- |
+| GDScript static analysis | `npm run test:gdscript` | PASS — 23 scripts, 0 errors, 0 warnings | M3 Batch 8 local terminal log; CI run 38914993211 source-test step |
+| Localization CSV structure | Python `csv` reader and uniqueness assertions | PASS — 136 three-column, unique-key rows | M3 Batch 8 local terminal log |
+| Resource links and original texture dimensions | `python3 tools/validate_project.py` | PASS — 51 `res://` links and 4 128×128 textures | M3 Batch 8 local terminal log |
+| Native survival core | `./scripts/run_native_tests.sh` | PASS — 3 waves, 27 spawns, completion state | M3 Batch 8 local terminal log |
+| Whitespace | `git diff --check` | PASS | M3 Batch 8 local terminal log |
+| Keyboard/gamepad capture, persistence, conflict, cancel, reset, and Controls rows | Normal project launch with `--verify-rebind-flow` | PASS | [GitHub Actions run 38914993211](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/38914993211) passed `Launch Boot and gameplay flow headlessly`; CI requires `REBIND_FLOW_PASS` after a keyboard F10 capture/reload, gamepad L3 capture/reload, same-surface conflict rejection, two Controls rows, capture cancellation, and reset/default restoration. |
+| Existing Boot/audio/result/input-accessibility/Back/control-layout contracts | Normal project launch under the CI flow-gate suite | PASS | CI run 38914993211 passed all normal-Boot gates, pause/Bengali settings capture, and full renderer capture. Commit `63bba34` records refreshed renderer frames. |
+| Android emulator install/launch | GitHub Actions run 38914993211 | BLOCKED — emulator boot timeout | Source, import, export, signature, normal-Boot, and renderer gates passed, but the hosted emulator did not boot before timeout. This is not physical-device evidence. |
+| Tested-build evidence archive | GitHub Actions run 38914993211 | BLOCKED — Actions artifact-storage quota | GitHub reported `Failed to CreateArtifact: Artifact storage quota has been hit`; no APK archive is presented as delivery. |
+
 ## Outstanding test requirements
 
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.

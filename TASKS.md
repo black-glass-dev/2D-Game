@@ -13,7 +13,7 @@
 - [x] Add the initial Bengali/English localization CSV catalog and a compatible OFL font family with provenance.
 - [x] Create shared Redline UI theme and original SVG icon source set.
 - [x] Introduce `MapData`, `MapRegistry`, and an `MP_DS_01` Desert compatibility resource.
-- [x] Add named InputMap actions while preserving legacy input; conflict-aware rebind UI remains next.
+- [x] Add named InputMap actions while preserving legacy input; add scoped persistent keyboard/gamepad rebind UI without altering touch safety.
 
 ## M2 started — Deliverable A flow
 
@@ -23,7 +23,7 @@
 - [x] Add five categorized settings sections, persistence, reset confirmation, immediate audio/FPS application, and legacy Desert compatibility write-through.
 - [x] Connect the shared settings surface to a state-authoritative pause overlay with renderer-backed Bengali evidence.
 - [x] Apply live joystick scale, action-button scale, opacity, and left-handed layout preferences without overwriting HUD-editor positions/sizes.
-- [ ] Complete conflict-aware input rebinding.
+- [x] Complete conflict-aware keyboard and gamepad input rebinding with persistence, cancellation, conflict rejection, and reset.
 - [x] Add map detail, difficulty/mode session selection, and a locked `MP_RF_02` future-map card without exposing a launch route.
 - [ ] Add loading telemetry, make difficulty/mode affect the Desert compatibility adapter, and add the visual menu background fallback.
 
