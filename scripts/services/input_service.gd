@@ -217,8 +217,9 @@ func restore_keyboard_binding_snapshot(snapshot: Dictionary, persist := false) -
 	for action in REBINDABLE_KEYBOARD_ACTIONS:
 		_erase_keyboard_events(action)
 		var keys: Array = snapshot.get(action, DEFAULT_KEY_BINDINGS.get(action, []))
-		for keycode in keys:
-			_add_key(action, Key(keycode))
+		for stored_keycode in keys:
+			var keycode: Key = int(stored_keycode) as Key
+			_add_key(action, keycode)
 	if persist:
 		_save_custom_bindings()
 
@@ -226,8 +227,9 @@ func restore_gamepad_binding_snapshot(snapshot: Dictionary, persist := false) ->
 	for action in REBINDABLE_GAMEPAD_ACTIONS:
 		_erase_gamepad_button_events(action)
 		var buttons: Array = snapshot.get(action, DEFAULT_GAMEPAD_BUTTON_BINDINGS.get(action, []))
-		for button_index in buttons:
-			_add_joy_button(action, JoyButton(button_index))
+		for stored_button_index in buttons:
+			var button_index: JoyButton = int(stored_button_index) as JoyButton
+			_add_joy_button(action, button_index)
 	if persist:
 		_save_custom_bindings()
 
@@ -260,8 +262,9 @@ func try_rebind_gamepad(action: String, button_index: JoyButton, persist := true
 func reset_keyboard_bindings(persist := true) -> void:
 	for action in REBINDABLE_KEYBOARD_ACTIONS:
 		_erase_keyboard_events(action)
-		for keycode in DEFAULT_KEY_BINDINGS.get(action, []):
-			_add_key(action, Key(keycode))
+		for stored_keycode in DEFAULT_KEY_BINDINGS.get(action, []):
+			var keycode: Key = int(stored_keycode) as Key
+			_add_key(action, keycode)
 	if persist:
 		_save_custom_bindings()
 	keyboard_bindings_reset.emit()
@@ -269,8 +272,9 @@ func reset_keyboard_bindings(persist := true) -> void:
 func reset_gamepad_bindings(persist := true) -> void:
 	for action in REBINDABLE_GAMEPAD_ACTIONS:
 		_erase_gamepad_button_events(action)
-		for button_index in DEFAULT_GAMEPAD_BUTTON_BINDINGS.get(action, []):
-			_add_joy_button(action, JoyButton(button_index))
+		for stored_button_index in DEFAULT_GAMEPAD_BUTTON_BINDINGS.get(action, []):
+			var button_index: JoyButton = int(stored_button_index) as JoyButton
+			_add_joy_button(action, button_index)
 	if persist:
 		_save_custom_bindings()
 	gamepad_bindings_reset.emit()
@@ -294,12 +298,12 @@ func _load_custom_bindings() -> void:
 	var keyboard_snapshot := keyboard_binding_snapshot()
 	for action in REBINDABLE_KEYBOARD_ACTIONS:
 		if config.has_section_key("keyboard", action):
-			keyboard_snapshot[action] = [Key(int(config.get_value("keyboard", action, KEY_NONE)))]
+			keyboard_snapshot[action] = [int(config.get_value("keyboard", action, KEY_NONE))]
 	restore_keyboard_binding_snapshot(keyboard_snapshot, false)
 	var gamepad_snapshot := gamepad_binding_snapshot()
 	for action in REBINDABLE_GAMEPAD_ACTIONS:
 		if config.has_section_key("gamepad", action):
-			gamepad_snapshot[action] = [JoyButton(int(config.get_value("gamepad", action, -1)))]
+			gamepad_snapshot[action] = [int(config.get_value("gamepad", action, -1))]
 	restore_gamepad_binding_snapshot(gamepad_snapshot, false)
 
 func _save_custom_bindings() -> void:
