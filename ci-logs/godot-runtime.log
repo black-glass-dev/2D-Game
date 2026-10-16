@@ -1,2 +1,18 @@
 Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
 
+SCRIPT ERROR: Parse Error: Function "Key()" not found in base self.
+          at: GDScript::reload (res://scripts/services/input_service.gd:221)
+SCRIPT ERROR: Parse Error: Function "JoyButton()" not found in base self.
+          at: GDScript::reload (res://scripts/services/input_service.gd:230)
+SCRIPT ERROR: Parse Error: Function "Key()" not found in base self.
+          at: GDScript::reload (res://scripts/services/input_service.gd:264)
+SCRIPT ERROR: Parse Error: Function "JoyButton()" not found in base self.
+          at: GDScript::reload (res://scripts/services/input_service.gd:273)
+SCRIPT ERROR: Parse Error: Function "Key()" not found in base self.
+          at: GDScript::reload (res://scripts/services/input_service.gd:297)
+SCRIPT ERROR: Parse Error: Function "JoyButton()" not found in base self.
+          at: GDScript::reload (res://scripts/services/input_service.gd:302)
+ERROR: Failed to load script "res://scripts/services/input_service.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript_resource_format.cpp:46)
+ERROR: Failed to instantiate an autoload, script 'res://scripts/services/input_service.gd' does not inherit from 'Node'.
+   at: start (main/main.cpp:4539)
