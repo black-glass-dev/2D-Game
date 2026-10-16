@@ -99,6 +99,19 @@ Candidate #67 is not treated as a tested delivery because the Android emulator i
 | Pause/settings visual regression | Normal Boot launch under Xvfb/OpenGL | PASS | CI run 38846049446 passed the real pause overlay/Bengali settings capture after the audio-routing change. |
 | Android emulator install/launch | GitHub Actions run 38846049446 | BLOCKED — emulator boot timeout | Source, import/export, audio-flow, pause visual, and graphics gates passed; the hosted emulator timed out before boot. This is not device-launch evidence. |
 
+## M3 batch 4 — live input and accessibility adapters
+
+| Test | Command / method | Result | Evidence |
+| --- | --- | --- | --- |
+| GDScript static analysis | `npm run test:gdscript` | PASS — 23 scripts, 0 errors, 0 warnings | M3 Batch 4 local terminal log; CI run 38859413030 source-test step |
+| Resource links and original texture dimensions | `python3 tools/validate_project.py` | PASS — 51 `res://` links and 4 128×128 textures | M3 Batch 4 local terminal log |
+| Native survival core | `./scripts/run_native_tests.sh` | PASS — 3 waves, 27 spawns, completion state | M3 Batch 4 local terminal log |
+| Whitespace | `git diff --check` | PASS | M3 Batch 4 local terminal log |
+| Named input map and live accessibility contracts | Normal project launch with `--verify-input-accessibility-flow` | PASS | [GitHub Actions run 38859413030](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/38859413030) passed the headless launch step. The gate requires `INPUT_ACCESSIBILITY_PASS` after checking 11 named actions have gamepad bindings and applying reduced motion, DEUTERANOPIA HUD colors, enabled/disabled floating damage numbers, haptics preference state, and runtime gamepad-deadzone application. |
+| Existing Boot/audio/pause/result contracts | Normal project launch under the CI flow-gate suite | PASS | CI run 38859413030 passed all normal-Boot flow gates plus pause/Bengali settings capture after the adapter change. |
+| Genuine renderer frames | Xvfb/OpenGL real-scene capture | PASS — 12 before + 12 after PNGs | CI run 38859413030 passed the full graphics capture. Commit `f9efcaf` records refreshed `screenshots/before/` and `screenshots/after/` evidence. |
+| Android emulator install/launch | GitHub Actions run 38859413030 | BLOCKED — emulator boot timeout | The export, normal-Boot, pause, and renderer gates passed, but the hosted emulator did not boot before timeout. The candidate APK is not physical-device-tested delivery. |
+
 ## Outstanding test requirements
 
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.

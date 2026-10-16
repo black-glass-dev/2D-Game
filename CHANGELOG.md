@@ -21,10 +21,14 @@ All notable production changes are documented here.
 - Normal-Boot `--verify-result-flow` harness that validates mission-complete state, result panel creation, and SaveService score/wave round-trip.
 - SFX routing for rifle, pistol, reload, and landing audio; UI-bus confirmation feedback for menus/settings; and a Master-volume-safe focus mute/restore policy.
 - Normal-Boot `--verify-audio-flow` harness covering bus availability, focus mute/restore, combat/landing SFX assignment, and UI feedback routing.
+- Live accessibility adapters: reduced camera bob/recoil/landing motion, colorblind-safe HUD palettes, preference-gated floating damage numbers, haptics enforcement, and a configurable gamepad deadzone.
+- Named gameplay-action consumption in the Desert player for keyboard/gamepad movement, fire, jump, crouch, weapon swap, reload, aim, and pause; visible touch controls remain the only touchscreen fire route.
+- Normal-Boot `--verify-input-accessibility-flow` harness for named gamepad bindings and the live reduced-motion, palette, and damage-number contracts.
 
 ### Changed
 
 - `project.godot` now boots `Boot.tscn` and registers the foundation services as autoloads; `LocalizationService` loads the reviewed CSV catalog at runtime into Godot Translation resources without committing generated import artifacts.
 - `Main.tscn` remains directly runnable; it now marks the global game state as Playing when the legacy Desert runtime takes ownership after loading.
 - Existing Desert gameplay, direct touch/keyboard input, runtime world builder, Android package/signing, and current HUD remain intact during the boot-flow migration.
-- Settings changes now synchronize quality tier, look sensitivity, aim assist, fire mode, and screen-effect compatibility values to the legacy Desert settings file for the next map hand-off; audio bus volumes apply immediately.
+- Settings changes now synchronize quality tier, look sensitivity, aim assist, fire mode, and screen-effect compatibility values to the legacy Desert settings file for the next map hand-off; audio bus volumes and live accessibility adapters apply immediately.
+- The graphics capture path can now instantiate the real Player without project autoloads, preserving renderer evidence alongside the new deadzone preference.
