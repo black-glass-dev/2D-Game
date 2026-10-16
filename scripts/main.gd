@@ -14,6 +14,7 @@ const PAUSE_FLOW_TEST_ARGUMENT := "--verify-pause-flow"
 const RESULT_FLOW_TEST_ARGUMENT := "--verify-result-flow"
 const AUDIO_FLOW_TEST_ARGUMENT := "--verify-audio-flow"
 const INPUT_ACCESSIBILITY_TEST_ARGUMENT := "--verify-input-accessibility-flow"
+const CONTROL_LAYOUT_TEST_ARGUMENT := "--verify-control-layout-flow"
 const PAUSE_CAPTURE_BENGALI_ARGUMENT := "--capture-pause-bengali"
 const PAUSE_CAPTURE_OUTPUT_ARGUMENT := "--pause-screenshot-dir"
 
@@ -78,6 +79,9 @@ var selected_hud_key := ""
 var drag_control: Control
 var drag_offset := Vector2.ZERO
 var hud_layout_loaded := false
+# Base rectangles store the player's layout independently from global touch
+# preferences. The visible controls are derived from these values at runtime.
+var hud_layout_base: Dictionary = {}
 var score := 0
 var shots := 0
 var hits := 0
@@ -164,6 +168,8 @@ func _ready() -> void:
 		call_deferred("_run_audio_flow_verification")
 	elif OS.get_cmdline_user_args().has(INPUT_ACCESSIBILITY_TEST_ARGUMENT):
 		call_deferred("_run_input_accessibility_verification")
+	elif OS.get_cmdline_user_args().has(CONTROL_LAYOUT_TEST_ARGUMENT):
+		call_deferred("_run_control_layout_verification")
 
 func _finish_boot_flow_verification() -> void:
 	if GameManager.state != GameManager.State.PLAYING or GameManager.selected_map_id != "MP_DS_01":
@@ -447,6 +453,8 @@ func _refresh_health_presentation() -> void:
 func _on_runtime_setting_changed(key: String, _value: Variant) -> void:
 	if key in ["subtitles", "reduce_screen_shake", "colorblind_mode", "damage_numbers", "haptics", "gamepad_deadzone"]:
 		_apply_accessibility_settings()
+	if key in ["touch_joystick_scale", "touch_opacity", "touch_left_handed", "button_scale"]:
+		_apply_touch_control_preferences()
 
 func _apply_accessibility_settings() -> void:
 	if player != null:
@@ -1083,6 +1091,49 @@ func _damage_number_count() -> int:
 			count += 1
 	return count
 
+func _run_control_layout_verification() -> void:
+	await get_tree().process_frame
+	if controls_root == null or hud_layout_base.is_empty() or movement_stick == null or fire_button == null or minimap == null:
+		push_error("Control-layout verification could not initialize the live HUD controls.")
+		get_tree().quit(1)
+		return
+	var original_joystick_scale := float(SettingsService.get_setting("touch_joystick_scale", 1.0))
+	var original_button_scale := float(SettingsService.get_setting("button_scale", 1.0))
+	var original_opacity := float(SettingsService.get_setting("touch_opacity", 1.0))
+	var original_left_handed := bool(SettingsService.get_setting("touch_left_handed", false))
+	var joystick_base: Rect2 = _base_rect_for("joystick")
+	var fire_base: Rect2 = _base_rect_for("fire")
+	var minimap_base: Rect2 = _base_rect_for("minimap")
+	SettingsService.set_setting("touch_joystick_scale", 1.20, false)
+	SettingsService.set_setting("button_scale", 1.15, false)
+	SettingsService.set_setting("touch_opacity", 0.55, false)
+	SettingsService.set_setting("touch_left_handed", true, false)
+	var expected_joystick := _display_rect_from_base("joystick", joystick_base)
+	var expected_fire := _display_rect_from_base("fire", fire_base)
+	var expected_minimap := _display_rect_from_base("minimap", minimap_base)
+	if not movement_stick.position.is_equal_approx(expected_joystick.position) or not movement_stick.size.is_equal_approx(expected_joystick.size):
+		push_error("Control-layout verification could not apply joystick scale or left-handed placement.")
+		get_tree().quit(1)
+		return
+	if not fire_button.position.is_equal_approx(expected_fire.position) or not fire_button.size.is_equal_approx(expected_fire.size) or not is_equal_approx(fire_button.modulate.a, 0.55):
+		push_error("Control-layout verification could not apply button scale or opacity.")
+		get_tree().quit(1)
+		return
+	if not minimap.position.is_equal_approx(expected_minimap.position) or not minimap.size.is_equal_approx(expected_minimap.size):
+		push_error("Control-layout verification should preserve the minimap anchor.")
+		get_tree().quit(1)
+		return
+	if not _base_rect_from_display("fire", Rect2(fire_button.position, fire_button.size)).is_equal_approx(fire_base):
+		push_error("Control-layout verification could not preserve the player-authored base layout.")
+		get_tree().quit(1)
+		return
+	SettingsService.set_setting("touch_joystick_scale", original_joystick_scale, false)
+	SettingsService.set_setting("button_scale", original_button_scale, false)
+	SettingsService.set_setting("touch_opacity", original_opacity, false)
+	SettingsService.set_setting("touch_left_handed", original_left_handed, false)
+	print("CONTROL_LAYOUT_PASS joystick=", movement_stick.size, " fire=", fire_button.size, " alpha=", fire_button.modulate.a)
+	get_tree().quit()
+
 func _pause_capture_directory() -> String:
 	var args := OS.get_cmdline_user_args()
 	for index in range(args.size() - 1):
@@ -1334,53 +1385,102 @@ func _load_hud_layout() -> void:
 		for key in HUD_KEYS:
 			if not config.has_section_key("layout", key + "_x"):
 				continue
-			var control := adjustable_controls.get(key) as Control
-			if control == null:
-				continue
-			var x := float(config.get_value("layout", key + "_x", 0.0)) * controls_root.size.x
-			var y := float(config.get_value("layout", key + "_y", 0.0)) * controls_root.size.y
-			var w := float(config.get_value("layout", key + "_w", control.size.x / controls_root.size.x)) * controls_root.size.x
-			var h := float(config.get_value("layout", key + "_h", control.size.y / controls_root.size.y)) * controls_root.size.y
-			_set_control_rect(key, Vector2(x, y), Vector2(w, h))
+			var fallback: Rect2 = _base_rect_for(key)
+			var x := float(config.get_value("layout", key + "_x", fallback.position.x / controls_root.size.x)) * controls_root.size.x
+			var y := float(config.get_value("layout", key + "_y", fallback.position.y / controls_root.size.y)) * controls_root.size.y
+			var w := float(config.get_value("layout", key + "_w", fallback.size.x / controls_root.size.x)) * controls_root.size.x
+			var h := float(config.get_value("layout", key + "_h", fallback.size.y / controls_root.size.y)) * controls_root.size.y
+			hud_layout_base[key] = Rect2(Vector2(x, y), Vector2(w, h))
 	hud_layout_loaded = true
-	_sync_movement_touch_region()
+	_apply_touch_control_preferences()
 
 func _apply_default_hud_layout() -> void:
 	var screen := controls_root.size
 	# The right-side controls use a collision-free 3×2 thumb cluster: every
 	# gap is at least 10 px at the 1280×720 design resolution and it expands with
 	# the device canvas. This removes the former SWAP/CROUCH ambiguity.
-	_set_control_rect("joystick", Vector2(34, screen.y - 220), Vector2(176, 176))
-	_set_control_rect("fire", Vector2(screen.x - 174, screen.y - 226), Vector2(144, 144))
-	# Mode switch occupies the gap above-left of FIRE. It never steals the FIRE
-	# hit target and is persisted like the existing mobile controls.
-	_set_control_rect("fire_mode", Vector2(screen.x - 264, screen.y - 282), Vector2(76, 54))
-	_set_control_rect("aim", Vector2(screen.x - 378, screen.y - 112), Vector2(84, 84))
-	_set_control_rect("reload", Vector2(screen.x - 284, screen.y - 112), Vector2(84, 84))
-	_set_control_rect("jump", Vector2(screen.x - 284, screen.y - 210), Vector2(84, 84))
-	_set_control_rect("crouch", Vector2(screen.x - 378, screen.y - 210), Vector2(84, 84))
-	_set_control_rect("swap", Vector2(screen.x - 472, screen.y - 112), Vector2(84, 84))
-	_set_control_rect("minimap", Vector2(screen.x - 166, 78), Vector2(148, 148))
+	hud_layout_base = {
+		"joystick": Rect2(Vector2(34, screen.y - 220), Vector2(176, 176)),
+		"fire": Rect2(Vector2(screen.x - 174, screen.y - 226), Vector2(144, 144)),
+		# Mode switch occupies the gap above-left of FIRE. It never steals the
+		# FIRE hit target and is persisted like the existing mobile controls.
+		"fire_mode": Rect2(Vector2(screen.x - 264, screen.y - 282), Vector2(76, 54)),
+		"aim": Rect2(Vector2(screen.x - 378, screen.y - 112), Vector2(84, 84)),
+		"reload": Rect2(Vector2(screen.x - 284, screen.y - 112), Vector2(84, 84)),
+		"jump": Rect2(Vector2(screen.x - 284, screen.y - 210), Vector2(84, 84)),
+		"crouch": Rect2(Vector2(screen.x - 378, screen.y - 210), Vector2(84, 84)),
+		"swap": Rect2(Vector2(screen.x - 472, screen.y - 112), Vector2(84, 84)),
+		"minimap": Rect2(Vector2(screen.x - 166, 78), Vector2(148, 148)),
+	}
+	_apply_touch_control_preferences()
 
-func _set_control_rect(key: String, position_value: Vector2, size_value: Vector2) -> void:
+func _base_rect_for(key: String) -> Rect2:
+	var stored: Variant = hud_layout_base.get(key, Rect2(Vector2.ZERO, Vector2(84, 84)))
+	return stored as Rect2
+
+func _touch_control_scale(key: String) -> float:
+	if key == "joystick":
+		return clampf(float(SettingsService.get_setting("touch_joystick_scale", 1.0)), 0.75, 1.35)
+	if key == "minimap":
+		return 1.0
+	return clampf(float(SettingsService.get_setting("button_scale", 1.0)), 0.75, 1.35)
+
+func _display_rect_from_base(key: String, base_rect: Rect2) -> Rect2:
+	var preference_scale := _touch_control_scale(key)
+	var display_size := base_rect.size * preference_scale
+	var display_position := base_rect.get_center() - display_size * 0.5
+	if key != "minimap" and bool(SettingsService.get_setting("touch_left_handed", false)):
+		display_position.x = controls_root.size.x - display_position.x - display_size.x
+	return Rect2(display_position, display_size)
+
+func _base_rect_from_display(key: String, display_rect: Rect2) -> Rect2:
+	var unmirrored_position := display_rect.position
+	if key != "minimap" and bool(SettingsService.get_setting("touch_left_handed", false)):
+		unmirrored_position.x = controls_root.size.x - unmirrored_position.x - display_rect.size.x
+	var preference_scale := _touch_control_scale(key)
+	var base_size := display_rect.size / preference_scale
+	var base_center := unmirrored_position + display_rect.size * 0.5
+	return Rect2(base_center - base_size * 0.5, base_size)
+
+func _apply_touch_control_preferences() -> void:
+	if controls_root == null or controls_root.size.x < 10.0:
+		return
+	for key in HUD_KEYS:
+		_set_control_rect_from_display(key, _display_rect_from_base(key, _base_rect_for(key)))
+	_apply_touch_control_opacity()
+	_sync_movement_touch_region()
+
+func _set_control_rect_from_display(key: String, display_rect: Rect2) -> void:
 	var control := adjustable_controls.get(key) as Control
 	if control == null:
 		return
 	var min_size := 70.0 if key == "joystick" else 58.0
 	var max_size := 270.0 if key == "joystick" else 220.0
-	var final_size := Vector2(clampf(size_value.x, min_size, max_size), clampf(size_value.y, min_size, max_size))
+	var final_size := Vector2(clampf(display_rect.size.x, min_size, max_size), clampf(display_rect.size.y, min_size, max_size))
 	if key == "joystick":
 		var side := maxf(final_size.x, final_size.y)
 		final_size = Vector2(side, side)
 	control.size = final_size
 	control.pivot_offset = final_size * 0.5
-	control.position = _clamp_control_position(position_value, final_size)
+	control.position = _clamp_control_position(display_rect.position, final_size)
 
 func _clamp_control_position(position_value: Vector2, control_size: Vector2) -> Vector2:
 	return Vector2(
 		clampf(position_value.x, 8.0, maxf(8.0, controls_root.size.x - control_size.x - 8.0)),
 		clampf(position_value.y, 58.0, maxf(58.0, controls_root.size.y - control_size.y - 8.0))
 	)
+
+func _apply_touch_control_opacity() -> void:
+	var opacity := clampf(float(SettingsService.get_setting("touch_opacity", 1.0)), 0.35, 1.0)
+	for key in HUD_KEYS:
+		var control := adjustable_controls.get(key) as Control
+		if control == null:
+			continue
+		var tint := Color.WHITE
+		if editor_surface != null and editor_surface.visible and key == selected_hud_key:
+			tint = Color("ffe2a0")
+		tint.a = 1.0 if key == "minimap" else opacity
+		control.modulate = tint
 
 func _sync_movement_touch_region() -> void:
 	if player != null and movement_stick != null:
@@ -1404,18 +1504,12 @@ func _exit_hud_edit() -> void:
 	editor_panel.visible = false
 	hud_edit_button.visible = true
 	drag_control = null
-	for key in HUD_KEYS:
-		var control := adjustable_controls.get(key) as Control
-		if control != null:
-			control.modulate = Color.WHITE
+	_apply_touch_control_opacity()
 	_set_status("HUD SAVED")
 
 func _set_selected_hud_key(key: String) -> void:
 	selected_hud_key = key
-	for item_key in HUD_KEYS:
-		var control := adjustable_controls.get(item_key) as Control
-		if control != null:
-			control.modulate = Color("ffe2a0") if item_key == key else Color.WHITE
+	_apply_touch_control_opacity()
 	if editor_title != null:
 		editor_title.text = "HUD EDIT  •  DRAG %s  •  USE SIZE BUTTONS" % key.to_upper()
 
@@ -1463,7 +1557,7 @@ func _resize_selected(multiplier: float) -> void:
 	if control == null:
 		return
 	var old_center := control.position + control.size * 0.5
-	_set_control_rect(selected_hud_key, old_center - control.size * multiplier * 0.5, control.size * multiplier)
+	_set_control_rect_from_display(selected_hud_key, Rect2(old_center - control.size * multiplier * 0.5, control.size * multiplier))
 	_sync_movement_touch_region()
 	_save_hud_layout()
 
@@ -1481,10 +1575,14 @@ func _save_hud_layout() -> void:
 		var control := adjustable_controls.get(key) as Control
 		if control == null:
 			continue
-		config.set_value("layout", key + "_x", control.position.x / controls_root.size.x)
-		config.set_value("layout", key + "_y", control.position.y / controls_root.size.y)
-		config.set_value("layout", key + "_w", control.size.x / controls_root.size.x)
-		config.set_value("layout", key + "_h", control.size.y / controls_root.size.y)
+		# Persist the player-authored base rect, never a temporary left-handed or
+		# scaled display rect. This prevents preference changes from compounding.
+		var base_rect := _base_rect_from_display(key, Rect2(control.position, control.size))
+		hud_layout_base[key] = base_rect
+		config.set_value("layout", key + "_x", base_rect.position.x / controls_root.size.x)
+		config.set_value("layout", key + "_y", base_rect.position.y / controls_root.size.y)
+		config.set_value("layout", key + "_w", base_rect.size.x / controls_root.size.x)
+		config.set_value("layout", key + "_h", base_rect.size.y / controls_root.size.y)
 	config.save(HUD_LAYOUT_FILE)
 
 func _show_end_panel(title: String, description: String, tint: Color) -> void:
