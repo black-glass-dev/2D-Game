@@ -82,6 +82,16 @@ func gamepad_bindings_ready() -> bool:
 			return false
 	return true
 
+func menu_back_bindings_ready() -> bool:
+	if not InputMap.has_action(ACTION_MENU_BACK):
+		return false
+	var has_keyboard := false
+	var has_gamepad := false
+	for event in InputMap.action_get_events(ACTION_MENU_BACK):
+		has_keyboard = has_keyboard or event is InputEventKey
+		has_gamepad = has_gamepad or event is InputEventJoypadButton
+	return has_keyboard and has_gamepad
+
 func _ensure_action(action: String) -> void:
 	if not InputMap.has_action(action):
 		InputMap.add_action(action)

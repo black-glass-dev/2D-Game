@@ -937,16 +937,18 @@ func _run_pause_flow_verification() -> void:
 		if not settings_capture_ok:
 			get_tree().quit(1)
 			return
-	_handle_pause_back()
+	# Exercise Android's actual back-request notification: first leave shared
+	# pause settings, then resume from the pause surface.
+	_notification(NOTIFICATION_WM_GO_BACK_REQUEST)
 	if not pause_panel.visible or pause_settings_center.visible:
-		push_error("Pause-flow verification could not return from shared settings.")
+		push_error("Pause-flow verification could not return from shared settings by Android Back.")
 		get_tree().quit(1)
 		return
-	_close_pause()
+	_notification(NOTIFICATION_WM_GO_BACK_REQUEST)
 	# `leave_pause()` and Control visibility update synchronously. Do not await a
 	# rendered frame here: the Xvfb capture route can defer it after readback.
 	if GameManager.state != GameManager.State.PLAYING or get_tree().paused or pause_overlay.visible:
-		push_error("Pause-flow verification could not resume gameplay state.")
+		push_error("Pause-flow verification could not resume gameplay state by Android Back.")
 		get_tree().quit(1)
 		return
 	print("PAUSE_FLOW_PASS state=", GameManager.state)

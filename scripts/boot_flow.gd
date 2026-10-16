@@ -22,6 +22,7 @@ const PAUSE_FLOW_TEST_ARGUMENT := "--verify-pause-flow"
 const RESULT_FLOW_TEST_ARGUMENT := "--verify-result-flow"
 const AUDIO_FLOW_TEST_ARGUMENT := "--verify-audio-flow"
 const INPUT_ACCESSIBILITY_TEST_ARGUMENT := "--verify-input-accessibility-flow"
+const BACK_FLOW_TEST_ARGUMENT := "--verify-back-flow"
 
 var active_view: View = View.SPLASH
 var selected_map_id := "MP_DS_01"
@@ -50,7 +51,9 @@ func _ready() -> void:
 	LocalizationService.locale_changed.connect(_on_locale_changed)
 	_build_shell()
 	_show_splash()
-	if OS.get_cmdline_user_args().has(BOOT_FLOW_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(PAUSE_FLOW_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(RESULT_FLOW_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(AUDIO_FLOW_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(INPUT_ACCESSIBILITY_TEST_ARGUMENT):
+	if OS.get_cmdline_user_args().has(BACK_FLOW_TEST_ARGUMENT):
+		call_deferred("_begin_back_flow_test")
+	elif OS.get_cmdline_user_args().has(BOOT_FLOW_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(PAUSE_FLOW_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(RESULT_FLOW_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(AUDIO_FLOW_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(INPUT_ACCESSIBILITY_TEST_ARGUMENT):
 		call_deferred("_begin_headless_handoff_test")
 	elif OS.get_cmdline_user_args().has(SETTINGS_MENU_TEST_ARGUMENT):
 		call_deferred("_begin_settings_menu_test")
@@ -60,6 +63,43 @@ func _ready() -> void:
 func _begin_headless_handoff_test() -> void:
 	_show_menu()
 	_start_selected_map()
+
+func _begin_back_flow_test() -> void:
+	await get_tree().process_frame
+	if not InputService.menu_back_bindings_ready():
+		push_error("Back-flow verification found incomplete keyboard/gamepad menu-back bindings.")
+		get_tree().quit(1)
+		return
+	# Exercise the exact Android back-request callback from splash rather than
+	# only calling the shared helper. Splash must return to menu, never exit.
+	_show_splash()
+	_notification(NOTIFICATION_WM_GO_BACK_REQUEST)
+	if active_view != View.MENU or GameManager.state != GameManager.State.MAIN_MENU:
+		push_error("Back-flow verification could not return from splash.")
+		get_tree().quit(1)
+		return
+	# ESC uses the same named menu action as desktop keyboard navigation.
+	_show_settings()
+	var keyboard_back := InputEventKey.new()
+	keyboard_back.physical_keycode = KEY_ESCAPE
+	keyboard_back.pressed = true
+	_unhandled_input(keyboard_back)
+	if active_view != View.MENU:
+		push_error("Back-flow verification could not return from settings by keyboard.")
+		get_tree().quit(1)
+		return
+	# Controller B must follow the same route from map selection.
+	_show_map_select()
+	var gamepad_back := InputEventJoypadButton.new()
+	gamepad_back.button_index = JOY_BUTTON_B
+	gamepad_back.pressed = true
+	_unhandled_input(gamepad_back)
+	if active_view != View.MENU:
+		push_error("Back-flow verification could not return from map selection by gamepad.")
+		get_tree().quit(1)
+		return
+	print("BACK_FLOW_PASS views=splash,settings,map_select")
+	get_tree().quit()
 
 func _begin_settings_menu_test() -> void:
 	_show_menu()
