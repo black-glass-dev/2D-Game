@@ -275,7 +275,7 @@ func _read_move_input() -> Vector2:
 	# The named actions retain WASD/arrow movement while adding the configured
 	# gamepad stick. A user-selected deadzone filters analog drift without
 	# affecting a full-strength keyboard direction.
-	var deadzone := clampf(float(SettingsService.get_setting("gamepad_deadzone", 0.20)), 0.05, 0.85)
+	var deadzone := _gamepad_deadzone()
 	var input_axis := Input.get_vector(
 		InputService.ACTION_MOVE_LEFT,
 		InputService.ACTION_MOVE_RIGHT,
@@ -286,6 +286,14 @@ func _read_move_input() -> Vector2:
 	if touch_move.length() > 0.05:
 		input_axis = touch_move
 	return input_axis.limit_length(1.0)
+
+func _gamepad_deadzone() -> float:
+	# Renderer captures instantiate gameplay without project autoloads. Resolve
+	# settings at runtime so Player remains usable by that real-scene harness.
+	var settings_service: Variant = get_node_or_null("/root/SettingsService")
+	if settings_service != null:
+		return clampf(float(settings_service.get_setting("gamepad_deadzone", 0.20)), 0.05, 0.85)
+	return 0.20
 
 func _update_sprint_state(input_axis: Vector2) -> void:
 	var keyboard_sprint := Input.is_key_pressed(KEY_SHIFT)

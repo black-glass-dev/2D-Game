@@ -314,10 +314,12 @@ func _spawn_raider(serial: int) -> void:
 	enemy.eliminated.connect(_on_raider_eliminated)
 
 func _on_raider_damaged(enemy: Raider, amount: int, headshot: bool) -> void:
+	_show_damage_number_at(enemy.global_position + Vector3(0, 1.55, 0), amount, headshot)
+
+func _show_damage_number_at(point: Vector3, amount: int, headshot: bool) -> void:
 	if not bool(SettingsService.get_setting("damage_numbers", true)) or player == null or player.camera == null:
 		return
 	var camera := player.camera
-	var point := enemy.global_position + Vector3(0, 1.55, 0)
 	if camera.is_position_behind(point):
 		return
 	var number := Label.new()
@@ -1005,17 +1007,16 @@ func _run_input_accessibility_verification() -> void:
 		push_error("Input-accessibility verification could not apply the critical-health palette.")
 		get_tree().quit(1)
 		return
-	var probe := Raider.new()
-	probe.global_position = player.camera.global_position + -player.camera.global_transform.basis.z * 5.0
+	var probe_point: Vector3 = player.camera.global_position + -player.camera.global_transform.basis.z * 5.0
 	SettingsService.set_setting("damage_numbers", true, false)
 	var before_count := _damage_number_count()
-	_on_raider_damaged(probe, 42, true)
+	_show_damage_number_at(probe_point, 42, true)
 	if _damage_number_count() != before_count + 1:
 		push_error("Input-accessibility verification could not create an enabled damage number.")
 		get_tree().quit(1)
 		return
 	SettingsService.set_setting("damage_numbers", false, false)
-	_on_raider_damaged(probe, 42, false)
+	_show_damage_number_at(probe_point, 42, false)
 	if _damage_number_count() != before_count + 1:
 		push_error("Input-accessibility verification did not suppress disabled damage numbers.")
 		get_tree().quit(1)
