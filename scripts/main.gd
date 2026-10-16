@@ -34,6 +34,8 @@ var score_label: Label
 var accuracy_label: Label
 var status_label: Label
 var alert_label: Label
+var sound_caption_label: Label
+var sound_caption_tween: Tween
 var damage_overlay: ColorRect
 var damage_edges: Array[ColorRect] = []
 var damage_indicator: Label
@@ -111,6 +113,7 @@ func _ready() -> void:
 	player.reload_requested.connect(_reload_active_weapon)
 	player.movement_touch_changed.connect(_update_movement_stick)
 	player.health_changed.connect(_on_health_changed)
+	player.landed.connect(_on_player_landed)
 	player.damage_taken.connect(_on_player_damage)
 	player.player_down.connect(_on_player_down)
 
@@ -123,12 +126,12 @@ func _ready() -> void:
 	pistol.set_equipped(false)
 	active_weapon = rifle
 	rifle.ammo_changed.connect(_on_rifle_ammo_changed)
-	rifle.weapon_message.connect(_set_status)
+	rifle.weapon_message.connect(_on_weapon_message)
 	rifle.shot_resolved.connect(_on_shot_resolved)
 	rifle.shot_feedback.connect(_on_shot_feedback)
 	rifle.weapon_fired.connect(_on_weapon_fired)
 	pistol.ammo_changed.connect(_on_pistol_ammo_changed)
-	pistol.weapon_message.connect(_set_status)
+	pistol.weapon_message.connect(_on_weapon_message)
 	pistol.shot_resolved.connect(_on_shot_resolved)
 	pistol.shot_feedback.connect(_on_shot_feedback)
 	pistol.weapon_fired.connect(_on_weapon_fired)
@@ -230,6 +233,7 @@ func _fire() -> void:
 		return
 	if active_weapon.has_method("try_fire") and active_weapon.try_fire(player.camera):
 		shots += 1
+		_show_sound_caption("caption.rifle_fire" if active_weapon == rifle else "caption.pistol_fire")
 		_update_accuracy()
 
 func _on_mobile_fire_down() -> void:
@@ -292,6 +296,14 @@ func _refresh_active_ammo() -> void:
 		_on_ammo_changed(rifle.ammo, rifle.reserve)
 	elif active_weapon == pistol and pistol != null:
 		_on_ammo_changed(pistol.ammo, pistol.reserve)
+
+func _on_weapon_message(message: String) -> void:
+	_set_status(message)
+	if message == "RELOADING":
+		_show_sound_caption("caption.reloading")
+
+func _on_player_landed(_impact: float) -> void:
+	_show_sound_caption("caption.landing")
 
 func _on_weapon_fired(origin: Vector3) -> void:
 	# Sound awareness is dispatched only per shot, not as a per-frame group scan.
@@ -433,12 +445,14 @@ func _refresh_health_presentation() -> void:
 	health_bar_fill.color = _hud_color("health_good" if displayed_health > displayed_health_maximum * .42 else "health_low")
 
 func _on_runtime_setting_changed(key: String, _value: Variant) -> void:
-	if key in ["reduce_screen_shake", "colorblind_mode", "damage_numbers", "haptics", "gamepad_deadzone"]:
+	if key in ["subtitles", "reduce_screen_shake", "colorblind_mode", "damage_numbers", "haptics", "gamepad_deadzone"]:
 		_apply_accessibility_settings()
 
 func _apply_accessibility_settings() -> void:
 	if player != null:
 		player.set_reduce_screen_shake(bool(SettingsService.get_setting("reduce_screen_shake", false)))
+	if sound_caption_label != null and not bool(SettingsService.get_setting("subtitles", true)):
+		sound_caption_label.visible = false
 	_refresh_health_presentation()
 	if damage_overlay != null:
 		var overlay_color := _hud_color("damage")
@@ -527,6 +541,18 @@ func _update_accuracy() -> void:
 func _set_status(message: String) -> void:
 	if status_label != null:
 		status_label.text = message
+
+func _show_sound_caption(key: String) -> void:
+	if sound_caption_label == null or not bool(SettingsService.get_setting("subtitles", true)):
+		return
+	if sound_caption_tween != null and sound_caption_tween.is_valid():
+		sound_caption_tween.kill()
+	sound_caption_label.text = "♪  %s" % tr(key)
+	sound_caption_label.visible = true
+	sound_caption_label.modulate.a = 1.0
+	sound_caption_tween = create_tween()
+	sound_caption_tween.tween_interval(0.62)
+	sound_caption_tween.tween_property(sound_caption_label, "modulate:a", 0.0, 0.28)
 
 func _show_alert(message: String, duration: float) -> void:
 	if alert_label == null:
@@ -665,6 +691,9 @@ func _build_hud() -> void:
 	ammo_label = _label("24  /  144", Vector2(-122, 29), Vector2(108, 30), 22, Color("fff2cf"), Control.PRESET_TOP_RIGHT, HORIZONTAL_ALIGNMENT_RIGHT)
 	accuracy_label = _label("ACC  0%", Vector2(18, -43), Vector2(140, 25), 15, Color("d8f5d0"), Control.PRESET_BOTTOM_LEFT)
 	status_label = _label("SECURE THE OUTPOST", Vector2(-190, -72), Vector2(380, 22), 14, Color("f0c079"), Control.PRESET_CENTER_BOTTOM, HORIZONTAL_ALIGNMENT_CENTER)
+	sound_caption_label = _label("", Vector2(-250, -102), Vector2(500, 24), 15, Color("e6f6e7"), Control.PRESET_CENTER_BOTTOM, HORIZONTAL_ALIGNMENT_CENTER)
+	sound_caption_label.name = "Sound caption"
+	sound_caption_label.visible = false
 	alert_label = _label("", Vector2(-330, 78), Vector2(660, 42), 24, Color("fff0cc"), Control.PRESET_CENTER_TOP, HORIZONTAL_ALIGNMENT_CENTER)
 	_build_dynamic_reticle()
 	hit_marker = _label("✕", Vector2(-25, -31), Vector2(50, 50), 42, Color("ffdf9a"), Control.PRESET_CENTER, HORIZONTAL_ALIGNMENT_CENTER)
@@ -989,6 +1018,7 @@ func _run_input_accessibility_verification() -> void:
 		push_error("Input-accessibility verification found an incomplete named input map.")
 		get_tree().quit(1)
 		return
+	var original_subtitles := bool(SettingsService.get_setting("subtitles", true))
 	var original_reduce_shake := bool(SettingsService.get_setting("reduce_screen_shake", false))
 	var original_colorblind := str(SettingsService.get_setting("colorblind_mode", "OFF"))
 	var original_damage_numbers := bool(SettingsService.get_setting("damage_numbers", true))
@@ -1000,6 +1030,18 @@ func _run_input_accessibility_verification() -> void:
 	SettingsService.set_setting("gamepad_deadzone", 0.35, false)
 	if player == null or not player.reduce_screen_shake or reticle_segments.is_empty() or reticle_segments[0].color != _hud_color("reticle"):
 		push_error("Input-accessibility verification could not apply reduced-motion or palette settings.")
+		get_tree().quit(1)
+		return
+	SettingsService.set_setting("subtitles", false, false)
+	_show_sound_caption("caption.rifle_fire")
+	if sound_caption_label == null or sound_caption_label.visible:
+		push_error("Input-accessibility verification did not suppress disabled sound captions.")
+		get_tree().quit(1)
+		return
+	SettingsService.set_setting("subtitles", true, false)
+	_show_sound_caption("caption.rifle_fire")
+	if not sound_caption_label.visible or sound_caption_label.text != "♪  %s" % tr("caption.rifle_fire"):
+		push_error("Input-accessibility verification could not present an enabled sound caption.")
 		get_tree().quit(1)
 		return
 	_on_health_changed(20, 100)
@@ -1021,13 +1063,15 @@ func _run_input_accessibility_verification() -> void:
 		push_error("Input-accessibility verification did not suppress disabled damage numbers.")
 		get_tree().quit(1)
 		return
+	SettingsService.set_setting("subtitles", original_subtitles, false)
 	SettingsService.set_setting("reduce_screen_shake", original_reduce_shake, false)
 	SettingsService.set_setting("colorblind_mode", original_colorblind, false)
 	SettingsService.set_setting("damage_numbers", original_damage_numbers, false)
 	SettingsService.set_setting("haptics", original_haptics, false)
 	SettingsService.set_setting("gamepad_deadzone", original_deadzone, false)
+	sound_caption_label.visible = false
 	_on_health_changed(player.health, OutpostPlayer.MAX_HEALTH)
-	print("INPUT_ACCESSIBILITY_PASS actions=", InputService.GAMEPLAY_ACTIONS.size(), " damage_numbers=", before_count + 1)
+	print("INPUT_ACCESSIBILITY_PASS actions=", InputService.GAMEPLAY_ACTIONS.size(), " damage_numbers=", before_count + 1, " captions=1")
 	get_tree().quit()
 
 func _damage_number_count() -> int:

@@ -21,6 +21,10 @@ loading.title,LOADING,লোড হচ্ছে
 loading.progress,Loading map resources…,ম্যাপ রিসোর্স লোড হচ্ছে…
 pause.title,PAUSED,বিরতি
 pause.subtitle,Operation clock stopped. Secure your settings or choose your next route.,অপারেশনের সময় থামানো আছে। সেটিংস ঠিক করুন বা পরের পথ বেছে নিন।
+caption.rifle_fire,Rifle firing,রাইফেল থেকে গুলি
+caption.pistol_fire,Pistol firing,পিস্তল থেকে গুলি
+caption.reloading,Reloading,পুনরায় লোড হচ্ছে
+caption.landing,Landing,অবতরণ
 pause.resume,RESUME,আবার শুরু
 pause.restart_operation,RESTART OPERATION,অপারেশন আবার শুরু
 pause.restart_wave,RESTART WAVE,ওয়েভ আবার শুরু
