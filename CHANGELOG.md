@@ -30,6 +30,8 @@ All notable production changes are documented here.
 - Normal-Boot `--verify-control-layout-flow` harness for scaled/mirrored controls, opacity, fixed minimap placement, and base-layout preservation.
 - Conflict-aware Controls rebinding for named gameplay keyboard actions and selected gameplay gamepad buttons, with localized capture UI, conflicting-action feedback, Escape/controller-B cancellation, reset, and `user://input_bindings.cfg` persistence.
 - Normal-Boot `--verify-rebind-flow` gate for keyboard/gamepad capture and persistence, conflict rejection, UI-row creation/cancellation, and default restoration.
+- Fact-based loading telemetry: localized loader stages, raw threaded-resource progress, monotonic elapsed time, and completed transition records for the Boot loading presentation.
+- Normal-Boot `--verify-loading-flow` gate for zero-percent start, localized preparing state, Main hand-off, truthful completion, and telemetry validity.
 
 ### Changed
 

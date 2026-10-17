@@ -25,7 +25,9 @@
 - [x] Apply live joystick scale, action-button scale, opacity, and left-handed layout preferences without overwriting HUD-editor positions/sizes.
 - [x] Complete conflict-aware keyboard and gamepad input rebinding with persistence, cancellation, conflict rejection, and reset.
 - [x] Add map detail, difficulty/mode session selection, and a locked `MP_RF_02` future-map card without exposing a launch route.
-- [ ] Add loading telemetry, make difficulty/mode affect the Desert compatibility adapter, and add the visual menu background fallback.
+- [x] Add fact-based loading telemetry with localized stages, actual progress samples, elapsed time, and normal-Boot hand-off verification.
+- [ ] Make difficulty/mode affect the Desert compatibility adapter without changing the Normal/Survival baseline.
+- [ ] Add the visual menu background fallback.
 
 ## M3 — Deliverable A regression QA
 
