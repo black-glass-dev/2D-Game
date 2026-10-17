@@ -22,3 +22,7 @@ Earlier workflow revisions could publish pre-release candidates after export/hea
 ## Evidence boundary
 
 Artifact upload quota and hosted-emulator availability remain independent infrastructure risks. A quota-blocked archive is not an APK delivery. An emulator timeout is not a passing device result. A successful future release created through this gate still represents emulator evidence; physical-device testing is separately recorded.
+
+## First gate evidence
+
+[CI run 39034299154](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39034299154) passed source/native/import/export/normal-Boot/renderer gates but timed out at Android emulator boot. The `Publish a device-validated debug APK candidate` step was skipped, and the subsequent `gh release list` audit showed no `apk-candidate-88` release. This proves the intended failure-safe publication behavior without representing the run as a device pass.

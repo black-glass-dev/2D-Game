@@ -229,9 +229,9 @@ The loop is a global `AudioService` player and does not change Desert score, HP,
 | Named Android device gate | Workflow source inspection | PASS — emulator step has stable `id: android_emulator` | `.github/workflows/android-apk.yml` |
 | Candidate-release condition | `python3 tools/validate_project.py` | PASS — validator rejects a workflow that lacks `steps.android_emulator.outcome == 'success'` | 2026-10-17 local terminal log |
 | Signing/update compatibility | Workflow review | PASS — existing package ID and persistent `operation-redline-debug.keystore` restore/cache path are unchanged | `.github/workflows/android-apk.yml`; `docs/RELEASE_GATING.md` |
-| First failed-emulator publication skip | GitHub Actions run | PENDING CI — no new candidate is claimed until this exact condition has been observed | Next CI run triggered by Batch 13 source |
+| First failed-emulator publication skip | GitHub Actions run 39034299154 | PASS — Android emulator timed out; `Publish a device-validated debug APK candidate` was skipped and no `apk-candidate-88` release was created | [Run 39034299154](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39034299154); post-run `gh release list` still ended at `apk-candidate-87` |
 
-Historical pre-releases are not physical-device-tested deliveries; this batch preserves them as audit records rather than deleting or relabelling them. The forward release gate prevents any future downloadable candidate from being created while the final Android install/launch step is failing.
+Historical pre-releases are not physical-device-tested deliveries; this batch preserves them as audit records rather than deleting or relabelling them. The forward release gate now has CI evidence that it prevents a new downloadable candidate while the final Android install/launch step is failing.
 
 ## Outstanding test requirements
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.
