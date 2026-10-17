@@ -203,8 +203,8 @@ Candidate #67 is not treated as a tested delivery because the Android emulator i
 | Native survival core | `./scripts/run_native_tests.sh` | PASS — 3 waves, 27 spawns, completion state | 2026-10-17 local terminal log |
 | Menu-asset integrity | Python PNG/header + manifest SHA-256 check | PASS — `assets/ui/menu_desert_outpost.png`, 1024×576, 671107 bytes, SHA-256 `282f687f85d4f71960e95279536717123b437e0bd207ab8000b9c4fa1151c72c` | 2026-10-17 local terminal log |
 | Whitespace | `git diff --check` | PASS | 2026-10-17 local terminal log |
-| Normal-Boot quality selection | `--verify-menu-background-flow` | PENDING CI — local Godot is unavailable | New headless CI gate in `.github/workflows/android-apk.yml` |
-| Normal-Boot renderer frames | Xvfb `--capture-menu-backgrounds` | PENDING CI — no image is claimed as a renderer capture before the run succeeds | New high/LOW PNG gate in `.github/workflows/android-apk.yml` |
+| Normal-Boot quality selection | `--verify-menu-background-flow` | PASS — `AUTO`/`HIGH` selected `static_outpost`; explicit `LOW` selected `procedural_low` | CI run 39030445119, `ci-logs/godot-menu-background-flow.log` |
+| Normal-Boot renderer frames | Xvfb `--capture-menu-backgrounds` | RERUN PENDING — initial run reached the renderer step but its parser accepted only `--menu-capture-path=value`, while CI supplied the standard paired argument form. The parser now accepts both forms. No frame is claimed before the repaired run succeeds. | CI run 39030445119, `ci-logs/godot-menu-background-capture.log`; repair follows in source |
 
 The LOW path is intentionally a texture-free `ColorRect` composition. The non-LOW path is a static original image. Both are Boot presentation only; this batch does not load `Main`, start a 3D background simulation, or alter Desert waves, score, HP, HUD, controls, input, loading, or Back routes.
 

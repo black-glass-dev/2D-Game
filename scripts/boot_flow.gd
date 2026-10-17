@@ -30,7 +30,7 @@ const SESSION_ADAPTER_TEST_ARGUMENT := "--verify-session-adapter-flow"
 const BACK_FLOW_TEST_ARGUMENT := "--verify-back-flow"
 const MENU_BACKGROUND_TEST_ARGUMENT := "--verify-menu-background-flow"
 const MENU_BACKGROUND_CAPTURE_ARGUMENT := "--capture-menu-backgrounds"
-const MENU_CAPTURE_PATH_ARGUMENT := "--menu-capture-path="
+const MENU_CAPTURE_PATH_ARGUMENT := "--menu-capture-path"
 
 var active_view: View = View.SPLASH
 var selected_map_id := "MP_DS_01"
@@ -440,9 +440,14 @@ func _begin_menu_background_capture() -> void:
 	get_tree().quit()
 
 func _get_menu_capture_directory() -> String:
-	for argument in OS.get_cmdline_user_args():
-		if argument.begins_with(MENU_CAPTURE_PATH_ARGUMENT):
-			return argument.trim_prefix(MENU_CAPTURE_PATH_ARGUMENT)
+	var arguments := OS.get_cmdline_user_args()
+	var assigned_prefix := "%s=" % MENU_CAPTURE_PATH_ARGUMENT
+	for index in arguments.size():
+		var argument := arguments[index]
+		if argument.begins_with(assigned_prefix):
+			return argument.trim_prefix(assigned_prefix)
+		if argument == MENU_CAPTURE_PATH_ARGUMENT and index + 1 < arguments.size():
+			return arguments[index + 1]
 	return ""
 
 func _save_menu_background_capture(path: String) -> Error:
