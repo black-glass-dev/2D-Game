@@ -17,6 +17,7 @@ ERROR: Condition "status < 0" is true. Returning: ERR_CANT_OPEN
 WARNING: All audio drivers failed, falling back to the dummy driver.
      at: initialize (servers/audio/audio_server.cpp:258)
 
+MENU_BACKGROUND_MODE quality=AUTO mode=static_outpost
 PAUSE_VISUAL_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/pause/pause-overlay.png size=1280x720
 PAUSE_VISUAL_CAPTURE /home/runner/work/2D-Game/2D-Game/build/screenshots/pause/pause-settings-bn.png size=1280x720
 PAUSE_FLOW_PASS state=5

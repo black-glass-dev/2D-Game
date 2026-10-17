@@ -5,22 +5,6 @@ Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
 [  16% ] [90m[1mfirst_scan_filesystem[22m | Loading global class names...[39m[0m
 [  33% ] [90m[1mfirst_scan_filesystem[22m | Verifying GDExtensions...[39m[0m
 [  50% ] [90m[1mfirst_scan_filesystem[22m | Creating autoload scripts...[39m[0m
-SCRIPT ERROR: Parse Error: Function "Key()" not found in base self.
-          at: GDScript::reload (res://scripts/services/input_service.gd:221)
-SCRIPT ERROR: Parse Error: Function "JoyButton()" not found in base self.
-          at: GDScript::reload (res://scripts/services/input_service.gd:230)
-SCRIPT ERROR: Parse Error: Function "Key()" not found in base self.
-          at: GDScript::reload (res://scripts/services/input_service.gd:264)
-SCRIPT ERROR: Parse Error: Function "JoyButton()" not found in base self.
-          at: GDScript::reload (res://scripts/services/input_service.gd:273)
-SCRIPT ERROR: Parse Error: Function "Key()" not found in base self.
-          at: GDScript::reload (res://scripts/services/input_service.gd:297)
-SCRIPT ERROR: Parse Error: Function "JoyButton()" not found in base self.
-          at: GDScript::reload (res://scripts/services/input_service.gd:302)
-ERROR: Failed to load script "res://scripts/services/input_service.gd" with error "Parse error".
-   at: load (modules/gdscript/gdscript_resource_format.cpp:46)
-ERROR: Failed to create an autoload, script 'res://scripts/services/input_service.gd' is not compiling.
-   at: _create_autoload (editor/settings/editor_autoload_settings.cpp:340)
 SCRIPT ERROR: Parse Error: Preload file "res://assets/audio/reload_click.wav" has no resource loaders (unrecognized file extension).
           at: GDScript::reload (res://scripts/services/audio_service.gd:11)
 SCRIPT ERROR: Parse Error: Cannot infer the type of "UI_CONFIRM_SOUND" constant because the value doesn't have a set type.
@@ -61,7 +45,7 @@ ERROR: Failed to create an autoload, script 'res://scripts/services/audio_servic
 [  92% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
 [92m[ DONE ][39m [1mupdate_scripts_classes[22m
 [0m
-[   0% ] [90m[1m_update_scan_actions[22m | Started Scanning actions... (66 steps)[39m[0m
+[   0% ] [90m[1m_update_scan_actions[22m | Started Scanning actions... (67 steps)[39m[0m
 [   0% ] [90m[1m_update_scan_actions[22m | landing_thump.wav[39m[0m
 [   1% ] [90m[1m_update_scan_actions[22m | pistol_shot.wav[39m[0m
 [   2% ] [90m[1m_update_scan_actions[22m | reload_click.wav[39m[0m
@@ -81,38 +65,39 @@ ERROR: Failed to create an autoload, script 'res://scripts/services/audio_servic
 [  23% ] [90m[1m_update_scan_actions[22m | concrete.png[39m[0m
 [  25% ] [90m[1m_update_scan_actions[22m | metal.png[39m[0m
 [  26% ] [90m[1m_update_scan_actions[22m | roof_plates.png[39m[0m
-[  28% ] [90m[1m_update_scan_actions[22m | wall.png[39m[0m
+[  27% ] [90m[1m_update_scan_actions[22m | wall.png[39m[0m
 [  29% ] [90m[1m_update_scan_actions[22m | wall_garage.png[39m[0m
-[  31% ] [90m[1m_update_scan_actions[22m | wall_lines.png[39m[0m
+[  30% ] [90m[1m_update_scan_actions[22m | wall_lines.png[39m[0m
 [  32% ] [90m[1m_update_scan_actions[22m | windows.png[39m[0m
-[  34% ] [90m[1m_update_scan_actions[22m | barrier_damaged.glb[39m[0m
+[  33% ] [90m[1m_update_scan_actions[22m | barrier_damaged.glb[39m[0m
 [  35% ] [90m[1m_update_scan_actions[22m | roof_metal.glb[39m[0m
-[  37% ] [90m[1m_update_scan_actions[22m | wall_garage.glb[39m[0m
+[  36% ] [90m[1m_update_scan_actions[22m | wall_garage.glb[39m[0m
 [  38% ] [90m[1m_update_scan_actions[22m | wall_window.glb[39m[0m
-[  40% ] [90m[1m_update_scan_actions[22m | colormap.png[39m[0m
+[  39% ] [90m[1m_update_scan_actions[22m | colormap.png[39m[0m
 [  41% ] [90m[1m_update_scan_actions[22m | barrel.glb[39m[0m
-[  43% ] [90m[1m_update_scan_actions[22m | metal_panel.glb[39m[0m
+[  42% ] [90m[1m_update_scan_actions[22m | metal_panel.glb[39m[0m
 [  44% ] [90m[1m_update_scan_actions[22m | rock_sand_a.glb[39m[0m
-[  46% ] [90m[1m_update_scan_actions[22m | rock_sand_b.glb[39m[0m
+[  45% ] [90m[1m_update_scan_actions[22m | rock_sand_b.glb[39m[0m
 [  47% ] [90m[1m_update_scan_actions[22m | machinegun.glb[39m[0m
-[  49% ] [90m[1m_update_scan_actions[22m | pistol.glb[39m[0m
+[  48% ] [90m[1m_update_scan_actions[22m | pistol.glb[39m[0m
 [  50% ] [90m[1m_update_scan_actions[22m | NotoSansBengali-Regular.ttf[39m[0m
-[  52% ] [90m[1m_update_scan_actions[22m | NotoSansBengali-SemiBold.ttf[39m[0m
-[  53% ] [90m[1m_update_scan_actions[22m | back.svg[39m[0m
-[  55% ] [90m[1m_update_scan_actions[22m | lock.svg[39m[0m
-[  56% ] [90m[1m_update_scan_actions[22m | play.svg[39m[0m
-[  58% ] [90m[1m_update_scan_actions[22m | settings.svg[39m[0m
-[  59% ] [90m[1m_update_scan_actions[22m | app_icon.svg[39m[0m
+[  51% ] [90m[1m_update_scan_actions[22m | NotoSansBengali-SemiBold.ttf[39m[0m
+[  52% ] [90m[1m_update_scan_actions[22m | back.svg[39m[0m
+[  54% ] [90m[1m_update_scan_actions[22m | lock.svg[39m[0m
+[  55% ] [90m[1m_update_scan_actions[22m | play.svg[39m[0m
+[  57% ] [90m[1m_update_scan_actions[22m | settings.svg[39m[0m
+[  58% ] [90m[1m_update_scan_actions[22m | app_icon.svg[39m[0m
+[  60% ] [90m[1m_update_scan_actions[22m | menu_desert_outpost.png[39m[0m
 [  61% ] [90m[1m_update_scan_actions[22m | redline.csv[39m[0m
-[  62% ] [90m[1m_update_scan_actions[22m | 01_spawn_ground.png[39m[0m
+[  63% ] [90m[1m_update_scan_actions[22m | 01_spawn_ground.png[39m[0m
 [  64% ] [90m[1m_update_scan_actions[22m | 02_main_lane.png[39m[0m
-[  65% ] [90m[1m_update_scan_actions[22m | 03_emissive_crates.png[39m[0m
+[  66% ] [90m[1m_update_scan_actions[22m | 03_emissive_crates.png[39m[0m
 [  67% ] [90m[1m_update_scan_actions[22m | 04_outpost_facade.png[39m[0m
-[  68% ] [90m[1m_update_scan_actions[22m | 05_mesa_horizon.png[39m[0m
+[  69% ] [90m[1m_update_scan_actions[22m | 05_mesa_horizon.png[39m[0m
 [  70% ] [90m[1m_update_scan_actions[22m | 06_raider_fifteen_m.png[39m[0m
-[  71% ] [90m[1m_update_scan_actions[22m | 07_raider_five_m.png[39m[0m
+[  72% ] [90m[1m_update_scan_actions[22m | 07_raider_five_m.png[39m[0m
 [  73% ] [90m[1m_update_scan_actions[22m | 08_rifle_idle.png[39m[0m
-[  74% ] [90m[1m_update_scan_actions[22m | 09_ads.png[39m[0m
+[  75% ] [90m[1m_update_scan_actions[22m | 09_ads.png[39m[0m
 [  76% ] [90m[1m_update_scan_actions[22m | 10_firing.png[39m[0m
 [  77% ] [90m[1m_update_scan_actions[22m | 11_low_hp.png[39m[0m
 [  79% ] [90m[1m_update_scan_actions[22m | 12_reload_crouch.png[39m[0m
@@ -130,7 +115,7 @@ ERROR: Failed to create an autoload, script 'res://scripts/services/audio_servic
 [  97% ] [90m[1m_update_scan_actions[22m | 12_reload_crouch.png[39m[0m
 [92m[ DONE ][39m [1m_update_scan_actions[22m
 [0m
-[   0% ] [90m[1mreimport[22m | Started (Re)Importing Assets (66 steps)[39m[0m
+[   0% ] [90m[1mreimport[22m | Started (Re)Importing Assets (67 steps)[39m[0m
 [   0% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
 [   1% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
 [   2% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
@@ -150,38 +135,39 @@ ERROR: Failed to create an autoload, script 'res://scripts/services/audio_servic
 [  23% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
 [  25% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
 [  26% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
-[  28% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  27% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
 [  29% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
-[  31% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  30% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
 [  32% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
-[  34% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  33% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
 [  35% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
-[  37% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  36% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
 [  38% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
-[  40% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  39% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
 [  41% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
-[  43% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  42% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
 [  44% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
-[  46% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  45% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
 [  47% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
-[  49% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  48% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
 [  50% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  51% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
 [  52% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
-[  53% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  54% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
 [  55% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
-[  56% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  57% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
 [  58% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
-[  59% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  60% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
 [  61% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
-[  62% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  63% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
 [  64% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
-[  65% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  66% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
 [  67% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
-[  68% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  69% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
 [  70% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
-[  71% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  72% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
 [  73% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
-[  74% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  75% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
 [  76% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
 [  77% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
 [  79% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
@@ -217,38 +203,39 @@ ERROR: Failed to create an autoload, script 'res://scripts/services/audio_servic
 [  23% ] [90m[1mreimport[22m | play.svg[39m[0m
 [  25% ] [90m[1mreimport[22m | settings.svg[39m[0m
 [  26% ] [90m[1mreimport[22m | app_icon.svg[39m[0m
-[  28% ] [90m[1mreimport[22m | 01_spawn_ground.png[39m[0m
-[  29% ] [90m[1mreimport[22m | 02_main_lane.png[39m[0m
-[  31% ] [90m[1mreimport[22m | 03_emissive_crates.png[39m[0m
-[  32% ] [90m[1mreimport[22m | 04_outpost_facade.png[39m[0m
-[  34% ] [90m[1mreimport[22m | 05_mesa_horizon.png[39m[0m
-[  35% ] [90m[1mreimport[22m | 06_raider_fifteen_m.png[39m[0m
-[  37% ] [90m[1mreimport[22m | 07_raider_five_m.png[39m[0m
-[  38% ] [90m[1mreimport[22m | 08_rifle_idle.png[39m[0m
-[  40% ] [90m[1mreimport[22m | 09_ads.png[39m[0m
-[  41% ] [90m[1mreimport[22m | 12_reload_crouch.png[39m[0m
-[  43% ] [90m[1mreimport[22m | 11_low_hp.png[39m[0m
-[  44% ] [90m[1mreimport[22m | 10_firing.png[39m[0m
-[  46% ] [90m[1mreimport[22m | 09_ads.png[39m[0m
-[  47% ] [90m[1mreimport[22m | asphalt_512.png[39m[0m
-[  49% ] [90m[1mreimport[22m | concrete_128.png[39m[0m
-[  50% ] [90m[1mreimport[22m | concrete_pbr_512.png[39m[0m
+[  27% ] [90m[1mreimport[22m | menu_desert_outpost.png[39m[0m
+[  29% ] [90m[1mreimport[22m | 01_spawn_ground.png[39m[0m
+[  30% ] [90m[1mreimport[22m | 02_main_lane.png[39m[0m
+[  32% ] [90m[1mreimport[22m | 03_emissive_crates.png[39m[0m
+[  33% ] [90m[1mreimport[22m | 04_outpost_facade.png[39m[0m
+[  35% ] [90m[1mreimport[22m | 05_mesa_horizon.png[39m[0m
+[  36% ] [90m[1mreimport[22m | 06_raider_fifteen_m.png[39m[0m
+[  38% ] [90m[1mreimport[22m | 07_raider_five_m.png[39m[0m
+[  39% ] [90m[1mreimport[22m | 08_rifle_idle.png[39m[0m
+[  41% ] [90m[1mreimport[22m | 09_ads.png[39m[0m
+[  42% ] [90m[1mreimport[22m | 12_reload_crouch.png[39m[0m
+[  44% ] [90m[1mreimport[22m | 11_low_hp.png[39m[0m
+[  45% ] [90m[1mreimport[22m | 10_firing.png[39m[0m
+[  47% ] [90m[1mreimport[22m | 09_ads.png[39m[0m
+[  48% ] [90m[1mreimport[22m | asphalt_512.png[39m[0m
+[  50% ] [90m[1mreimport[22m | concrete_128.png[39m[0m
+[  51% ] [90m[1mreimport[22m | concrete_pbr_512.png[39m[0m
 [  52% ] [90m[1mreimport[22m | corrugated_metal_512.png[39m[0m
-[  53% ] [90m[1mreimport[22m | crate_128.png[39m[0m
+[  54% ] [90m[1mreimport[22m | crate_128.png[39m[0m
 [  55% ] [90m[1mreimport[22m | painted_metal_128.png[39m[0m
-[  56% ] [90m[1mreimport[22m | rock_strata_512.png[39m[0m
+[  57% ] [90m[1mreimport[22m | rock_strata_512.png[39m[0m
 [  58% ] [90m[1mreimport[22m | sand_128.png[39m[0m
-[  59% ] [90m[1mreimport[22m | sand_pbr_512.png[39m[0m
+[  60% ] [90m[1mreimport[22m | sand_pbr_512.png[39m[0m
 [  61% ] [90m[1mreimport[22m | terrain_detail_normal_512.png[39m[0m
-[  62% ] [90m[1mreimport[22m | weathered_crate_512.png[39m[0m
+[  63% ] [90m[1mreimport[22m | weathered_crate_512.png[39m[0m
 [  64% ] [90m[1mreimport[22m | 08_rifle_idle.png[39m[0m
-[  65% ] [90m[1mreimport[22m | concrete.png[39m[0m
+[  66% ] [90m[1mreimport[22m | concrete.png[39m[0m
 [  67% ] [90m[1mreimport[22m | metal.png[39m[0m
-[  68% ] [90m[1mreimport[22m | roof_plates.png[39m[0m
+[  69% ] [90m[1mreimport[22m | roof_plates.png[39m[0m
 [  70% ] [90m[1mreimport[22m | wall.png[39m[0m
-[  71% ] [90m[1mreimport[22m | wall_garage.png[39m[0m
+[  72% ] [90m[1mreimport[22m | wall_garage.png[39m[0m
 [  73% ] [90m[1mreimport[22m | wall_lines.png[39m[0m
-[  74% ] [90m[1mreimport[22m | windows.png[39m[0m
+[  75% ] [90m[1mreimport[22m | windows.png[39m[0m
 [  76% ] [90m[1mreimport[22m | redline.csv[39m[0m
 [  77% ] [90m[1mreimport[22m | NotoSansBengali-Regular.ttf[39m[0m
 [  79% ] [90m[1mreimport[22m | NotoSansBengali-SemiBold.ttf[39m[0m
@@ -333,7 +320,7 @@ ERROR: Failed to create an autoload, script 'res://scripts/services/audio_servic
 [  98% ] [90m[1mreimport[22m | Finalizing Asset Import...[39m[0m
 [92m[ DONE ][39m [1mreimport[22m
 [0m
-[   0% ] [90m[1mreimport[22m | Started (Re)Importing Assets (66 steps)[39m[0m
+[   0% ] [90m[1mreimport[22m | Started (Re)Importing Assets (67 steps)[39m[0m
 [   0% ] [90m[1mreimport[22m | Executing post-reimport operations...[39m[0m
 [92m[ DONE ][39m [1mreimport[22m
 [0m
