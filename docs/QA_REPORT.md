@@ -203,14 +203,12 @@ Candidate #67 is not treated as a tested delivery because the Android emulator i
 | Native survival core | `./scripts/run_native_tests.sh` | PASS — 3 waves, 27 spawns, completion state | 2026-10-17 local terminal log |
 | Menu-asset integrity | Python PNG/header + manifest SHA-256 check | PASS — `assets/ui/menu_desert_outpost.png`, 1024×576, 671107 bytes, SHA-256 `282f687f85d4f71960e95279536717123b437e0bd207ab8000b9c4fa1151c72c` | 2026-10-17 local terminal log |
 | Whitespace | `git diff --check` | PASS | 2026-10-17 local terminal log |
-| Normal-Boot quality selection | `--verify-menu-background-flow` | PASS — `AUTO`/`HIGH` selected `static_outpost`; explicit `LOW` selected `procedural_low` | CI run 39030445119, `ci-logs/godot-menu-background-flow.log` |
-| Normal-Boot renderer frames | Xvfb `--capture-menu-backgrounds` | RERUN PENDING — initial run reached the renderer step but its parser accepted only `--menu-capture-path=value`, while CI supplied the standard paired argument form. The parser now accepts both forms. No frame is claimed before the repaired run succeeds. | CI run 39030445119, `ci-logs/godot-menu-background-capture.log`; repair follows in source |
+| Normal-Boot quality selection | `--verify-menu-background-flow` | PASS — `AUTO`/`HIGH` selected `static_outpost`; explicit `LOW` selected `procedural_low` | CI run 39030720943; initial diagnostic log remains in `ci-logs/godot-menu-background-flow.log` |
+| Normal-Boot renderer frames | Xvfb `--capture-menu-backgrounds` | PASS — named HIGH/LOW frames are valid, non-identical 1280×720 PNGs after Boot selected the intended paths | CI run 39030720943; committed at `630e9c2`: `screenshots/menu/menu_background_high.png` (490475 bytes, `dc30ba4a37d1a21d8b2affcfd1bb154ecd3632fd8e5147be0b37b11fccbf05c1`) and `menu_background_low.png` (32726 bytes, `e0926038c12720271849cdc9b47d6191e724158a312052994956297097db0544`) |
 
-The LOW path is intentionally a texture-free `ColorRect` composition. The non-LOW path is a static original image. Both are Boot presentation only; this batch does not load `Main`, start a 3D background simulation, or alter Desert waves, score, HP, HUD, controls, input, loading, or Back routes.
+The LOW path is intentionally a texture-free `ColorRect` composition. The non-LOW path is a static original image. Both are Boot presentation only; this batch does not load `Main`, start a 3D background simulation, or alter Desert waves, score, HP, HUD, controls, input, loading, or Back routes. CI run 39030720943 passed all listed source/import/export/normal-Boot/Xvfb renderer gates, but the hosted Android emulator timed out before boot and artifact upload remained quota-blocked. It therefore does not qualify as a physical-device result or downloadable APK delivery.
 
 ## Outstanding test requirements
-
-- First Batch 11 normal-Boot/Xvfb high-and-LOW renderer capture and its CI result.
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.
 - `MP_RF_02` bot navigation/floor/link/hazard tests before Gate 2 approval.
 - Draw calls, visible triangles, texture memory, audio voice count and load timing at each Highrise quality tier.

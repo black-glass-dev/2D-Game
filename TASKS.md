@@ -28,7 +28,7 @@
 - [x] Add fact-based loading telemetry with localized stages, actual progress samples, elapsed time, and normal-Boot hand-off verification.
 - [x] Make difficulty/mode affect the Desert compatibility adapter without changing the Normal/Survival baseline.
 - [x] Add the quality-aware visual menu background fallback (static original outpost image for non-LOW; no-texture procedural outpost for explicit LOW).
-- [ ] Run the new normal-Boot Xvfb high/LOW renderer-capture gate and record its evidence; retain the physical-device matrix as a separate requirement.
+- [x] Run the normal-Boot Xvfb high/LOW renderer-capture gate and record its committed evidence; retain the physical-device matrix as a separate requirement.
 
 ## M3 — Deliverable A regression QA
 
