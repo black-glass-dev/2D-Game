@@ -181,6 +181,19 @@ Candidate #67 is not treated as a tested delivery because the Android emulator i
 | Android emulator install/launch | GitHub Actions run 39013816812 | BLOCKED — emulator boot timeout | Source, import, export, signature, normal-Boot, and renderer gates passed, but the hosted emulator did not boot before timeout. This is not physical-device evidence. |
 | Tested-build evidence archive | GitHub Actions run 39013816812 | BLOCKED — Actions artifact-storage quota | GitHub reported `Failed to CreateArtifact: Artifact storage quota has been hit`; no APK archive is presented as delivery. |
 
+## M2 batch 10 — Desert session compatibility adapter
+
+| Test | Command / method | Result | Evidence |
+| --- | --- | --- | --- |
+| GDScript static analysis | `npm run test:gdscript` | PASS — 23 scripts, 0 errors, 0 warnings | M2 Batch 10 local terminal log; CI run 39015842921 source-test step |
+| Resource links and original texture dimensions | `python3 tools/validate_project.py` | PASS — 52 `res://` links and 4 128×128 textures | M2 Batch 10 local terminal log |
+| Native survival core | `./scripts/run_native_tests.sh` | PASS — 3 waves, 27 spawns, completion state | M2 Batch 10 local terminal log |
+| Whitespace | `git diff --check` | PASS | M2 Batch 10 local terminal log |
+| Difficulty cadence, Normal/Survival baseline, and Endless continuation | Normal project launch with `--verify-session-adapter-flow` | PASS | [GitHub Actions run 39015842921](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39015842921) passed the headless flow suite. The gate requires `SESSION_ADAPTER_PASS` after Boot passes HARD/ENDLESS into Main, verifies the 6/9/12/6 cycle, preserves Normal 0.83/0.71/0.59 cadence and three-wave completion, orders Easy/Normal/Hard/Nightmare cadence, and confirms Endless continues after wave three. |
+| Existing Boot/audio/result/input-accessibility/Back/control-layout/rebind/loading contracts | Normal project launch under the CI flow-gate suite | PASS | CI run 39015842921 passed all normal-Boot gates, pause/Bengali settings capture, and full renderer capture. Commit `8bcb15b` records refreshed renderer frames. |
+| Android emulator install/launch | GitHub Actions run 39015842921 | BLOCKED — emulator boot timeout | Source, import, export, signature, normal-Boot, and renderer gates passed, but the hosted emulator did not boot before timeout. This is not physical-device evidence. |
+| Tested-build evidence archive | GitHub Actions run 39015842921 | BLOCKED — Actions artifact-storage quota | GitHub reported `Failed to CreateArtifact: Artifact storage quota has been hit`; no APK archive is presented as delivery. |
+
 ## Outstanding test requirements
 
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.

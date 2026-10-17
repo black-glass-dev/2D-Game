@@ -32,6 +32,8 @@ All notable production changes are documented here.
 - Normal-Boot `--verify-rebind-flow` gate for keyboard/gamepad capture and persistence, conflict rejection, UI-row creation/cancellation, and default restoration.
 - Fact-based loading telemetry: localized loader stages, raw threaded-resource progress, monotonic elapsed time, and completed transition records for the Boot loading presentation.
 - Normal-Boot `--verify-loading-flow` gate for zero-percent start, localized preparing state, Main hand-off, truthful completion, and telemetry validity.
+- Desert session adapter: Easy/Normal/Hard/Nightmare now vary spawn cadence, Survival preserves the three-wave operation, and Endless repeats the 6/9/12 profile with an infinite HUD wave limit.
+- Normal-Boot `--verify-session-adapter-flow` gate for Boot-to-Main session hand-off, default-baseline preservation, all difficulty cadence ordering, and Endless continuation.
 
 ### Changed
 
