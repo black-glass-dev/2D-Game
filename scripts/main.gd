@@ -1001,14 +1001,16 @@ func _run_result_flow_verification() -> void:
 func _run_audio_flow_verification() -> void:
 	await get_tree().process_frame
 	var master_index := AudioServer.get_bus_index("Master")
+	var music_index := AudioServer.get_bus_index(AudioService.BUS_MUSIC)
 	var sfx_index := AudioServer.get_bus_index(AudioService.BUS_SFX)
 	var ui_index := AudioServer.get_bus_index(AudioService.BUS_UI)
-	if master_index < 0 or sfx_index < 0 or ui_index < 0:
+	if master_index < 0 or music_index < 0 or sfx_index < 0 or ui_index < 0:
 		push_error("Audio-flow verification could not resolve the required audio buses.")
 		get_tree().quit(1)
 		return
 	var original_master_volume := float(SettingsService.get_setting("master_volume", 1.0))
 	var original_focus_mute := bool(SettingsService.get_setting("mute_when_unfocused", true))
+	var original_music_volume := float(SettingsService.get_setting("music_volume", 0.75))
 	var original_sfx_volume := float(SettingsService.get_setting("sfx_volume", 0.85))
 	SettingsService.set_setting("master_volume", 1.0, false)
 	SettingsService.set_setting("mute_when_unfocused", true, false)
@@ -1022,6 +1024,25 @@ func _run_audio_flow_verification() -> void:
 		push_error("Audio-flow verification could not restore Master on focus return.")
 		get_tree().quit(1)
 		return
+	SettingsService.set_setting("music_volume", 0.50, false)
+	await get_tree().process_frame
+	var background_stream := AudioService.music_player.stream as AudioStreamWAV if AudioService.music_player != null else null
+	if AudioService.music_player == null or not AudioService.music_player.playing or str(AudioService.music_player.bus) != AudioService.BUS_MUSIC or background_stream == null or background_stream.loop_mode != AudioStreamWAV.LOOP_FORWARD:
+		push_error("Audio-flow verification could not route and loop the background music.")
+		get_tree().quit(1)
+		return
+	SettingsService.set_setting("music_volume", 0.0, false)
+	await get_tree().process_frame
+	if AudioService.music_player.playing or not AudioServer.is_bus_mute(music_index):
+		push_error("Audio-flow verification could not stop muted background music.")
+		get_tree().quit(1)
+		return
+	SettingsService.set_setting("music_volume", 0.50, false)
+	await get_tree().process_frame
+	if not AudioService.music_player.playing or AudioServer.is_bus_mute(music_index):
+		push_error("Audio-flow verification could not resume enabled background music.")
+		get_tree().quit(1)
+		return
 	AudioService.set_bus_linear_volume(AudioService.BUS_SFX, 0.40)
 	if is_zero_approx(AudioServer.get_bus_volume_db(sfx_index)) or str(rifle.shot_audio.bus) != AudioService.BUS_SFX or str(pistol.shot_audio.bus) != AudioService.BUS_SFX:
 		push_error("Audio-flow verification could not route combat audio through SFX.")
@@ -1032,10 +1053,11 @@ func _run_audio_flow_verification() -> void:
 		get_tree().quit(1)
 		return
 	AudioService.play_ui_confirm()
+	SettingsService.set_setting("music_volume", original_music_volume, false)
 	SettingsService.set_setting("mute_when_unfocused", original_focus_mute, false)
 	SettingsService.set_setting("master_volume", original_master_volume, false)
 	AudioService.set_bus_linear_volume(AudioService.BUS_SFX, original_sfx_volume)
-	print("AUDIO_FLOW_PASS sfx_bus=", sfx_index, " ui_bus=", ui_index)
+	print("AUDIO_FLOW_PASS music_bus=", music_index, " sfx_bus=", sfx_index, " ui_bus=", ui_index)
 	get_tree().quit()
 
 func _run_input_accessibility_verification() -> void:

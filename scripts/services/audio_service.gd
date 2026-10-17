@@ -8,16 +8,20 @@ signal focus_mute_changed(is_muted: bool)
 const BUS_MUSIC := "Music"
 const BUS_SFX := "SFX"
 const BUS_UI := "UI"
+const BACKGROUND_MUSIC := preload("res://assets/audio/outpost_watch.wav")
+const MUSIC_MIX_VOLUME_DB := -16.0
 const UI_CONFIRM_SOUND := preload("res://assets/audio/reload_click.wav")
 
 var application_has_focus := true
 var muted_for_focus := false
+var music_player: AudioStreamPlayer
 var ui_feedback: AudioStreamPlayer
 
 func _ready() -> void:
 	_ensure_bus(BUS_MUSIC)
 	_ensure_bus(BUS_SFX)
 	_ensure_bus(BUS_UI)
+	_build_music_player()
 	_build_ui_feedback()
 	SettingsService.setting_changed.connect(_on_setting_changed)
 	_apply_saved_volumes()
@@ -31,6 +35,8 @@ func set_bus_linear_volume(bus_name: String, linear_volume: float) -> void:
 	AudioServer.set_bus_mute(bus_index, is_zero_approx(clamped))
 	if bus_name == "Master":
 		_apply_focus_mute_policy()
+	elif bus_name == BUS_MUSIC:
+		_update_music_playback(clamped)
 	bus_volume_changed.emit(bus_name, clamped)
 
 func set_muted_when_unfocused(enabled: bool) -> void:
@@ -58,6 +64,32 @@ func _ensure_bus(bus_name: String) -> void:
 	AudioServer.add_bus()
 	var index := AudioServer.bus_count - 1
 	AudioServer.set_bus_name(index, bus_name)
+
+func _build_music_player() -> void:
+	music_player = AudioStreamPlayer.new()
+	music_player.name = "Outpost Watch Music"
+	# Duplicate the imported stream before setting loop metadata so the asset stays
+	# immutable for any future one-shot use.
+	var loop_stream := BACKGROUND_MUSIC.duplicate(true) as AudioStreamWAV
+	if loop_stream != null:
+		loop_stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+		loop_stream.loop_begin = 0
+		loop_stream.loop_end = 0
+	music_player.stream = loop_stream if loop_stream != null else BACKGROUND_MUSIC
+	music_player.bus = BUS_MUSIC
+	# At the default 75% Music setting this yields about -18.5 dB, intentionally
+	# below the current -5 to -12 dB weapon/landing effects.
+	music_player.volume_db = MUSIC_MIX_VOLUME_DB
+	add_child(music_player)
+
+func _update_music_playback(linear_volume: float) -> void:
+	if music_player == null or music_player.stream == null:
+		return
+	if is_zero_approx(linear_volume):
+		if music_player.playing:
+			music_player.stop()
+	elif not music_player.playing:
+		music_player.play()
 
 func _build_ui_feedback() -> void:
 	ui_feedback = AudioStreamPlayer.new()

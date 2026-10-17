@@ -208,6 +208,20 @@ Candidate #67 is not treated as a tested delivery because the Android emulator i
 
 The LOW path is intentionally a texture-free `ColorRect` composition. The non-LOW path is a static original image. Both are Boot presentation only; this batch does not load `Main`, start a 3D background simulation, or alter Desert waves, score, HP, HUD, controls, input, loading, or Back routes. CI run 39030720943 passed all listed source/import/export/normal-Boot/Xvfb renderer gates, but the hosted Android emulator timed out before boot and artifact upload remained quota-blocked. It therefore does not qualify as a physical-device result or downloadable APK delivery.
 
+## M3 batch 12 — original background music (local source gate)
+
+| Check | Command / route | Result | Evidence |
+| --- | --- | --- | --- |
+| Deterministic source asset | `python3 tools/generate_music.py --check` | PASS — committed PCM frames exactly match the source-controlled generator | 2026-10-17 local terminal log |
+| Waveform boundary / clipping | Python PCM analysis | PASS — peak `10160/32767`; first/last 50-frame edge peak `157`, providing a click-safe forward-loop boundary | 2026-10-17 local terminal log |
+| Music asset shape | `python3 tools/validate_project.py` | PASS — mono, 16-bit, 22,050 Hz, 352,800 frames / 16 seconds; generator check executes within project validation | 2026-10-17 local terminal log |
+| GDScript static analysis | `npm run test:gdscript` | PASS — 23 scripts, 0 errors, 0 warnings | 2026-10-17 local terminal log |
+| Native survival core | `./scripts/run_native_tests.sh` | PASS — 3 waves, 27 spawns, completion state | 2026-10-17 local terminal log |
+| Music-bus loop, zero-volume stop, and resume | Normal project `--verify-audio-flow` | PENDING CI — local Godot is unavailable | Expanded existing normal-Boot audio contract in `scripts/main.gd` |
+| Human listening / physical Android mix | Device headphone/speaker check | OPEN — no device or working emulator evidence | `docs/AUDIO_ASSET_REVIEW.md` records source/mix analysis only |
+
+The loop is a global `AudioService` player and does not change Desert score, HP, waves, enemy data, input, HUD layout, loading, map ownership, or Back routes. Its effective default bed is approximately -18.5 dB before Master volume, deliberately below existing transient combat effects. This is a source/mix-policy result, not an audible listening claim.
+
 ## Outstanding test requirements
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.
 - `MP_RF_02` bot navigation/floor/link/hazard tests before Gate 2 approval.

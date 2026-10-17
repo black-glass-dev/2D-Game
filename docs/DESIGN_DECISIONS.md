@@ -235,3 +235,13 @@
 **Alternative considered:** Run the playable `Main` scene as a live menu background, use a 3D rail camera above LOW, or apply an adaptive override that changes a player-selected quality tier.
 
 **Why not selected:** Live gameplay systems behind the menu couple presentation to wave/session state and waste CPU/GPU. A 3D camera raises import/render risk for a narrow UI improvement. An adaptive override would make the visible manual selection untrustworthy. D-024 supersedes D-003's unimplemented rail-camera direction.
+
+## D-025 — One original, low-level Music-bus loop before more soundtrack scope
+
+**Decision:** Add one original, non-lyrical 16-second tactical background loop generated from source-controlled standard-library synthesis. Own it globally in `AudioService`, route it only to `Music`, set its player gain to `-16 dB`, forward-loop it, and stop it when the saved Music volume is zero. Keep existing Master focus mute behavior. Do not add combat-adaptive layers, radio vocals, licensed tracks, or multiple music states in this batch.
+
+**Reason:** The existing Music slider and bus had no audible consumer. A single reproducible loop makes that player-facing setting operational while preserving mobile budget and combat readability. The source PCM is mono 22,050 Hz and about 0.67 MiB, and its effective default level is about -18.5 dB—well below current transient weapon effects. The provenance, mix calculation, source generator, and memory boundary are independently recorded in `docs/AUDIO_ASSET_REVIEW.md`.
+
+**Alternative considered:** Import a CC0 music-jingle pack, leave Music saved-only until a larger soundtrack is licensed, or add multiple adaptive gameplay tracks.
+
+**Why not selected:** The inspected CC0 jingles were short stingers rather than credible background loops. Leaving an exposed volume slider without a sound source remains misleading. Multiple states and adaptive mixing would need transition design, more assets, broader memory measurements, and physical-device listening tests; they exceed this narrow M3 batch.

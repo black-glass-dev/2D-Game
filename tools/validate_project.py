@@ -9,7 +9,9 @@ from __future__ import annotations
 
 import re
 import struct
+import subprocess
 import sys
+import wave
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -54,6 +56,20 @@ def main() -> None:
         width, height = struct.unpack(">II", header[16:24])
         if (width, height) != (128, 128):
             error(f"{texture.name} is {width}x{height}, expected 128x128")
+
+    music = ROOT / "assets/audio/outpost_watch.wav"
+    if music.exists():
+        with wave.open(str(music), "rb") as stream:
+            audio_shape = (
+                stream.getnchannels(),
+                stream.getsampwidth(),
+                stream.getframerate(),
+                stream.getnframes(),
+            )
+        expected_audio_shape = (1, 2, 22050, 352800)
+        if audio_shape != expected_audio_shape:
+            error(f"{music.name} has {audio_shape}, expected {expected_audio_shape}")
+        subprocess.run([sys.executable, str(ROOT / "tools/generate_music.py"), "--check"], check=True)
 
     for source in (ROOT / "scripts").glob("*.gd"):
         contents = source.read_text(encoding="utf-8")

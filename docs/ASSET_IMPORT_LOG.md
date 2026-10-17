@@ -25,6 +25,12 @@ Every external asset acquisition must record:
 
 The GitHub release ZIP alternative was intentionally not used because the redirect target was unavailable in the restricted build network. The sparse Git source checkout retrieved the exact font files and license directly from the pinned repository revision.
 
+## M3 original music asset
+
+| Asset | Creator | License | Source/revision | Generation and integrity | Target / use | Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| Outpost Watch tactical loop | Operation Redline project | Original project asset | `tools/generate_music.py`; deterministic standard-library synthesis, no downloaded/sample audio | Generated 2026-10-17. `assets/audio/outpost_watch.wav`: 705,644 bytes, SHA-256 `9611694ac92cea9ae4c0801c8d8c44ee52931dfd0e90b08075bccb40f54edbe9`; PCM WAV mono, 22,050 Hz, 16-bit, 16 seconds. `python3 tools/generate_music.py --check` reconstructs and verifies its PCM frames. | Global `AudioService` player on `Music`, looped at -16 dB before the player's Music slider; user value zero stops decoding/playback. | Imported as an original, non-lyrical tactical loop. No external audio acquisition was used because the available inspected CC0 jingle candidates were 1.55–1.76-second one-shots, unsuitable as background music. |
+
 ## Future Highrise assets
 
 Highrise art acquisition begins only after Gate 2 and only after each required asset is decomposed into versioned `assets_manifest.json` entries.

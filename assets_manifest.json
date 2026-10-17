@@ -31,6 +31,26 @@
       "use": "Static non-LOW Boot-menu backdrop; original non-futuristic year-2000 desert outpost pixel art"
     },
     {
+      "id": "audio.outpost_watch",
+      "kind": "background_music",
+      "creator": "Operation Redline project",
+      "source_repository": null,
+      "source_revision": null,
+      "license": "Original project asset",
+      "license_file": null,
+      "generator": "tools/generate_music.py",
+      "files": [
+        {
+          "path": "assets/audio/outpost_watch.wav",
+          "bytes": 705644,
+          "sha256": "9611694ac92cea9ae4c0801c8d8c44ee52931dfd0e90b08075bccb40f54edbe9",
+          "format": "PCM WAV, mono, 22050 Hz, 16-bit, 16 seconds"
+        }
+      ],
+      "generated_at": "2026-10-17",
+      "use": "Low-level looping tactical background music routed only through the Music bus"
+    },
+    {
       "id": "font.noto_sans_bengali",
       "kind": "font",
       "creator": "The Noto Project Authors",

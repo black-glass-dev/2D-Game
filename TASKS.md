@@ -38,7 +38,8 @@
 - [x] Make subtitles, reduced-motion, colorblind HUD, damage-number, haptic, and gamepad-deadzone preferences operational in Desert; add normal-Boot input/accessibility coverage.
 - [x] Add normal-Boot Android Back, Escape, controller-B, and paused-settings return/resume route coverage.
 - [ ] Validate the complete touch, mouse, keyboard, gamepad, Android Back, focus-mute/restore, quality-tier, language, and audible mix matrix on real devices where available.
-- [ ] Add licensed/original background music only after a separate provenance, mix, and mobile-memory review.
+- [x] Add one original background-music loop after provenance, mix, and mobile-memory review; keep physical-device listening/mix validation open as a separate requirement.
+- [ ] Record a normal-Boot CI audio-flow result for the new Music-bus loop and retain physical-device listening validation.
 
 ## Guardrails
 
