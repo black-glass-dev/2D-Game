@@ -222,6 +222,17 @@ The LOW path is intentionally a texture-free `ColorRect` composition. The non-LO
 
 The loop is a global `AudioService` player and does not change Desert score, HP, waves, enemy data, input, HUD layout, loading, map ownership, or Back routes. Its effective default bed is approximately -18.5 dB before Master volume, deliberately below existing transient combat effects. CI run 39032788356 passed every listed source/import/export/normal-Boot/Xvfb renderer gate, but its hosted Android emulator timed out before boot and artifact upload remained quota-blocked. This is a source/mix-policy and normal-Boot contract result, not an audible listening or physical-device claim.
 
+## M3 batch 13 — downloadable APK truth gate (local source gate)
+
+| Check | Command / route | Result | Evidence |
+| --- | --- | --- | --- |
+| Named Android device gate | Workflow source inspection | PASS — emulator step has stable `id: android_emulator` | `.github/workflows/android-apk.yml` |
+| Candidate-release condition | `python3 tools/validate_project.py` | PASS — validator rejects a workflow that lacks `steps.android_emulator.outcome == 'success'` | 2026-10-17 local terminal log |
+| Signing/update compatibility | Workflow review | PASS — existing package ID and persistent `operation-redline-debug.keystore` restore/cache path are unchanged | `.github/workflows/android-apk.yml`; `docs/RELEASE_GATING.md` |
+| First failed-emulator publication skip | GitHub Actions run | PENDING CI — no new candidate is claimed until this exact condition has been observed | Next CI run triggered by Batch 13 source |
+
+Historical pre-releases are not physical-device-tested deliveries; this batch preserves them as audit records rather than deleting or relabelling them. The forward release gate prevents any future downloadable candidate from being created while the final Android install/launch step is failing.
+
 ## Outstanding test requirements
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.
 - `MP_RF_02` bot navigation/floor/link/hazard tests before Gate 2 approval.

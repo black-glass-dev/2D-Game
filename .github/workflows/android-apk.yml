@@ -344,6 +344,7 @@ jobs:
           git push origin "HEAD:${GITHUB_REF_NAME}"
 
       - name: Install and launch APK in Android emulator
+        id: android_emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
           # Android Test Device images are purpose-built for CI and are much
@@ -370,10 +371,11 @@ jobs:
               exit 1
             fi
 
-      - name: Publish a downloadable debug APK candidate
-        # APK export, signature verification and a short gameplay-scene launch must pass.
-        # The separate Android-emulator row remains the final mobile-device test gate.
-        if: ${{ always() && steps.android_export.outcome == 'success' && steps.gameplay_smoke.outcome == 'success' }}
+      - name: Publish a device-validated debug APK candidate
+        # An APK is a player-downloadable update only after every software gate
+        # and the actual Android install/launch row have passed. Export alone is
+        # never evidence that an installed app can update and boot safely.
+        if: ${{ always() && steps.android_export.outcome == 'success' && steps.gameplay_smoke.outcome == 'success' && steps.android_emulator.outcome == 'success' }}
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -381,9 +383,9 @@ jobs:
           gh release create "apk-candidate-${GITHUB_RUN_NUMBER}" build/OperationRedline-debug.apk \
             --repo "${GITHUB_REPOSITORY}" \
             --target "${GITHUB_SHA}" \
-            --title "Operation Redline debug APK candidate #${GITHUB_RUN_NUMBER}" \
+            --title "Operation Redline device-validated debug APK candidate #${GITHUB_RUN_NUMBER}" \
             --prerelease \
-            --notes "Automated source checks, Godot import, APK archive/signature verification and a headless gameplay-scene launch passed. See this run's Android emulator step for the remaining device-launch status."
+            --notes "Automated source/native checks, Godot import, APK archive/signature verification, normal-Boot flow checks, renderer captures, and Android emulator install/launch all passed. The package ID and persistent debug signing stream are retained for in-place updates."
 
       - name: Upload tested build evidence
         if: always()

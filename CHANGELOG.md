@@ -38,6 +38,7 @@ All notable production changes are documented here.
 - Normal-Boot `--verify-menu-background-flow` contract and Xvfb high/LOW capture route. The workflow validates two named renderer outputs before it publishes them as evidence.
 - Original, source-controlled `outpost_watch.wav` background-music loop, owned by `AudioService`, routed to the existing Music bus, looped forward, and stopped/resumed by the saved Music volume.
 - Reproducible music-generator/source validation plus expanded normal-Boot audio-flow coverage for Music routing, loop metadata, mute-stop, and enabled resume.
+- A release-truth gate requiring Android emulator install/launch success before CI can publish a downloadable debug APK candidate.
 
 ### Changed
 

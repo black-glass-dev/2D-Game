@@ -30,6 +30,14 @@ def main() -> None:
     if not scene.is_file():
         error("startup scene is missing")
 
+    workflow = ROOT / ".github/workflows/android-apk.yml"
+    if not workflow.is_file():
+        error("Android workflow is missing")
+    workflow_text = workflow.read_text(encoding="utf-8")
+    release_gate = "steps.android_emulator.outcome == 'success'"
+    if "id: android_emulator" not in workflow_text or release_gate not in workflow_text:
+        error("downloadable APK publishing is not gated on Android emulator success")
+
     checked_links = 0
     for source in ROOT.rglob("*"):
         relative_source = source.relative_to(ROOT)

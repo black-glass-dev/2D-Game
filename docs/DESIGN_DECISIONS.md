@@ -245,3 +245,13 @@
 **Alternative considered:** Import a CC0 music-jingle pack, leave Music saved-only until a larger soundtrack is licensed, or add multiple adaptive gameplay tracks.
 
 **Why not selected:** The inspected CC0 jingles were short stingers rather than credible background loops. Leaving an exposed volume slider without a sound source remains misleading. Multiple states and adaptive mixing would need transition design, more assets, broader memory measurements, and physical-device listening tests; they exceed this narrow M3 batch.
+
+## D-026 — A downloadable candidate requires Android install/launch success
+
+**Decision:** Gate the GitHub pre-release APK step on successful Android export, normal-Boot gameplay checks, and the Android emulator install/launch step. Keep the existing package ID and persistent debug-signing keystore stream. Do not publish a new player-downloadable candidate when the emulator times out or fails.
+
+**Reason:** An export/signature check proves that an APK can be built, not that it can install as an in-place update and launch. The former workflow correctly labelled candidates as pre-releases but could still publish them while its final device gate was failing. A hard dependency on the named `android_emulator` step makes the user-facing delivery boundary match the stated test requirement.
+
+**Alternative considered:** Publish an APK after export/headless success with a warning, block all export artifacts until a physical device is available, or retroactively delete historical pre-releases.
+
+**Why not selected:** A warning can be missed and leaves an untested update downloadable. Blocking exports would eliminate valuable diagnostics and renderer evidence. Historical release deletion is destructive and would erase audit history; instead, `docs/RELEASE_GATING.md` explicitly records their non-tested status while the forward gate prevents recurrence.

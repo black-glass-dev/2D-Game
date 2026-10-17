@@ -40,6 +40,8 @@
 - [ ] Validate the complete touch, mouse, keyboard, gamepad, Android Back, focus-mute/restore, quality-tier, language, and audible mix matrix on real devices where available.
 - [x] Add one original background-music loop after provenance, mix, and mobile-memory review; keep physical-device listening/mix validation open as a separate requirement.
 - [x] Record a normal-Boot CI audio-flow result for the new Music-bus loop; retain physical-device listening validation as a separate requirement.
+- [x] Implement a forward-only downloadable-APK gate requiring Android install/launch; retain package ID and persistent debug-signing compatibility for in-place updates.
+- [ ] Verify on CI that an emulator failure skips candidate publication; retain physical-device validation as a separate requirement.
 
 ## Guardrails
 
