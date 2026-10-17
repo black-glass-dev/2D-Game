@@ -20,6 +20,9 @@ enum State {
 
 var state: State = State.BOOT
 var state_before_pause: State = State.PLAYING
+const DIFFICULTIES := ["EASY", "NORMAL", "HARD", "NIGHTMARE"]
+const MODES := ["SURVIVAL", "ENDLESS"]
+
 var selected_map_id := "MP_DS_01"
 var selected_difficulty := "NORMAL"
 var selected_mode := "SURVIVAL"
@@ -37,8 +40,8 @@ func select_map(map_id: String) -> void:
 	selected_map_id = map_id
 
 func set_session_options(difficulty: String, mode: String) -> void:
-	selected_difficulty = difficulty
-	selected_mode = mode
+	selected_difficulty = difficulty if difficulty in DIFFICULTIES else "NORMAL"
+	selected_mode = mode if mode in MODES else "SURVIVAL"
 
 func enter_pause() -> bool:
 	if state != State.PLAYING:

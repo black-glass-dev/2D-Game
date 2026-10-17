@@ -215,3 +215,13 @@
 **Alternative considered:** Animate a cosmetically smooth percentage independent of the loader, or add a separate loading scene with duplicated transition ownership.
 
 **Why not selected:** Simulated percentages can reach completion while an Android device is still loading and undermine trust. A second scene would split fade/loading responsibility from the existing autoload and increase Boot-to-Desert regression risk.
+
+## D-023 — Session options alter cadence and completion policy while preserving the default profile
+
+**Decision:** Give the pre-deployment difficulty selector ownership of hostile spawn cadence only: Easy is slower, Normal is unchanged, Hard and Nightmare are faster, and every profile keeps the same 6/9/12 enemy count sequence. Survival completes after its third wave exactly as before. Endless repeats that same 6/9/12 sequence indefinitely, rather than inventing larger late-wave counts. The active Main HUD displays an infinite wave limit for Endless.
+
+**Reason:** The selector must affect the real Desert session, but the verified Normal/Survival mode needs to retain its existing spawn counts, 0.83/0.71/0.59-second cadence, score, player HP, and three-wave completion contract. A narrow director adapter provides an explicit, understandable effect without changing enemy data or score economy.
+
+**Alternative considered:** Scale enemy health/damage and reward score per difficulty, multiply wave sizes, or add random endless escalation.
+
+**Why not selected:** Those changes would combine combat tuning, survival balance, result scoring, and device-performance risk in one compatibility batch. They would also make the established Normal/Survival regression baseline ambiguous.

@@ -17,6 +17,7 @@ const INPUT_ACCESSIBILITY_TEST_ARGUMENT := "--verify-input-accessibility-flow"
 const CONTROL_LAYOUT_TEST_ARGUMENT := "--verify-control-layout-flow"
 const REBIND_FLOW_TEST_ARGUMENT := "--verify-rebind-flow"
 const LOADING_FLOW_TEST_ARGUMENT := "--verify-loading-flow"
+const SESSION_ADAPTER_TEST_ARGUMENT := "--verify-session-adapter-flow"
 const PAUSE_CAPTURE_BENGALI_ARGUMENT := "--capture-pause-bengali"
 const PAUSE_CAPTURE_OUTPUT_ARGUMENT := "--pause-screenshot-dir"
 
@@ -143,6 +144,7 @@ func _ready() -> void:
 	pistol.weapon_fired.connect(_on_weapon_fired)
 
 	director = SurvivalDirector.new()
+	director.configure_session(GameManager.selected_difficulty, GameManager.selected_mode)
 	add_child(director)
 	director.wave_started.connect(_on_wave_started)
 	director.enemy_spawn_requested.connect(_spawn_raider)
@@ -158,7 +160,7 @@ func _ready() -> void:
 	_apply_accessibility_settings()
 	get_viewport().size_changed.connect(_on_viewport_size_changed)
 	_set_status("SECURE THE OUTPOST")
-	_show_alert("OPERATION REDLINE", 2.1)
+	_show_alert(_session_banner(), 2.1)
 	director.start_operation()
 	if OS.get_cmdline_user_args().has("--verify-boot-flow"):
 		call_deferred("_finish_boot_flow_verification")
@@ -176,6 +178,8 @@ func _ready() -> void:
 		call_deferred("_run_rebind_flow_verification")
 	elif OS.get_cmdline_user_args().has(LOADING_FLOW_TEST_ARGUMENT):
 		call_deferred("_run_loading_flow_verification")
+	elif OS.get_cmdline_user_args().has(SESSION_ADAPTER_TEST_ARGUMENT):
+		call_deferred("_run_session_adapter_flow_verification")
 
 func _finish_boot_flow_verification() -> void:
 	if GameManager.state != GameManager.State.PLAYING or GameManager.selected_map_id != "MP_DS_01":
@@ -370,13 +374,19 @@ func _on_raider_eliminated(_enemy: Raider, points: int) -> void:
 
 func _on_wave_started(wave_number: int, enemy_count: int) -> void:
 	WorldBuilder.set_wave_atmosphere(self, wave_number)
-	wave_label.text = "WAVE  %d / 3   •   %d INBOUND" % [wave_number, enemy_count]
+	wave_label.text = "WAVE  %d / %s   •   %d INBOUND" % [wave_number, _wave_limit_display(), enemy_count]
 	_show_alert("WAVE %d  —  HOLD THE LINE" % wave_number, 1.5)
 
 func _on_wave_cleared(wave_number: int) -> void:
 	wave_label.text = "WAVE %d CLEARED" % wave_number
-	if wave_number < 3:
+	if director != null and (director.is_endless() or wave_number < SurvivalDirector.WAVE_SIZES.size()):
 		_show_alert("AREA SECURED  •  RELOAD NOW", 2.1)
+
+func _wave_limit_display() -> String:
+	return "∞" if director != null and director.is_endless() else str(SurvivalDirector.WAVE_SIZES.size())
+
+func _session_banner() -> String:
+	return "%s  •  %s" % [tr("game.%s" % GameManager.selected_difficulty.to_lower()), tr("game.%s" % GameManager.selected_mode.to_lower())]
 
 func _on_operation_complete() -> void:
 	GameManager.set_state(GameManager.State.MISSION_COMPLETE)
@@ -699,7 +709,7 @@ func _build_hud() -> void:
 	health_bar_fill.color = Color("80d88a")
 	health_bar_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hud.add_child(health_bar_fill)
-	wave_label = _label("WAVE  1 / 3", Vector2(0, 10), Vector2(440, 27), 19, Color("ffe0a8"), Control.PRESET_CENTER_TOP, HORIZONTAL_ALIGNMENT_CENTER)
+	wave_label = _label("WAVE  1 / %s" % _wave_limit_display(), Vector2(0, 10), Vector2(440, 27), 19, Color("ffe0a8"), Control.PRESET_CENTER_TOP, HORIZONTAL_ALIGNMENT_CENTER)
 	score_label = _label("SCORE  00000", Vector2(-216, 10), Vector2(198, 25), 16, Color("d8f5d0"), Control.PRESET_TOP_RIGHT, HORIZONTAL_ALIGNMENT_RIGHT)
 	weapon_label = _label("CARBINE", Vector2(-220, 33), Vector2(94, 20), 13, Color("77ddd4"), Control.PRESET_TOP_RIGHT, HORIZONTAL_ALIGNMENT_RIGHT)
 	ammo_label = _label("24  /  144", Vector2(-122, 29), Vector2(108, 30), 22, Color("fff2cf"), Control.PRESET_TOP_RIGHT, HORIZONTAL_ALIGNMENT_RIGHT)
@@ -1088,6 +1098,50 @@ func _run_input_accessibility_verification() -> void:
 	sound_caption_label.visible = false
 	_on_health_changed(player.health, OutpostPlayer.MAX_HEALTH)
 	print("INPUT_ACCESSIBILITY_PASS actions=", InputService.GAMEPLAY_ACTIONS.size(), " damage_numbers=", before_count + 1, " captions=1")
+	get_tree().quit()
+
+func _run_session_adapter_flow_verification() -> void:
+	await get_tree().process_frame
+	if director == null or director.difficulty != "HARD" or not director.is_endless() or GameManager.selected_difficulty != "HARD" or GameManager.selected_mode != "ENDLESS":
+		push_error("Session-adapter verification could not pass the selected Boot session into Desert.")
+		get_tree().quit(1)
+		return
+	if director.wave_size_for(1) != 6 or director.wave_size_for(2) != 9 or director.wave_size_for(3) != 12 or director.wave_size_for(4) != 6:
+		push_error("Session-adapter verification could not retain/repeat the documented wave profile.")
+		get_tree().quit(1)
+		return
+	var normal_director := SurvivalDirector.new()
+	normal_director.configure_session("NORMAL", "SURVIVAL")
+	if not is_equal_approx(normal_director.spawn_interval_for_wave(1), 0.83) or not is_equal_approx(normal_director.spawn_interval_for_wave(2), 0.71) or not is_equal_approx(normal_director.spawn_interval_for_wave(3), 0.59):
+		push_error("Session-adapter verification changed the Normal/Survival spawn baseline.")
+		get_tree().quit(1)
+		return
+	var easy_director := SurvivalDirector.new()
+	easy_director.configure_session("EASY", "SURVIVAL")
+	var nightmare_director := SurvivalDirector.new()
+	nightmare_director.configure_session("NIGHTMARE", "SURVIVAL")
+	if not (easy_director.spawn_interval_for_wave(1) > normal_director.spawn_interval_for_wave(1)) or not (director.spawn_interval_for_wave(1) < normal_director.spawn_interval_for_wave(1)) or not (nightmare_director.spawn_interval_for_wave(1) < director.spawn_interval_for_wave(1)):
+		push_error("Session-adapter verification could not apply the selected difficulty cadence order.")
+		get_tree().quit(1)
+		return
+	normal_director.current_wave = SurvivalDirector.WAVE_SIZES.size()
+	normal_director.alive = 1
+	normal_director.running = true
+	normal_director.enemy_eliminated()
+	if not normal_director.completed or normal_director.running:
+		push_error("Session-adapter verification could not complete the Survival profile after wave three.")
+		get_tree().quit(1)
+		return
+	director.current_wave = SurvivalDirector.WAVE_SIZES.size()
+	director.alive = 1
+	director.waiting_to_spawn = 0
+	director.running = true
+	director.enemy_eliminated()
+	if director.completed or not director.running or not is_equal_approx(director.intermission_left, SurvivalDirector.INTERMISSION):
+		push_error("Session-adapter verification could not continue the Endless profile after wave three.")
+		get_tree().quit(1)
+		return
+	print("SESSION_ADAPTER_PASS difficulty=HARD mode=ENDLESS waves=6,9,12,6")
 	get_tree().quit()
 
 func _run_loading_flow_verification() -> void:

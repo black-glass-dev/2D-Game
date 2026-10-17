@@ -25,6 +25,7 @@ const INPUT_ACCESSIBILITY_TEST_ARGUMENT := "--verify-input-accessibility-flow"
 const CONTROL_LAYOUT_TEST_ARGUMENT := "--verify-control-layout-flow"
 const REBIND_FLOW_TEST_ARGUMENT := "--verify-rebind-flow"
 const LOADING_FLOW_TEST_ARGUMENT := "--verify-loading-flow"
+const SESSION_ADAPTER_TEST_ARGUMENT := "--verify-session-adapter-flow"
 const BACK_FLOW_TEST_ARGUMENT := "--verify-back-flow"
 
 var active_view: View = View.SPLASH
@@ -59,6 +60,8 @@ func _ready() -> void:
 	_show_splash()
 	if OS.get_cmdline_user_args().has(BACK_FLOW_TEST_ARGUMENT):
 		call_deferred("_begin_back_flow_test")
+	elif OS.get_cmdline_user_args().has(SESSION_ADAPTER_TEST_ARGUMENT):
+		call_deferred("_begin_session_adapter_flow_test")
 	elif OS.get_cmdline_user_args().has(LOADING_FLOW_TEST_ARGUMENT):
 		call_deferred("_begin_loading_flow_test")
 	elif OS.get_cmdline_user_args().has(BOOT_FLOW_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(PAUSE_FLOW_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(RESULT_FLOW_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(AUDIO_FLOW_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(INPUT_ACCESSIBILITY_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(CONTROL_LAYOUT_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(REBIND_FLOW_TEST_ARGUMENT):
@@ -69,6 +72,11 @@ func _ready() -> void:
 		call_deferred("_begin_map_select_test")
 
 func _begin_headless_handoff_test() -> void:
+	_show_menu()
+	_start_selected_map()
+
+func _begin_session_adapter_flow_test() -> void:
+	GameManager.set_session_options("HARD", "ENDLESS")
 	_show_menu()
 	_start_selected_map()
 
