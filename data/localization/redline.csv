@@ -19,6 +19,12 @@ menu.coming_soon,COMING SOON,শীঘ্রই আসছে
 menu.locked,LOCKED,লকড
 loading.title,LOADING,লোড হচ্ছে
 loading.progress,Loading map resources…,ম্যাপ রিসোর্স লোড হচ্ছে…
+loading.preparing,PREPARING DEPLOYMENT,মোতায়েন প্রস্তুত হচ্ছে
+loading.streaming,STREAMING MAP RESOURCES,ম্যাপ রিসোর্স লোড হচ্ছে
+loading.ready,MAP READY,ম্যাপ প্রস্তুত
+loading.finalizing,FINALIZING DEPLOYMENT,মোতায়েন চূড়ান্ত হচ্ছে
+loading.failed,LOAD FAILED,লোড ব্যর্থ হয়েছে
+loading.telemetry,%s  •  %d%%  •  %.1f s,%s  •  %d%%  •  %.1f সেকেন্ড
 pause.title,PAUSED,বিরতি
 pause.subtitle,Operation clock stopped. Secure your settings or choose your next route.,অপারেশনের সময় থামানো আছে। সেটিংস ঠিক করুন বা পরের পথ বেছে নিন।
 caption.rifle_fire,Rifle firing,রাইফেল থেকে গুলি

@@ -24,6 +24,7 @@ const AUDIO_FLOW_TEST_ARGUMENT := "--verify-audio-flow"
 const INPUT_ACCESSIBILITY_TEST_ARGUMENT := "--verify-input-accessibility-flow"
 const CONTROL_LAYOUT_TEST_ARGUMENT := "--verify-control-layout-flow"
 const REBIND_FLOW_TEST_ARGUMENT := "--verify-rebind-flow"
+const LOADING_FLOW_TEST_ARGUMENT := "--verify-loading-flow"
 const BACK_FLOW_TEST_ARGUMENT := "--verify-back-flow"
 
 var active_view: View = View.SPLASH
@@ -39,6 +40,8 @@ var splash_title: Label
 var splash_hint: Label
 var loading_label: Label
 var loading_bar: ProgressBar
+var loading_stage := "REQUESTED"
+var loading_progress := 0.0
 var splash_left := SPLASH_SECONDS
 var menu_ready := false
 
@@ -48,6 +51,7 @@ func _ready() -> void:
 	if MapRegistry.get_map(selected_map_id) == null:
 		selected_map_id = "MP_DS_01"
 	GameManager.set_state(GameManager.State.SPLASH)
+	SceneLoader.load_stage_changed.connect(_on_load_stage_changed)
 	SceneLoader.load_progress.connect(_on_load_progress)
 	SceneLoader.load_failed.connect(_on_load_failed)
 	LocalizationService.locale_changed.connect(_on_locale_changed)
@@ -55,6 +59,8 @@ func _ready() -> void:
 	_show_splash()
 	if OS.get_cmdline_user_args().has(BACK_FLOW_TEST_ARGUMENT):
 		call_deferred("_begin_back_flow_test")
+	elif OS.get_cmdline_user_args().has(LOADING_FLOW_TEST_ARGUMENT):
+		call_deferred("_begin_loading_flow_test")
 	elif OS.get_cmdline_user_args().has(BOOT_FLOW_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(PAUSE_FLOW_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(RESULT_FLOW_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(AUDIO_FLOW_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(INPUT_ACCESSIBILITY_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(CONTROL_LAYOUT_TEST_ARGUMENT) or OS.get_cmdline_user_args().has(REBIND_FLOW_TEST_ARGUMENT):
 		call_deferred("_begin_headless_handoff_test")
 	elif OS.get_cmdline_user_args().has(SETTINGS_MENU_TEST_ARGUMENT):
@@ -65,6 +71,22 @@ func _ready() -> void:
 func _begin_headless_handoff_test() -> void:
 	_show_menu()
 	_start_selected_map()
+
+func _begin_loading_flow_test() -> void:
+	_show_menu()
+	_start_selected_map()
+	if active_view != View.LOADING or loading_bar == null or loading_label == null:
+		push_error("Loading-flow verification could not construct the loading presentation.")
+		get_tree().quit(1)
+		return
+	if not is_zero_approx(loading_bar.value) or loading_stage != SceneLoader.STAGE_REQUESTED:
+		push_error("Loading-flow verification found fabricated initial loading telemetry.")
+		get_tree().quit(1)
+		return
+	if not loading_label.text.contains(tr("loading.preparing")):
+		push_error("Loading-flow verification could not localize the preparing stage.")
+		get_tree().quit(1)
+		return
 
 func _begin_back_flow_test() -> void:
 	await get_tree().process_frame
@@ -150,6 +172,8 @@ func _process(delta: float) -> void:
 		splash_left = maxf(splash_left - delta, 0.0)
 		if splash_left <= 0.0:
 			_show_menu()
+	elif active_view == View.LOADING:
+		_refresh_loading_telemetry()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if active_view == View.SPLASH and (event is InputEventScreenTouch or event.is_action_pressed(InputService.ACTION_MENU_ACCEPT) or event.is_action_pressed(InputService.ACTION_MENU_BACK)):
@@ -359,6 +383,8 @@ func _show_settings() -> void:
 func _show_loading(map_data: RedlineMapData) -> void:
 	active_view = View.LOADING
 	GameManager.set_state(GameManager.State.LOADING)
+	loading_stage = SceneLoader.STAGE_REQUESTED
+	loading_progress = 0.0
 	footer_label.text = ""
 	_clear_content()
 	var center := CenterContainer.new()
@@ -381,14 +407,14 @@ func _show_loading(map_data: RedlineMapData) -> void:
 	loading_bar = ProgressBar.new()
 	loading_bar.min_value = 0.0
 	loading_bar.max_value = 100.0
-	loading_bar.value = 4.0
+	loading_bar.value = 0.0
 	loading_bar.show_percentage = false
 	loading_bar.custom_minimum_size = Vector2(0, 28)
 	box.add_child(loading_bar)
 	loading_label = Label.new()
-	loading_label.text = tr("loading.progress")
 	loading_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(loading_label)
+	_refresh_loading_telemetry()
 
 func _make_map_card(map_data: RedlineMapData) -> PanelContainer:
 	var card := PanelContainer.new()
@@ -548,23 +574,57 @@ func _start_selected_map() -> void:
 	SaveService.set_last_map(map_data.id)
 	GameManager.select_map(map_data.id)
 	_show_loading(map_data)
-	var result := SceneLoader.load_scene(map_data.scene_path)
-	if result != OK:
-		_on_load_failed(map_data.scene_path, result)
+	SceneLoader.load_scene(map_data.scene_path)
 
 func _selected_map_is_playable() -> bool:
 	var map_data := MapRegistry.get_map(selected_map_id)
 	return map_data != null and map_data.can_launch() and SaveService.is_map_unlocked(map_data.id)
 
-func _on_load_progress(_scene_path: String, progress: float) -> void:
-	if active_view != View.LOADING or loading_bar == null:
-		return
-	loading_bar.value = clampf(progress, 0.0, 1.0) * 100.0
-
-func _on_load_failed(_scene_path: String, _error_code: Error) -> void:
+func _on_load_stage_changed(_scene_path: String, stage: String, progress: float, _elapsed_msec: int) -> void:
 	if active_view != View.LOADING:
 		return
-	_show_map_select()
+	loading_stage = stage
+	loading_progress = clampf(progress, 0.0, 1.0)
+	_refresh_loading_telemetry()
+
+func _on_load_progress(_scene_path: String, progress: float) -> void:
+	if active_view != View.LOADING:
+		return
+	loading_progress = clampf(progress, 0.0, 1.0)
+	_refresh_loading_telemetry()
+
+func _on_load_failed(_scene_path: String, _error_code: Error, _elapsed_msec: int) -> void:
+	if active_view != View.LOADING:
+		return
+	loading_stage = SceneLoader.STAGE_FAILED
+	_refresh_loading_telemetry()
+	await get_tree().create_timer(1.2).timeout
+	if active_view == View.LOADING:
+		_show_map_select()
+
+func _refresh_loading_telemetry() -> void:
+	if loading_bar == null or loading_label == null:
+		return
+	var telemetry := SceneLoader.get_active_telemetry()
+	if not telemetry.is_empty():
+		loading_stage = str(telemetry.get("stage", loading_stage))
+		loading_progress = clampf(float(telemetry.get("progress", loading_progress)), 0.0, 1.0)
+	var elapsed_msec := int(telemetry.get("elapsed_msec", 0))
+	loading_bar.value = loading_progress * 100.0
+	loading_label.text = tr("loading.telemetry") % [_loading_stage_label(loading_stage), roundi(loading_progress * 100.0), float(elapsed_msec) / 1000.0]
+
+func _loading_stage_label(stage: String) -> String:
+	match stage:
+		SceneLoader.STAGE_STREAMING:
+			return tr("loading.streaming")
+		SceneLoader.STAGE_READY:
+			return tr("loading.ready")
+		SceneLoader.STAGE_TRANSITIONING:
+			return tr("loading.finalizing")
+		SceneLoader.STAGE_FAILED:
+			return tr("loading.failed")
+		_:
+			return tr("loading.preparing")
 
 func _on_locale_changed(_locale: String) -> void:
 	call_deferred("_refresh_view_for_locale")

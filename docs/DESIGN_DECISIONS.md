@@ -205,3 +205,13 @@
 **Alternative considered:** Swap the two conflicting action bindings automatically, allow arbitrary duplicate mappings, or expose every device event including touch, mouse, analog axes, and system menu controls.
 
 **Why not selected:** Automatic swaps can silently remove an intentional binding; duplicates make action ownership ambiguous. Full device/event editing would endanger Android Back, focused-menu navigation, visible-control-only touch safety, and the verified Desert movement convention without a larger device QA matrix.
+
+## D-022 — Loading telemetry reports loader facts, not simulated progress
+
+**Decision:** Keep threaded scene loading in `SceneLoader`, but report its actual request, streaming, ready, transition, completion, and failure stages together with the `ResourceLoader` progress samples and monotonic elapsed time. Boot presents those values directly: the bar begins at zero, reaches 100 only after Godot reports the resource loaded, and shows a localized stage plus elapsed seconds. The last completed transition remains available to the incoming scene for normal-Boot verification.
+
+**Reason:** The existing screen began at an invented four percent and exposed only a generic label. Fact-based telemetry gives a player meaningful deployment feedback while keeping the existing Main scene, fade, input safety, and map ownership unchanged.
+
+**Alternative considered:** Animate a cosmetically smooth percentage independent of the loader, or add a separate loading scene with duplicated transition ownership.
+
+**Why not selected:** Simulated percentages can reach completion while an Android device is still loading and undermine trust. A second scene would split fade/loading responsibility from the existing autoload and increase Boot-to-Desert regression risk.

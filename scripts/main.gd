@@ -16,6 +16,7 @@ const AUDIO_FLOW_TEST_ARGUMENT := "--verify-audio-flow"
 const INPUT_ACCESSIBILITY_TEST_ARGUMENT := "--verify-input-accessibility-flow"
 const CONTROL_LAYOUT_TEST_ARGUMENT := "--verify-control-layout-flow"
 const REBIND_FLOW_TEST_ARGUMENT := "--verify-rebind-flow"
+const LOADING_FLOW_TEST_ARGUMENT := "--verify-loading-flow"
 const PAUSE_CAPTURE_BENGALI_ARGUMENT := "--capture-pause-bengali"
 const PAUSE_CAPTURE_OUTPUT_ARGUMENT := "--pause-screenshot-dir"
 
@@ -173,6 +174,8 @@ func _ready() -> void:
 		call_deferred("_run_control_layout_verification")
 	elif OS.get_cmdline_user_args().has(REBIND_FLOW_TEST_ARGUMENT):
 		call_deferred("_run_rebind_flow_verification")
+	elif OS.get_cmdline_user_args().has(LOADING_FLOW_TEST_ARGUMENT):
+		call_deferred("_run_loading_flow_verification")
 
 func _finish_boot_flow_verification() -> void:
 	if GameManager.state != GameManager.State.PLAYING or GameManager.selected_map_id != "MP_DS_01":
@@ -1085,6 +1088,30 @@ func _run_input_accessibility_verification() -> void:
 	sound_caption_label.visible = false
 	_on_health_changed(player.health, OutpostPlayer.MAX_HEALTH)
 	print("INPUT_ACCESSIBILITY_PASS actions=", InputService.GAMEPLAY_ACTIONS.size(), " damage_numbers=", before_count + 1, " captions=1")
+	get_tree().quit()
+
+func _run_loading_flow_verification() -> void:
+	# SceneLoader survives the Boot → Main change and emits its final telemetry
+	# after the outgoing fade, so wait only for that real transition to settle.
+	for _frame in range(90):
+		var telemetry: Dictionary = SceneLoader.get_last_load_telemetry()
+		if str(telemetry.get("outcome", "")) == "loaded":
+			break
+		await get_tree().process_frame
+	var completed: Dictionary = SceneLoader.get_last_load_telemetry()
+	if str(completed.get("outcome", "")) != "loaded" or str(completed.get("scene_path", "")) != "res://scenes/Main.tscn":
+		push_error("Loading-flow verification could not record a completed Main transition.")
+		get_tree().quit(1)
+		return
+	if str(completed.get("stage", "")) != SceneLoader.STAGE_COMPLETE or not is_equal_approx(float(completed.get("progress", 0.0)), 1.0):
+		push_error("Loading-flow verification could not preserve truthful completion telemetry.")
+		get_tree().quit(1)
+		return
+	if int(completed.get("elapsed_msec", -1)) < 0 or int(completed.get("progress_samples", -1)) < 0:
+		push_error("Loading-flow verification found invalid elapsed-time or sample telemetry.")
+		get_tree().quit(1)
+		return
+	print("LOADING_FLOW_PASS elapsed_ms=", completed.get("elapsed_msec", 0), " samples=", completed.get("progress_samples", 0))
 	get_tree().quit()
 
 func _run_rebind_flow_verification() -> void:
