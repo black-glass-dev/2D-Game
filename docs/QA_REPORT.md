@@ -194,8 +194,23 @@ Candidate #67 is not treated as a tested delivery because the Android emulator i
 | Android emulator install/launch | GitHub Actions run 39015842921 | BLOCKED — emulator boot timeout | Source, import, export, signature, normal-Boot, and renderer gates passed, but the hosted emulator did not boot before timeout. This is not physical-device evidence. |
 | Tested-build evidence archive | GitHub Actions run 39015842921 | BLOCKED — Actions artifact-storage quota | GitHub reported `Failed to CreateArtifact: Artifact storage quota has been hit`; no APK archive is presented as delivery. |
 
+## M2 batch 11 — quality-aware menu backdrop (local source gate)
+
+| Check | Command / route | Result | Evidence |
+| --- | --- | --- | --- |
+| GDScript static analysis | `npm run test:gdscript` | PASS — 23 scripts, 0 errors, 0 warnings | 2026-10-17 local terminal log |
+| Resource links and original texture dimensions | `python3 tools/validate_project.py` | PASS — 53 `res://` links and 4 128×128 world textures | 2026-10-17 local terminal log |
+| Native survival core | `./scripts/run_native_tests.sh` | PASS — 3 waves, 27 spawns, completion state | 2026-10-17 local terminal log |
+| Menu-asset integrity | Python PNG/header + manifest SHA-256 check | PASS — `assets/ui/menu_desert_outpost.png`, 1024×576, 671107 bytes, SHA-256 `282f687f85d4f71960e95279536717123b437e0bd207ab8000b9c4fa1151c72c` | 2026-10-17 local terminal log |
+| Whitespace | `git diff --check` | PASS | 2026-10-17 local terminal log |
+| Normal-Boot quality selection | `--verify-menu-background-flow` | PENDING CI — local Godot is unavailable | New headless CI gate in `.github/workflows/android-apk.yml` |
+| Normal-Boot renderer frames | Xvfb `--capture-menu-backgrounds` | PENDING CI — no image is claimed as a renderer capture before the run succeeds | New high/LOW PNG gate in `.github/workflows/android-apk.yml` |
+
+The LOW path is intentionally a texture-free `ColorRect` composition. The non-LOW path is a static original image. Both are Boot presentation only; this batch does not load `Main`, start a 3D background simulation, or alter Desert waves, score, HP, HUD, controls, input, loading, or Back routes.
+
 ## Outstanding test requirements
 
+- First Batch 11 normal-Boot/Xvfb high-and-LOW renderer capture and its CI result.
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.
 - `MP_RF_02` bot navigation/floor/link/hazard tests before Gate 2 approval.
 - Draw calls, visible triangles, texture memory, audio voice count and load timing at each Highrise quality tier.

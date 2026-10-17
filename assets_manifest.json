@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-10-15",
+  "generated_at": "2026-10-17",
   "policy": {
     "preferred_license": "CC0-1.0",
     "accepted_permissive_licenses": ["CC0-1.0", "OFL-1.1", "MIT", "BSD-2-Clause", "BSD-3-Clause", "Apache-2.0"],
@@ -11,6 +11,25 @@
     "request_timeout_seconds": 30
   },
   "assets": [
+    {
+      "id": "ui.menu_desert_outpost",
+      "kind": "menu_background",
+      "creator": "Operation Redline project",
+      "source_repository": null,
+      "source_revision": null,
+      "license": "Original project asset",
+      "license_file": null,
+      "files": [
+        {
+          "path": "assets/ui/menu_desert_outpost.png",
+          "bytes": 671107,
+          "sha256": "282f687f85d4f71960e95279536717123b437e0bd207ab8000b9c4fa1151c72c",
+          "dimensions": "1024x576"
+        }
+      ],
+      "retrieved_at": "2026-10-17",
+      "use": "Static non-LOW Boot-menu backdrop; original non-futuristic year-2000 desert outpost pixel art"
+    },
     {
       "id": "font.noto_sans_bengali",
       "kind": "font",

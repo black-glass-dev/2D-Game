@@ -34,6 +34,8 @@ All notable production changes are documented here.
 - Normal-Boot `--verify-loading-flow` gate for zero-percent start, localized preparing state, Main hand-off, truthful completion, and telemetry validity.
 - Desert session adapter: Easy/Normal/Hard/Nightmare now vary spawn cadence, Survival preserves the three-wave operation, and Endless repeats the 6/9/12 profile with an infinite HUD wave limit.
 - Normal-Boot `--verify-session-adapter-flow` gate for Boot-to-Main session hand-off, default-baseline preservation, all difficulty cadence ordering, and Endless continuation.
+- Quality-aware Boot-menu backdrop: non-LOW selections display an original 1024×576 Desert Outpost pixel-art image, while explicit LOW uses a no-texture procedural desert/outpost silhouette.
+- Normal-Boot `--verify-menu-background-flow` contract and Xvfb high/LOW capture route. The workflow validates two named renderer outputs before it publishes them as evidence.
 
 ### Changed
 

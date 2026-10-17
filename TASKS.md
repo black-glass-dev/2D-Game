@@ -27,7 +27,8 @@
 - [x] Add map detail, difficulty/mode session selection, and a locked `MP_RF_02` future-map card without exposing a launch route.
 - [x] Add fact-based loading telemetry with localized stages, actual progress samples, elapsed time, and normal-Boot hand-off verification.
 - [x] Make difficulty/mode affect the Desert compatibility adapter without changing the Normal/Survival baseline.
-- [ ] Add the visual menu background fallback.
+- [x] Add the quality-aware visual menu background fallback (static original outpost image for non-LOW; no-texture procedural outpost for explicit LOW).
+- [ ] Run the new normal-Boot Xvfb high/LOW renderer-capture gate and record its evidence; retain the physical-device matrix as a separate requirement.
 
 ## M3 — Deliverable A regression QA
 

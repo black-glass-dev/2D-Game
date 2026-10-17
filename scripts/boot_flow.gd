@@ -13,6 +13,7 @@ enum View {
 }
 
 const REDLINE_THEME := preload("res://ui/theme/redline_theme.tres")
+const MENU_BACKGROUND_IMAGE := "res://assets/ui/menu_desert_outpost.png"
 const SPLASH_SECONDS := 1.35
 const MIN_TOUCH_TARGET := Vector2(320, 58)
 const BOOT_FLOW_TEST_ARGUMENT := "--verify-boot-flow"
@@ -27,10 +28,17 @@ const REBIND_FLOW_TEST_ARGUMENT := "--verify-rebind-flow"
 const LOADING_FLOW_TEST_ARGUMENT := "--verify-loading-flow"
 const SESSION_ADAPTER_TEST_ARGUMENT := "--verify-session-adapter-flow"
 const BACK_FLOW_TEST_ARGUMENT := "--verify-back-flow"
+const MENU_BACKGROUND_TEST_ARGUMENT := "--verify-menu-background-flow"
+const MENU_BACKGROUND_CAPTURE_ARGUMENT := "--capture-menu-backgrounds"
+const MENU_CAPTURE_PATH_ARGUMENT := "--menu-capture-path="
 
 var active_view: View = View.SPLASH
 var selected_map_id := "MP_DS_01"
 var background: ColorRect
+var menu_background_image: TextureRect
+var menu_background_fallback: Control
+var menu_background_shade: ColorRect
+var menu_background_mode := "uninitialized"
 var root_margin: MarginContainer
 var title_label: Label
 var subtitle_label: Label
@@ -56,9 +64,15 @@ func _ready() -> void:
 	SceneLoader.load_progress.connect(_on_load_progress)
 	SceneLoader.load_failed.connect(_on_load_failed)
 	LocalizationService.locale_changed.connect(_on_locale_changed)
+	SettingsService.setting_changed.connect(_on_setting_changed)
 	_build_shell()
+	_apply_menu_background_quality()
 	_show_splash()
-	if OS.get_cmdline_user_args().has(BACK_FLOW_TEST_ARGUMENT):
+	if OS.get_cmdline_user_args().has(MENU_BACKGROUND_CAPTURE_ARGUMENT):
+		call_deferred("_begin_menu_background_capture")
+	elif OS.get_cmdline_user_args().has(MENU_BACKGROUND_TEST_ARGUMENT):
+		call_deferred("_begin_menu_background_flow_test")
+	elif OS.get_cmdline_user_args().has(BACK_FLOW_TEST_ARGUMENT):
 		call_deferred("_begin_back_flow_test")
 	elif OS.get_cmdline_user_args().has(SESSION_ADAPTER_TEST_ARGUMENT):
 		call_deferred("_begin_session_adapter_flow_test")
@@ -212,6 +226,23 @@ func _build_shell() -> void:
 	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(background)
 
+	menu_background_image = TextureRect.new()
+	menu_background_image.name = "Static Desert Outpost Background"
+	menu_background_image.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	menu_background_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	menu_background_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	menu_background_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	background.add_child(menu_background_image)
+
+	menu_background_fallback = _build_low_quality_background()
+	background.add_child(menu_background_fallback)
+
+	menu_background_shade = ColorRect.new()
+	menu_background_shade.name = "Menu Background Contrast Shade"
+	menu_background_shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	menu_background_shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	background.add_child(menu_background_shade)
+
 	var top_band := ColorRect.new()
 	top_band.color = Color(0.04, 0.20, 0.27, 0.68)
 	top_band.set_anchors_preset(Control.PRESET_TOP_WIDE)
@@ -293,6 +324,132 @@ func _build_shell() -> void:
 	splash_hint.add_theme_font_size_override("font_size", 15)
 	splash_hint.modulate.a = 0.78
 	splash_box.add_child(splash_hint)
+
+func _build_low_quality_background() -> Control:
+	# LOW never loads a texture or a 3D scene. These flat blocks make the
+	# outpost silhouette recognizable while keeping Boot GPU/CPU work bounded.
+	var fallback := Control.new()
+	fallback.name = "Procedural Low Desert Outpost Background"
+	fallback.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	fallback.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_add_menu_backdrop_block(fallback, "Low Sky", Color("467d8b"), Rect2(0.0, 0.0, 1.0, 0.64))
+	_add_menu_backdrop_block(fallback, "Low Sun", Color("e6b75a"), Rect2(0.72, 0.12, 0.09, 0.14))
+	_add_menu_backdrop_block(fallback, "Low Distant Ridge", Color("7b765d"), Rect2(0.0, 0.42, 0.42, 0.24))
+	_add_menu_backdrop_block(fallback, "Low Distant Ridge Right", Color("656a56"), Rect2(0.35, 0.48, 0.30, 0.18))
+	_add_menu_backdrop_block(fallback, "Low Sand Horizon", Color("bd9659"), Rect2(0.0, 0.60, 1.0, 0.10))
+	_add_menu_backdrop_block(fallback, "Low Sand", Color("9d7140"), Rect2(0.0, 0.69, 1.0, 0.31))
+	_add_menu_backdrop_block(fallback, "Low Outpost Wall", Color("6f6b58"), Rect2(0.53, 0.48, 0.31, 0.23))
+	_add_menu_backdrop_block(fallback, "Low Outpost Roof", Color("393d38"), Rect2(0.50, 0.44, 0.37, 0.06))
+	_add_menu_backdrop_block(fallback, "Low Outpost Door", Color("252f30"), Rect2(0.65, 0.58, 0.08, 0.13))
+	_add_menu_backdrop_block(fallback, "Low Radio Mast", Color("303b39"), Rect2(0.80, 0.27, 0.014, 0.18))
+	_add_menu_backdrop_block(fallback, "Low Radio Mast Cap", Color("303b39"), Rect2(0.77, 0.27, 0.08, 0.012))
+	_add_menu_backdrop_block(fallback, "Low Supply Crate", Color("554d38"), Rect2(0.46, 0.66, 0.09, 0.07))
+	_add_menu_backdrop_block(fallback, "Low Foreground Rock", Color("5b4a37"), Rect2(0.16, 0.78, 0.12, 0.08))
+	return fallback
+
+func _add_menu_backdrop_block(parent: Control, block_name: String, color: Color, region: Rect2) -> void:
+	var block := ColorRect.new()
+	block.name = block_name
+	block.color = color
+	block.set_anchors_preset(Control.PRESET_FULL_RECT)
+	block.anchor_left = region.position.x
+	block.anchor_top = region.position.y
+	block.anchor_right = region.end.x
+	block.anchor_bottom = region.end.y
+	block.offset_left = 0.0
+	block.offset_top = 0.0
+	block.offset_right = 0.0
+	block.offset_bottom = 0.0
+	block.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(block)
+
+func _apply_menu_background_quality() -> void:
+	if menu_background_image == null or menu_background_fallback == null or menu_background_shade == null:
+		return
+	var quality_tier := str(SettingsService.get_setting("quality_tier", "AUTO")).to_upper()
+	if quality_tier == "LOW":
+		menu_background_image.texture = null
+		menu_background_image.visible = false
+		menu_background_fallback.visible = true
+		menu_background_shade.color = Color(0.02, 0.07, 0.10, 0.26)
+		menu_background_mode = "procedural_low"
+	else:
+		var backdrop := load(MENU_BACKGROUND_IMAGE) as Texture2D
+		if backdrop != null:
+			menu_background_image.texture = backdrop
+			menu_background_image.visible = true
+			menu_background_fallback.visible = false
+			menu_background_shade.color = Color(0.02, 0.06, 0.09, 0.48)
+			menu_background_mode = "static_outpost"
+		else:
+			menu_background_image.texture = null
+			menu_background_image.visible = false
+			menu_background_fallback.visible = true
+			menu_background_shade.color = Color(0.02, 0.07, 0.10, 0.26)
+			menu_background_mode = "procedural_asset_missing"
+	print("MENU_BACKGROUND_MODE quality=", quality_tier, " mode=", menu_background_mode)
+
+func _on_setting_changed(key: String, _value: Variant) -> void:
+	if key == "quality_tier":
+		_apply_menu_background_quality()
+
+func _begin_menu_background_flow_test() -> void:
+	_show_menu()
+	await get_tree().process_frame
+	var original_tier := str(SettingsService.get_setting("quality_tier", "AUTO"))
+	SettingsService.set_setting("quality_tier", "LOW", false)
+	await get_tree().process_frame
+	if menu_background_mode != "procedural_low" or not menu_background_fallback.visible or menu_background_image.visible:
+		push_error("Menu-background verification could not enforce the LOW fallback.")
+		get_tree().quit(1)
+		return
+	SettingsService.set_setting("quality_tier", "HIGH", false)
+	await get_tree().process_frame
+	if menu_background_mode != "static_outpost" or menu_background_image.texture == null or not menu_background_image.visible or menu_background_fallback.visible:
+		push_error("Menu-background verification could not select the static non-LOW backdrop.")
+		get_tree().quit(1)
+		return
+	SettingsService.set_setting("quality_tier", original_tier, false)
+	print("MENU_BACKGROUND_PASS low=procedural_low high=static_outpost")
+	get_tree().quit()
+
+func _begin_menu_background_capture() -> void:
+	_show_menu()
+	var output_directory := _get_menu_capture_directory()
+	if output_directory.is_empty() or DirAccess.make_dir_recursive_absolute(output_directory) != OK:
+		push_error("Menu-background capture could not create its output directory.")
+		get_tree().quit(1)
+		return
+	var original_tier := str(SettingsService.get_setting("quality_tier", "AUTO"))
+	SettingsService.set_setting("quality_tier", "HIGH", false)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if menu_background_mode != "static_outpost" or _save_menu_background_capture(output_directory.path_join("menu_background_high.png")) != OK:
+		push_error("Menu-background capture could not write the HIGH static frame.")
+		get_tree().quit(1)
+		return
+	SettingsService.set_setting("quality_tier", "LOW", false)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if menu_background_mode != "procedural_low" or _save_menu_background_capture(output_directory.path_join("menu_background_low.png")) != OK:
+		push_error("Menu-background capture could not write the LOW procedural frame.")
+		get_tree().quit(1)
+		return
+	SettingsService.set_setting("quality_tier", original_tier, false)
+	print("MENU_BACKGROUND_CAPTURE_PASS high=menu_background_high.png low=menu_background_low.png")
+	get_tree().quit()
+
+func _get_menu_capture_directory() -> String:
+	for argument in OS.get_cmdline_user_args():
+		if argument.begins_with(MENU_CAPTURE_PATH_ARGUMENT):
+			return argument.trim_prefix(MENU_CAPTURE_PATH_ARGUMENT)
+	return ""
+
+func _save_menu_background_capture(path: String) -> Error:
+	var image := get_viewport().get_texture().get_image()
+	if image == null or image.is_empty():
+		return ERR_CANT_CREATE
+	return image.save_png(path)
 
 func _show_splash() -> void:
 	active_view = View.SPLASH

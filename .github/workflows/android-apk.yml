@@ -194,6 +194,8 @@ jobs:
           grep -q "LOADING_FLOW_PASS" build/godot-loading-flow.log
           timeout 30s godot --headless --path . -- --verify-session-adapter-flow 2>&1 | tee build/godot-session-adapter-flow.log
           grep -q "SESSION_ADAPTER_PASS" build/godot-session-adapter-flow.log
+          timeout 30s godot --headless --path . -- --verify-menu-background-flow 2>&1 | tee build/godot-menu-background-flow.log
+          grep -q "MENU_BACKGROUND_PASS" build/godot-menu-background-flow.log
 
       - name: Capture pause and Bengali settings through normal Boot flow
         shell: bash
@@ -222,6 +224,39 @@ jobs:
               width, height = struct.unpack(">II", header[16:24])
               if width < 1280 or height < 720 or path.stat().st_size < 4096:
                   raise SystemExit(f"invalid pause capture: {path} ({width}x{height}, {path.stat().st_size} bytes)")
+          PY
+
+      - name: Capture quality-aware menu backgrounds through normal Boot
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.local/bin:$PATH"
+          mkdir -p build/screenshots/menu
+          # This is a real Boot scene under Xvfb, not a fabricated image or a
+          # custom scene harness. It exercises both explicit quality selections.
+          timeout 100s xvfb-run --auto-servernum godot \
+            --path . --rendering-driver opengl3 -- \
+            --capture-menu-backgrounds \
+            --menu-capture-path "$GITHUB_WORKSPACE/build/screenshots/menu" \
+            2>&1 | tee build/godot-menu-background-capture.log
+          grep -q "MENU_BACKGROUND_CAPTURE_PASS" build/godot-menu-background-capture.log
+          test "$(find build/screenshots/menu -name '*.png' | wc -l)" -eq 2
+          python3 - <<'PY'
+          from pathlib import Path
+          import struct
+          expected = {"menu_background_high.png", "menu_background_low.png"}
+          captures = sorted(Path("build/screenshots/menu").glob("*.png"))
+          if {path.name for path in captures} != expected:
+              raise SystemExit(f"unexpected menu captures: {[path.name for path in captures]}")
+          if captures[0].read_bytes() == captures[1].read_bytes():
+              raise SystemExit("HIGH and LOW menu captures are byte-identical")
+          for path in captures:
+              header = path.read_bytes()[:24]
+              if header[:8] != b"\x89PNG\r\n\x1a\n":
+                  raise SystemExit(f"not a PNG: {path}")
+              width, height = struct.unpack(">II", header[16:24])
+              if width < 1280 or height < 720 or path.stat().st_size < 4096:
+                  raise SystemExit(f"invalid menu capture: {path} ({width}x{height}, {path.stat().st_size} bytes)")
           PY
 
       - name: Capture genuine before and after graphics frames
@@ -273,10 +308,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          rm -f screenshots/before/*.png screenshots/after/*.png
+          rm -f screenshots/before/*.png screenshots/after/*.png screenshots/menu/*.png
           find screenshots -name '*.import' -delete
           cp build/screenshots/before/*.png screenshots/before/
           cp build/screenshots/after/*.png screenshots/after/
+          cp build/screenshots/menu/menu_background_high.png screenshots/menu/
+          cp build/screenshots/menu/menu_background_low.png screenshots/menu/
           # The APK version step intentionally edits this tracked export preset.
           # Do not let that ephemeral CI-only version block a screenshot rebase.
           git restore export_presets.cfg

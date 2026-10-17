@@ -11,6 +11,7 @@ The following assets were authored specifically for this repository and are incl
 - Runtime rifle, pistol, hands and combat effect kits in `scripts/rifle.gd`, `scripts/pistol.gd` and `scripts/weapon_effects.gd`
 - Generated game sound effects already stored under `assets/audio/`
 - Shared menu UI icon source files in `assets/ui/icons/`
+- `assets/ui/menu_desert_outpost.png`, an original project-commissioned, AI-assisted pixel-art illustration of the year-2000 Desert Outpost. It contains no third-party character, weapon, building, logo, HUD, text, or commercial-game material; its file hash and dimensions are registered in `assets_manifest.json`.
 
 ## Third-party assets
 

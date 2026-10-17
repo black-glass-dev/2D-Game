@@ -225,3 +225,13 @@
 **Alternative considered:** Scale enemy health/damage and reward score per difficulty, multiply wave sizes, or add random endless escalation.
 
 **Why not selected:** Those changes would combine combat tuning, survival balance, result scoring, and device-performance risk in one compatibility batch. They would also make the established Normal/Survival regression baseline ambiguous.
+
+## D-024 — Quality selection owns a static-or-procedural Boot backdrop
+
+**Decision:** Keep Boot presentation independent from Desert gameplay. `AUTO`, `MEDIUM`, `HIGH`, and `ULTRA` use one original static 1024×576 Desert Outpost pixel-art image. Explicit `LOW` uses only a flat, no-texture procedural desert/outpost silhouette composed from `ColorRect` nodes. Settings changes apply this choice immediately and no automatic quality policy overrides a manual LOW selection.
+
+**Reason:** The prior rail-camera concept in D-003 would still require a 3D scene and create boot/battery risk. A static image preserves the intended year-2000, non-futuristic outpost presentation at normal quality, while the LOW path avoids loading an image or starting `Main`, a world, AI, combat, HUD, or input simulation behind the menu. The two modes are simple to prove through normal Boot and renderer capture.
+
+**Alternative considered:** Run the playable `Main` scene as a live menu background, use a 3D rail camera above LOW, or apply an adaptive override that changes a player-selected quality tier.
+
+**Why not selected:** Live gameplay systems behind the menu couple presentation to wave/session state and waste CPU/GPU. A 3D camera raises import/render risk for a narrow UI improvement. An adaptive override would make the visible manual selection untrustworthy. D-024 supersedes D-003's unimplemented rail-camera direction.
