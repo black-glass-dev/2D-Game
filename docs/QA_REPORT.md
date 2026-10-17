@@ -208,7 +208,7 @@ Candidate #67 is not treated as a tested delivery because the Android emulator i
 
 The LOW path is intentionally a texture-free `ColorRect` composition. The non-LOW path is a static original image. Both are Boot presentation only; this batch does not load `Main`, start a 3D background simulation, or alter Desert waves, score, HP, HUD, controls, input, loading, or Back routes. CI run 39030720943 passed all listed source/import/export/normal-Boot/Xvfb renderer gates, but the hosted Android emulator timed out before boot and artifact upload remained quota-blocked. It therefore does not qualify as a physical-device result or downloadable APK delivery.
 
-## M3 batch 12 — original background music (local source gate)
+## M3 batch 12 — original background music (source and normal-Boot gate)
 
 | Check | Command / route | Result | Evidence |
 | --- | --- | --- | --- |
@@ -217,10 +217,10 @@ The LOW path is intentionally a texture-free `ColorRect` composition. The non-LO
 | Music asset shape | `python3 tools/validate_project.py` | PASS — mono, 16-bit, 22,050 Hz, 352,800 frames / 16 seconds; generator check executes within project validation | 2026-10-17 local terminal log |
 | GDScript static analysis | `npm run test:gdscript` | PASS — 23 scripts, 0 errors, 0 warnings | 2026-10-17 local terminal log |
 | Native survival core | `./scripts/run_native_tests.sh` | PASS — 3 waves, 27 spawns, completion state | 2026-10-17 local terminal log |
-| Music-bus loop, zero-volume stop, and resume | Normal project `--verify-audio-flow` | PENDING CI — local Godot is unavailable | Expanded existing normal-Boot audio contract in `scripts/main.gd` |
-| Human listening / physical Android mix | Device headphone/speaker check | OPEN — no device or working emulator evidence | `docs/AUDIO_ASSET_REVIEW.md` records source/mix analysis only |
+| Music-bus loop, zero-volume stop, and resume | Normal project `--verify-audio-flow` | PASS — Music bus/player, forward-loop metadata, zero-volume stop, and non-zero resume passed inside the existing normal-Boot audio contract | [GitHub Actions run 39032788356](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39032788356), `Launch Boot and gameplay flow headlessly` step |
+| Human listening / physical Android mix | Device headphone/speaker check | OPEN — hosted emulator again timed out before boot; no device evidence exists | `docs/AUDIO_ASSET_REVIEW.md` records source/mix analysis only |
 
-The loop is a global `AudioService` player and does not change Desert score, HP, waves, enemy data, input, HUD layout, loading, map ownership, or Back routes. Its effective default bed is approximately -18.5 dB before Master volume, deliberately below existing transient combat effects. This is a source/mix-policy result, not an audible listening claim.
+The loop is a global `AudioService` player and does not change Desert score, HP, waves, enemy data, input, HUD layout, loading, map ownership, or Back routes. Its effective default bed is approximately -18.5 dB before Master volume, deliberately below existing transient combat effects. CI run 39032788356 passed every listed source/import/export/normal-Boot/Xvfb renderer gate, but its hosted Android emulator timed out before boot and artifact upload remained quota-blocked. This is a source/mix-policy and normal-Boot contract result, not an audible listening or physical-device claim.
 
 ## Outstanding test requirements
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.
