@@ -347,13 +347,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # Follow the emulator-runner documented udev path, then verify that
-          # the runner user can actually use KVM. A bare chmod can be undone by
-          # device-rule refreshes and does not prove the intended group policy.
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
+          # Prefer the emulator-runner documented udev policy. Some hosted
+          # images expose /dev/kvm but reject a live udev trigger; in that
+          # runner-specific case retain the previously verified direct node
+          # permission fallback rather than skipping the emulator probe.
+          if echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules; then
+            sudo udevadm control --reload-rules || echo "KVM udev reload unavailable; using node-permission fallback."
+            sudo udevadm trigger --name-match=kvm || echo "KVM udev trigger unavailable; using node-permission fallback."
+          else
+            echo "KVM udev rule could not be written; using node-permission fallback."
+          fi
           test -e /dev/kvm
+          sudo chmod 666 /dev/kvm
           test -r /dev/kvm
           test -w /dev/kvm
           ls -l /dev/kvm

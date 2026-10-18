@@ -335,3 +335,13 @@
 **Alternative considered:** Keep retrying API-30 ATD, remove the device gate, or attempt an ARM emulator.
 
 **Why not selected:** Identical retries waste CI minutes. Removing the gate would recreate untested downloadable APK risk. ARM images are slower and the action documentation identifies modern x86/x86_64 images as the accelerated CI path.
+
+## D-035 — A failed live udev trigger must not suppress an otherwise usable KVM probe
+
+**Decision:** Attempt the documented persistent KVM udev rule, but treat failure to reload or trigger live udev as a runner-specific diagnostic rather than an automatic release-gate failure. Verify `/dev/kvm` exists, apply the previously successful direct node-permission fallback, then require read/write access before the emulator action proceeds.
+
+**Reason:** CI run 39129496696 completed all source/export/renderer gates but failed in the new udev preparation step before the API-29 emulator was ever attempted. Earlier runs proved that the hosted image can expose an accessible `/dev/kvm` with direct node permissions. The fallback preserves the udev attempt and its audit signal without conflating an in-run device-rule refresh failure with emulator availability.
+
+**Alternative considered:** Remove the udev policy entirely, leave the hard failure in place, or waive KVM verification.
+
+**Why not selected:** Removing udev loses a documented durable configuration path. Leaving the hard failure prevents testing the distinct API-29 image hypothesis. Waiving KVM would hide the acceleration prerequisite that the release gate is meant to verify.

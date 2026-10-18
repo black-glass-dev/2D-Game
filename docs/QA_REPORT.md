@@ -320,9 +320,20 @@ No endpoint association is recorded in project data. The hosted emulator still t
 | Persistent KVM configuration | Workflow review + `python3 tools/validate_project.py` | PASS — uses the emulator-runner documented udev rule and verifies `/dev/kvm` access before launch | `.github/workflows/android-apk.yml` |
 | Distinct boot hypothesis | Workflow review + project validator | PASS — API-29/default x86_64 with explicit Linux hardware acceleration replaces the repeatedly timing-out API-30 ATD image | `.github/workflows/android-apk.yml` |
 | Delivery/evidence guard | Workflow static validation | PASS — install output, package/foreground proof, crash scan, and named release dependency remain required | `.github/workflows/android-apk.yml`; `tools/validate_project.py` |
-| New hosted baseline run | GitHub Actions | PENDING — no device or emulator success is claimed until this changed configuration executes | CI run for this batch is required |
+| New hosted baseline run | GitHub Actions run 39129496696 at `3446c62` | BLOCKED before emulator launch — source/export/capture gates passed, but the live udev preparation returned exit code 1 | [Run 39129496696](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39129496696) |
 
 The image change is a bounded diagnostic probe. It does not weaken APK publication, classify an APK as tested, or replace physical-device QA.
+
+## Batch 22 — resilient KVM fallback (workflow source gate)
+
+| Check | Command / route | Result | Evidence |
+| --- | --- | --- | --- |
+| Documented-policy attempt | Workflow review + project validator | PASS — writes/reloads/triggers the documented KVM udev policy where the runner permits it | `.github/workflows/android-apk.yml` |
+| Direct-node fallback | Workflow review + project validator | PASS — a reload/trigger failure logs its reason but the runner must still expose writable `/dev/kvm` after explicit permission before launch | `.github/workflows/android-apk.yml`; `tools/validate_project.py` |
+| API-29 baseline preservation | Workflow review | READY — the distinct API-29/default x86_64 probe remains queued behind the KVM check | `.github/workflows/android-apk.yml` |
+| Fallback hosted run | GitHub Actions | PENDING — no emulator/device result is claimed before the revised step executes | CI run for this batch is required |
+
+The fallback does not downgrade KVM verification: a missing or inaccessible `/dev/kvm` still fails the named Android gate, and candidate publication remains blocked.
 
 ## Outstanding test requirements
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.

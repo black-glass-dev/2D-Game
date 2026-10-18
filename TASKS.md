@@ -45,7 +45,7 @@
 - [x] Implement a forward-only downloadable-APK gate requiring Android install/launch; retain package ID and persistent debug-signing compatibility for in-place updates.
 - [x] Verify on CI that an emulator failure skips candidate publication; retain physical-device validation as a separate requirement.
 - [x] Harden the hosted Android-emulator gate with explicit KVM readiness, hardware acceleration, install-output capture, package verification, and foreground-activity proof.
-- [x] Retry the hosted emulator using the runner's documented KVM udev policy and API-29/default x86_64 baseline rather than repeatedly retrying the timing-out API-30 ATD image.
+- [x] Probe the runner's documented KVM udev policy and API-29/default x86_64 baseline; retain direct-node fallback when live udev refresh is unavailable rather than repeatedly retrying the timing-out API-30 ATD image.
 
 ## M4 — Highrise graybox and systems
 

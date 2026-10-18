@@ -41,6 +41,7 @@ def main() -> None:
         "Enable KVM acceleration for Android emulator",
         "99-kvm4all.rules",
         "test -e /dev/kvm",
+        "sudo chmod 666 /dev/kvm",
         "api-level: 29",
         "target: default",
         "-accel on",
