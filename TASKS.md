@@ -46,6 +46,7 @@
 - [x] Verify on CI that an emulator failure skips candidate publication; retain physical-device validation as a separate requirement.
 - [x] Harden the hosted Android-emulator gate with explicit KVM readiness, hardware acceleration, install-output capture, package verification, and foreground-activity proof.
 - [x] Probe the runner's documented KVM udev policy and API-29/default x86_64 baseline; retain direct-node fallback when live udev refresh is unavailable rather than repeatedly retrying the timing-out API-30 ATD image.
+- [x] Keep the emulator action's inline install/foreground probe POSIX-shell compatible, matching its `/usr/bin/sh` execution environment.
 
 ## M4 — Highrise graybox and systems
 

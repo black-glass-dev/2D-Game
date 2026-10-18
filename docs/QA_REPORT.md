@@ -331,9 +331,19 @@ The image change is a bounded diagnostic probe. It does not weaken APK publicati
 | Documented-policy attempt | Workflow review + project validator | PASS — writes/reloads/triggers the documented KVM udev policy where the runner permits it | `.github/workflows/android-apk.yml` |
 | Direct-node fallback | Workflow review + project validator | PASS — a reload/trigger failure logs its reason but the runner must still expose writable `/dev/kvm` after explicit permission before launch | `.github/workflows/android-apk.yml`; `tools/validate_project.py` |
 | API-29 baseline preservation | Workflow review | READY — the distinct API-29/default x86_64 probe remains queued behind the KVM check | `.github/workflows/android-apk.yml` |
-| Fallback hosted run | GitHub Actions | PENDING — no emulator/device result is claimed before the revised step executes | CI run for this batch is required |
+| Fallback hosted run | GitHub Actions run 39130099493 at `8dcad51` | PARTIAL PASS — KVM step passed and API-29 action ran, but its `/usr/bin/sh` inline script exited before install/launch evidence | [Run 39130099493](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39130099493) |
 
 The fallback does not downgrade KVM verification: a missing or inaccessible `/dev/kvm` still fails the named Android gate, and candidate publication remains blocked.
+
+## Batch 23 — POSIX emulator-script repair (workflow source gate)
+
+| Check | Command / route | Result | Evidence |
+| --- | --- | --- | --- |
+| Shell portability contract | Workflow review + `python3 tools/validate_project.py` | PASS — action script uses POSIX `set -eu` and `[ ... ]`, not Bash-only options/conditionals | `.github/workflows/android-apk.yml`; `tools/validate_project.py` |
+| Evidence path retained | Workflow source review | PASS — `adb install -r`, package lookup, resumed-activity check, and logcat scan remain unchanged after the shell repair | `.github/workflows/android-apk.yml` |
+| Repaired API-29 run | GitHub Actions | PENDING — no emulator/device result is claimed before the POSIX-compatible probe executes | CI run for this batch is required |
+
+The repair addresses an action-shell failure, not an APK or device pass. Candidate publication remains gated on a successful full emulator step.
 
 ## Outstanding test requirements
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.

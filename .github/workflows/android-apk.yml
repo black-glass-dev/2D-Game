@@ -384,7 +384,9 @@ jobs:
           disable-linux-hw-accel: false
           disable-animations: true
           script: |
-            set -euo pipefail
+            # android-emulator-runner invokes this block with /usr/bin/sh.
+            # Keep it POSIX so the device probe is reached after boot.
+            set -eu
             adb wait-for-device
             adb shell getprop sys.boot_completed | tr -d '\r' | grep -qx '1'
             adb logcat -c
@@ -404,7 +406,7 @@ jobs:
               echo "Android runtime crash found in logcat."
               exit 1
             fi
-            if [[ "$foreground" != true ]]; then
+            if [ "$foreground" != true ]; then
               echo "Operation Redline did not reach a resumed Android activity."
               exit 1
             fi

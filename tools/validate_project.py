@@ -46,6 +46,9 @@ def main() -> None:
         "target: default",
         "-accel on",
         "disable-linux-hw-accel: false",
+        "android-emulator-runner invokes this block with /usr/bin/sh",
+        "set -eu",
+        "if [ \"$foreground\" != true ]; then",
         "adb install -r build/OperationRedline-debug.apk | tee build/android-emulator-install.log",
         "mResumedActivity.*com.operationredline.outpost",
     )

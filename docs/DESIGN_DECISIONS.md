@@ -345,3 +345,13 @@
 **Alternative considered:** Remove the udev policy entirely, leave the hard failure in place, or waive KVM verification.
 
 **Why not selected:** Removing udev loses a documented durable configuration path. Leaving the hard failure prevents testing the distinct API-29 image hypothesis. Waiving KVM would hide the acceleration prerequisite that the release gate is meant to verify.
+
+## D-036 — Emulator action scripts must remain POSIX-shell compatible
+
+**Decision:** Make the Android-emulator-runner `script` block POSIX `sh` compatible: use `set -eu` and `[ ... ]` tests, not Bash-only `pipefail` or `[[ ... ]]`. Statically validate the portability markers beside the existing install/package/foreground evidence contract.
+
+**Reason:** CI run 39130099493 reached the new KVM/API-29 launch path, then failed the action script with `/usr/bin/sh` exit code 1 before installation/launch evidence could run. The action's inline script is executed with `sh`, so shell features that work in the surrounding GitHub `bash` steps are not portable there.
+
+**Alternative considered:** Treat the run as an emulator boot failure, remove strict shell options, or wrap a nested Bash command without validating it.
+
+**Why not selected:** The annotation identifies a shell-process failure rather than a boot timeout. Removing error handling would hide failed ADB/package checks. An unguarded nested shell adds quoting risk; POSIX syntax keeps the action-native execution path explicit and reviewable.
