@@ -387,9 +387,18 @@ The pre-launch log remains diagnostic evidence only. It cannot substitute for co
 | Check | Command / route | Result | Evidence |
 | --- | --- | --- | --- |
 | Baseline reduction | Workflow review + `python3 tools/validate_project.py` | PASS — preserves API-29/default/x86_64, 600-second allowance, mandatory Linux acceleration, and both diagnostics while removing unproven AVD profile/memory/launch overrides | `.github/workflows/android-apk.yml`; `tools/validate_project.py` |
-| Minimal baseline run | GitHub Actions | PENDING — no emulator/device result is claimed before the reduced baseline executes | CI run for this batch is required |
+| Minimal baseline run | GitHub Actions run 39134522905 at `a3cf98e` | PARTIAL PASS — all preceding gates passed; pre-launch trace reached and identified a missing `libpulse.so.0`, then emulator boot timed out | [Run 39134522905](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39134522905); `ci-logs/android-emulator-prelaunch.log` at `e21b602` |
 
 The reduction is diagnostic isolation, not a relaxation of acceleration, install, foreground, crash, candidate-publication, or physical-device gates.
+
+## Batch 29 — missing emulator runtime library (workflow source gate)
+
+| Check | Command / route | Result | Evidence |
+| --- | --- | --- | --- |
+| Loader-dependency repair | Workflow source review + `python3 tools/validate_project.py` | PASS — installs only `libpulse0` and verifies `libpulse.so.0` immediately before the action | `.github/workflows/android-apk.yml`; `tools/validate_project.py` |
+| Runtime repair run | GitHub Actions | PENDING — no emulator/device result is claimed before the dependency-backed probe executes | CI run for this batch is required |
+
+`libpulse0` repairs the documented QEMU dynamic-loader dependency. It is not a claim that emulator boot, APK install, app foregrounding, or device validation succeeded.
 
 ## Outstanding test requirements
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.

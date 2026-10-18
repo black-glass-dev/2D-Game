@@ -385,3 +385,13 @@
 **Alternative considered:** Alter API level/target/architecture, disable KVM acceleration, or keep all overrides and retry unchanged.
 
 **Why not selected:** Altering the baseline invalidates the already selected API-29 test hypothesis. Disabling acceleration violates the release gate. Retrying identical pre-launch-unreached inputs cannot determine whether an override caused AVD setup failure.
+
+## D-040 — Install the emulator's missing PulseAudio runtime library
+
+**Decision:** Install Ubuntu package `libpulse0` immediately before the Android-emulator-runner action and assert `libpulse.so.0` is present in the dynamic-linker cache. Keep `-noaudio`; this package restores a runtime loader dependency, not audio playback.
+
+**Reason:** The committed pre-launch record from run 39134522905 proves AVD setup reached the hook and captures the exact emulator-loader error: `qemu-system-x86_64: error while loading shared libraries: libpulse.so.0: cannot open shared object file`. The action then timed out waiting for boot, which is consistent with the emulator binary being unable to start. Installing the specific missing library is the minimal evidence-backed repair.
+
+**Alternative considered:** Relax the emulator gate, remove `-noaudio`, change Android image/API, or install an unbounded desktop-audio package set.
+
+**Why not selected:** None addresses the recorded dynamic-loader error as directly. `-noaudio` does not remove QEMU's linked library requirement. Unrelated image/API changes would conflate causes, while broad packages add unnecessary runner surface.

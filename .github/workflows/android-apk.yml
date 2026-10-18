@@ -363,6 +363,14 @@ jobs:
           test -w /dev/kvm
           ls -l /dev/kvm
 
+      - name: Install Android emulator runtime dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes libpulse0
+          ldconfig -p | grep -q 'libpulse\.so\.0'
+
       - name: Install and launch APK in Android emulator
         id: android_emulator
         uses: reactivecircus/android-emulator-runner@v2
