@@ -15,6 +15,7 @@ The old [candidate #61](https://github.com/islamyousuf032-glitch/2D-Game/release
 | Original texture dimensions | `python3 tools/validate_project.py` reads PNG IHDR headers | **PASS** — 4 retained retro textures are exactly 128×128; the new generated PBR/detail textures are separate 512×512 presentation assets |
 | Referenced-resource consistency | `python3 tools/validate_project.py` scans committed `res://` references | **PASS** — 54 resource links resolve, including the curated CC0 model subset and the Highrise input contract |
 | Highrise coordinate-packet contract | `python3 tools/validate_highrise_manifest.py` and `python3 tools/test_validate_highrise_manifest.py` | **PASS** — current map remains locked/no-coordinate; 3 dependency-free tests exercise waiting-state rejection and staged source/hash/anchor validation with temporary synthetic fixtures |
+| Physical-device evidence contract | `python3 tools/validate_physical_qa_evidence.py` and `python3 tools/test_validate_physical_qa_evidence.py` | **PASS** — committed template remains non-evidence; 3 tests enforce future identity/install/logcat/row evidence and truthful PASS/FAIL/BLOCKED classification |
 | GDScript parse/type diagnostics | `npm ci && npm run test:gdscript` via pinned Godot 4.x analyzer | **PASS** — 23 scripts, 0 errors, 0 warnings |
 | C++ warning-clean compile | `g++ -std=c++20 -Wall -Wextra -Werror -pedantic ...` | **PASS** |
 | C++ survival pacing unit tests | `./scripts/run_native_tests.sh` | **PASS** — 3 waves, 27 spawns and completion state |

@@ -28,4 +28,12 @@
 
 ## Evidence review rule
 
-A physical-device record is accepted only when every required row has a PASS/FAIL/BLOCKED value, a concrete evidence path, and a device/APK identity. Any FAIL or BLOCKED row keeps the release classification below physical-device-tested. Record observed problems verbatim; do not convert a timeout, missing clip, or unavailable hardware into PASS.
+Copy the schema-versioned template to a separate, untracked-or-reviewable `physical_qa_evidence.json`; never overwrite the committed template with a test result. Set its status to `PHYSICAL_DEVICE_EVIDENCE` only after a real run. A completed record is accepted only when it includes the exact source SHA, APK SHA-256/version/package, exact non-placeholder `adb install -r` command and output reference, device identity/input hardware, logcat reference, reviewer/time, and every required row with a PASS/FAIL/BLOCKED value, non-empty observation, and at least one concrete evidence reference.
+
+Validate a proposed record before release review:
+
+```bash
+python3 tools/validate_physical_qa_evidence.py physical_qa_evidence.json
+```
+
+All-PASS rows are the only route to `PHYSICAL_DEVICE_TESTED`. Any FAIL or BLOCKED row must retain `NOT_PHYSICAL_DEVICE_TESTED`, even though the record remains valuable evidence. The validator rejects a template that is modified to claim PASS, blank identity/install/logcat fields, unreferenced rows, placeholder commands, malformed hashes, and a false release classification. Record observed problems verbatim; do not convert a timeout, missing clip, or unavailable hardware into PASS.

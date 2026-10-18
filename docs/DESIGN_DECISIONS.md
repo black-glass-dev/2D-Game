@@ -305,3 +305,13 @@
 **Alternative considered:** Increase the boot timeout without diagnostics, publish after export with a warning, or treat a successful `adb install` as launch proof.
 
 **Why not selected:** A longer timeout alone may consume CI time without fixing software emulation. Warning-labelled downloads would violate the delivery gate. Installation only proves package acceptance; it does not prove that the process started and reached a foreground activity.
+
+## D-032 — Physical QA records are machine-validated evidence, not editable checklists
+
+**Decision:** Give the physical Android QA template a schema version and validate both the committed non-evidence template and any future completed record. A completed record must identify the exact source/APK/device/install/logcat/reviewer and supply concrete evidence plus an observation for every D01–D12 row. Its release classification is derived from the matrix: only all PASS rows may state `PHYSICAL_DEVICE_TESTED`; a record containing FAIL or BLOCKED remains `NOT_PHYSICAL_DEVICE_TESTED`.
+
+**Reason:** A well-written checklist can still be copied with blank identity fields, a placeholder install command, a missing capture, or an optimistic status. A dependency-free validator makes the release wording auditable before a reviewer sees a device claim, while preserving FAIL/BLOCKED records as useful evidence rather than forcing a false success.
+
+**Alternative considered:** Keep the JSON as an unvalidated template, reject all records with a non-PASS row, or let a reviewer select any release classification manually.
+
+**Why not selected:** Unvalidated JSON cannot reliably distinguish a procedure from proof. Rejecting failure records erases diagnostic information and discourages honest reporting. Manual classifications can contradict the matrix and are especially risky while hosted emulator evidence remains unavailable.

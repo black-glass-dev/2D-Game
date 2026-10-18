@@ -290,6 +290,17 @@ The native graph uses neutral test identifiers only. CI's Android emulator timed
 
 This batch strengthens the definition of a later emulator pass and proves that KVM access alone does not resolve the hosted runner's boot failure. It does not bypass the named gate, publish an APK, or create physical-device evidence.
 
+## Batch 19 — physical-evidence integrity contract (local source gate)
+
+| Check | Command / route | Result | Evidence |
+| --- | --- | --- | --- |
+| Committed template boundary | `python3 tools/validate_physical_qa_evidence.py` | PASS — schema-1 template remains `TEMPLATE_NOT_EVIDENCE`, all D01–D12 rows are `NOT_RUN`, and no release classification can be implied | `docs/physical_qa_evidence.template.json` |
+| Completed-record rules | `python3 tools/test_validate_physical_qa_evidence.py` | PASS — 3 tests reject a modified template and a false all-PASS classification; temporary synthetic fixtures prove valid PASS and honest BLOCKED record shapes | `tools/test_validate_physical_qa_evidence.py` |
+| Project-gate integration | `python3 tools/validate_project.py` | PASS — template validator and regression suite run with the regular source checks | `tools/validate_project.py` |
+| Actual device evidence | Android device or successful emulator plus completed record | OPEN — no physical record or working hosted-emulator run exists | `docs/PHYSICAL_DEVICE_QA.md` |
+
+The synthetic fixtures are test-only and are not Android evidence. This batch makes later evidence harder to misclassify; it does not convert the committed template, CI captures, or an emulator timeout into a device pass.
+
 ## Outstanding test requirements
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.
 - `MP_RF_02` bot navigation/floor/link/hazard tests before Gate 2 approval.

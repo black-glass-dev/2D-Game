@@ -44,6 +44,7 @@ All notable production changes are documented here.
 - A schema-2, test-covered Highrise coordinate-packet contract that binds future B2 appendix/reference files by SHA-256 and requires explicit coordinate-frame, zone-source, and feature-anchor records before graybox construction.
 - A coordinate-free C++ `RouteTopology` core and regression suite for later map navigation links, directionality, disabled traversal, and fallback-route verification.
 - An Android-emulator readiness/evidence contract: KVM access, required hardware acceleration, install-output capture, package lookup, foreground-activity proof, and corresponding static release-gate validation.
+- A schema-versioned physical-device evidence validator and regression suite that prevents the QA template, incomplete identity, missing evidence, or a contradictory matrix from being labelled as physical-device-tested.
 
 ### Changed
 
