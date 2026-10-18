@@ -46,6 +46,7 @@ def main() -> None:
         "target: default",
         "-accel on",
         "disable-linux-hw-accel: false",
+        "pre-emulator-launch-script: sh \"$GITHUB_WORKSPACE/scripts/android_emulator_prelaunch_probe.sh\"",
         "The action parses YAML block lines into independent `sh -c` commands.",
         "script: sh \"$GITHUB_WORKSPACE/scripts/android_emulator_probe.sh\"",
         "Commit Android emulator diagnostics if probe fails",
@@ -69,6 +70,19 @@ def main() -> None:
     if not all(requirement in emulator_probe_text for requirement in probe_contract):
         error("Android emulator probe lacks the required POSIX install/foreground evidence contract")
     subprocess.run(["/usr/bin/sh", "-n", str(emulator_probe)], check=True)
+    emulator_prelaunch_probe = ROOT / "scripts/android_emulator_prelaunch_probe.sh"
+    if not emulator_prelaunch_probe.is_file():
+        error("Android emulator prelaunch probe script is missing")
+    prelaunch_contract = (
+        "#!/usr/bin/env sh",
+        "ANDROID_EMULATOR_PRELAUNCH_REACHED",
+        "\"$ANDROID_HOME/emulator/emulator\" -version",
+        "android-emulator-prelaunch.log",
+    )
+    prelaunch_text = emulator_prelaunch_probe.read_text(encoding="utf-8")
+    if not all(requirement in prelaunch_text for requirement in prelaunch_contract):
+        error("Android emulator prelaunch probe lacks the required launch-boundary evidence contract")
+    subprocess.run(["/usr/bin/sh", "-n", str(emulator_prelaunch_probe)], check=True)
 
     subprocess.run([sys.executable, str(ROOT / "tools/validate_physical_qa_evidence.py")], check=True)
     subprocess.run([sys.executable, str(ROOT / "tools/test_validate_physical_qa_evidence.py")], check=True)

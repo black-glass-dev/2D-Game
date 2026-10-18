@@ -369,9 +369,18 @@ The external probe corrects action parsing semantics, but the runner working dir
 | Check | Command / route | Result | Evidence |
 | --- | --- | --- | --- |
 | Absolute action/probe paths | `python3 tools/validate_project.py`; `/usr/bin/sh -n scripts/android_emulator_probe.sh` | PASS — action calls the script via `$GITHUB_WORKSPACE`; script requires the same variable and writes APK/log evidence beneath the absolute workspace build path | `.github/workflows/android-apk.yml`; `scripts/android_emulator_probe.sh`; `tools/validate_project.py` |
-| Repaired probe run | GitHub Actions | PENDING — no emulator/device result is claimed before the workspace-absolute probe executes | CI run for this batch is required |
+| Repaired probe run | GitHub Actions run 39132968303 at `8b64170` | PARTIAL PASS — all preceding gates passed, but the action returned `/usr/bin/sh` exit 1 before installation/launch evidence; the run-specific marker confirms no post-launch probe log was available | [Run 39132968303](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39132968303); `ci-logs/android-emulator-probe-missing.txt` at `84c5390` |
 
-The next failure marker includes the GitHub run identifier, preventing repeated opaque failures from being hidden by an unchanged diagnostic file.
+The run-specific marker prevents repeated opaque failures from being hidden by an unchanged diagnostic file, but it does not identify whether the failure preceded AVD launch.
+
+## Batch 27 — pre-launch emulator boundary (workflow source gate)
+
+| Check | Command / route | Result | Evidence |
+| --- | --- | --- | --- |
+| AVD/launch boundary contract | `python3 tools/validate_project.py`; `/usr/bin/sh -n scripts/android_emulator_prelaunch_probe.sh` | PASS — workspace-absolute pre-launch hook records an AVD-created marker, action path values, emulator version, and AVD config presence before boot | `.github/workflows/android-apk.yml`; `scripts/android_emulator_prelaunch_probe.sh`; `tools/validate_project.py` |
+| Boundary probe run | GitHub Actions | PENDING — no emulator/device result is claimed before the pre-launch observation executes | CI run for this batch is required |
+
+The pre-launch log is diagnostic evidence only. It cannot substitute for completed install, package, foreground, crash, or physical-device validation.
 
 ## Outstanding test requirements
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.

@@ -365,3 +365,13 @@
 **Alternative considered:** Re-run unchanged, suppress `set -e`, or add a Bash wrapper.
 
 **Why not selected:** An unchanged retry cannot narrow the failure. Suppressing failure behavior can falsely continue past a broken evidence command. A nested Bash wrapper obscures the action-native `sh` environment instead of recording the actual failing command. The runner's unproven relative working directory is also not an acceptable evidence path, so the tracked script and every output path use `$GITHUB_WORKSPACE` explicitly.
+
+## D-038 — Record the emulator runner's pre-launch boundary separately
+
+**Decision:** Use a second, one-line `pre-emulator-launch-script` input to run a workspace-absolute POSIX pre-launch probe after AVD creation and before emulator boot. Record the action working directory, Android paths, AVD config presence, emulator version, and a boundary marker; preserve this file with the failure diagnostics.
+
+**Reason:** Run 39132968303 again reached all prior KVM/API-29 gates yet committed no post-launch probe trace, despite workspace-absolute post-launch paths. The evidence cannot distinguish a failure before the custom probe (AVD/launch path) from a trace-preservation failure. The runner defines the pre-launch hook precisely at that boundary, so it provides the smallest additional observation without relaxing any gate.
+
+**Alternative considered:** Change the API/profile/acceleration inputs blindly, disable the strict action gate, or treat the generic annotation as device evidence.
+
+**Why not selected:** Changing several variables at once destroys failure attribution. Relaxing the gate or claiming a device result would violate the release contract. The pre-launch record narrows the execution boundary first while preserving KVM, API, acceleration, install, package, foreground, and crash requirements.

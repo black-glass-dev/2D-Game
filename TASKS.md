@@ -50,6 +50,7 @@
 - [x] Persist the next failed emulator probe's POSIX command trace in a branch diagnostic so opaque hosted-action failures can be narrowed without fabricating launch evidence.
 - [x] Move emulator install/foreground control flow to one tracked POSIX script because the runner independently executes every YAML `script` line.
 - [x] Address the runner's unproven current directory by invoking the probe and all evidence paths through `$GITHUB_WORKSPACE`.
+- [x] Record the runner's post-AVD/pre-boot boundary separately so action failure can be attributed before changing emulator configuration again.
 
 ## M4 — Highrise graybox and systems
 

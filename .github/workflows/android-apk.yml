@@ -383,6 +383,9 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -no-snapshot-save -no-metrics -accel on
           disable-linux-hw-accel: false
           disable-animations: true
+          # This runs after AVD creation and before boot, so a failed action can
+          # distinguish setup/launch failure from probe failure.
+          pre-emulator-launch-script: sh "$GITHUB_WORKSPACE/scripts/android_emulator_prelaunch_probe.sh"
           # The action parses YAML block lines into independent `sh -c` commands.
           # Invoke one tracked POSIX script by workspace path so its control flow
           # and evidence paths do not depend on the action's current directory.
@@ -394,10 +397,15 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p ci-logs
-          if [ -f build/android-emulator-probe.log ]; then
-            cp build/android-emulator-probe.log ci-logs/android-emulator-probe.log
-          else
-            printf 'Android emulator action failed before its probe log was created. Run: %s\n' "${GITHUB_RUN_ID}" > ci-logs/android-emulator-probe-missing.txt
+          found_diagnostic=false
+          for log_name in android-emulator-prelaunch.log android-emulator-probe.log; do
+            if [ -f "build/${log_name}" ]; then
+              cp "build/${log_name}" "ci-logs/${log_name}"
+              found_diagnostic=true
+            fi
+          done
+          if [ "$found_diagnostic" = false ]; then
+            printf 'Android emulator action failed before its prelaunch or probe log was created. Run: %s\n' "${GITHUB_RUN_ID}" > ci-logs/android-emulator-probe-missing.txt
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -432,6 +440,7 @@ jobs:
             build/OperationRedline-debug.apk
             build/android-emulator-install.log
             build/android-emulator.log
+            build/android-emulator-prelaunch.log
             build/android-emulator-probe.log
             build/godot-import.log
             build/godot-export.log
