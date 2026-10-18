@@ -1,10 +1,12 @@
 # Operation Redline — test report
 
-**Date:** 2026-10-14 (Asia/Dhaka)
+**Historical baseline date:** 2026-10-14 (Asia/Dhaka)
 
-**Current candidate:** [Operation Redline debug APK candidate #61](https://github.com/islamyousuf032-glitch/2D-Game/releases/tag/apk-candidate-61) (`OperationRedline-debug.apk`, 67,375,616 bytes)
+## Current delivery status — 2026-10-17
 
-**Status:** **Source checks, Godot import, Android export/signature, headless gameplay startup and all 12 real renderer captures passed. Candidate #61 retains persistent mobile SINGLE/AUTO fire selection, locked manual quality tiers and the no-black-panel ADS repair, adds the CC0 period-appropriate outpost/weapon/world pass, and uses a performance-trimmed KayKit CC0 smuggler rig. It is a downloadable in-place debug update; the GitHub-hosted Android emulator itself timed out booting, so it is not labelled as a fully physical-device-tested final release.**
+**No APK is currently offered by this project as a tested or supported downloadable delivery.** The forward workflow policy now requires source/export/normal-Boot/renderer success **and** Android emulator install/launch success before it can publish a new pre-release. CI run 39034299154 passed every non-device gate, then timed out at hosted-emulator boot and correctly skipped publication; no `apk-candidate-88` was created. Artifact storage remains quota-blocked.
+
+The old [candidate #61](https://github.com/islamyousuf032-glitch/2D-Game/releases/tag/apk-candidate-61) is a retained historical pre-release record, not a current recommended delivery and not physical-device-tested. Its historical source/export/renderer evidence remains below for audit only. The current gate and exact evidence boundary are in [`RELEASE_GATING.md`](RELEASE_GATING.md).
 
 ## Passed checks
 
@@ -22,9 +24,9 @@
 | APK archive and signature | `unzip -t` and `jarsigner -verify -certs -verbose` | **PASS** |
 | Graphics gameplay-regression safety | Original visual collision remains separate; local checks plus CI headless startup exercise scene creation without changing player/wave/AI/HUD save paths | **PASS** |
 
-## Current APK and graphics evidence
+## Historical APK and graphics evidence
 
-- Downloadable candidate #61: [`OperationRedline-debug.apk`](https://github.com/islamyousuf032-glitch/2D-Game/releases/download/apk-candidate-61/OperationRedline-debug.apk)
+- Historical pre-release candidate #61: [`OperationRedline-debug.apk`](https://github.com/islamyousuf032-glitch/2D-Game/releases/download/apk-candidate-61/OperationRedline-debug.apk). It is retained for audit only and must not be represented as a current tested delivery.
 - Candidate #61 retains the persistent `SINGLE` / `AUTO` HUD selector beside the FIRE cluster. SINGLE preserves one shot per FIRE press; AUTO uses hold-to-fire while retaining each weapon's existing cooldown, ammunition, recoil and damage logic.
 - Manual LOW, MEDIUM, HIGH and ULTRA selection is locked exactly at the player-selected visual budget. Only AUTO is allowed to temporarily adapt after sustained frame pressure. Tier changes visibly affect 3D render scale, shadow range, SSAO/bloom, lamps, scatter meshes, dust and embers without changing game simulation.
 - Candidate #61 retains the repaired carbine ADS route: one main-camera world render, a 75→40° cubic FOV transition, 0.45× retained look sensitivity, transparent screen-space glass and an open reflex viewmodel below the reticle. The sidearm uses the same safe route at 55°. There is no mobile scope SubViewport, opaque black panel or filled black lens.
@@ -37,6 +39,6 @@
 
 The GitHub-hosted Android emulator did not boot before its timeout. That is runner infrastructure failure, not an APK/export/signature failure. A prior physical-device screenshot verified the legacy signing stream, but candidate #61's expanded graphics, external assets and touch presentation still need a real-device playthrough before a fully physical-device-tested label can be used.
 
-## APK release rule
+## APK release and physical-device rule
 
-The APK may be labelled **fully tested** only after a physical Android or working-emulator playthrough checks: landscape presentation; touch look/movement; JUMP/CROUCH/SPRINT/SLIDE; FIRE/AIM/RELOAD/SWAP; saved HUD layout; settings tiers; radar; Raider combat; death/redeploy; and all three survival waves. Until then, releases remain deliberately labelled **debug candidate**.
+A future pre-release may be published only after the forward gate in [`RELEASE_GATING.md`](RELEASE_GATING.md) has passed Android emulator install/launch in addition to source, export, normal-Boot, and renderer gates. It may be labelled **physical-device-tested** only after a real Android device or working emulator completes the exact PASS/FAIL/BLOCKED evidence matrix in [`PHYSICAL_DEVICE_QA.md`](PHYSICAL_DEVICE_QA.md), with a completed copy of [`physical_qa_evidence.template.json`](physical_qa_evidence.template.json). Until then, there is no tested APK delivery claim.

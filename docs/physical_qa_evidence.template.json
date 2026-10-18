@@ -1,0 +1,44 @@
+{
+  "status": "TEMPLATE_NOT_EVIDENCE",
+  "tester": "",
+  "timezone": "",
+  "tested_at": "",
+  "source_commit": "",
+  "apk": {
+    "path_or_release_url": "",
+    "sha256": "",
+    "package_id": "com.operationredline.outpost",
+    "version_code": "",
+    "version_name": "",
+    "install_command": "adb install -r <exact-apk-path>",
+    "install_output_path": ""
+  },
+  "device": {
+    "manufacturer": "",
+    "model": "",
+    "codename": "",
+    "android_version": "",
+    "build_fingerprint": "",
+    "display_resolution": "",
+    "refresh_rate_hz": "",
+    "input_hardware": []
+  },
+  "matrix": {
+    "D01_install_update": {"result": "NOT_RUN", "evidence": [], "notes": ""},
+    "D02_landscape_boot": {"result": "NOT_RUN", "evidence": [], "notes": ""},
+    "D03_touch_movement_look": {"result": "NOT_RUN", "evidence": [], "notes": ""},
+    "D04_touch_fire_safety": {"result": "NOT_RUN", "evidence": [], "notes": ""},
+    "D05_touch_actions_hud": {"result": "NOT_RUN", "evidence": [], "notes": ""},
+    "D06_keyboard_mouse": {"result": "NOT_RUN", "evidence": [], "notes": ""},
+    "D07_gamepad": {"result": "NOT_RUN", "evidence": [], "notes": ""},
+    "D08_back_focus": {"result": "NOT_RUN", "evidence": [], "notes": ""},
+    "D09_settings_language_quality": {"result": "NOT_RUN", "evidence": [], "notes": ""},
+    "D10_audio_mix": {"result": "NOT_RUN", "evidence": [], "notes": ""},
+    "D11_survival_regression": {"result": "NOT_RUN", "evidence": [], "notes": ""},
+    "D12_performance_thermal": {"result": "NOT_RUN", "evidence": [], "notes": ""}
+  },
+  "logcat_path": "",
+  "reviewed_by": "",
+  "reviewed_at": "",
+  "release_classification": "NOT_PHYSICAL_DEVICE_TESTED"
+}

@@ -39,6 +39,7 @@ All notable production changes are documented here.
 - Original, source-controlled `outpost_watch.wav` background-music loop, owned by `AudioService`, routed to the existing Music bus, looped forward, and stopped/resumed by the saved Music volume.
 - Reproducible music-generator/source validation plus expanded normal-Boot audio-flow coverage for Music routing, loop metadata, mute-stop, and enabled resume.
 - A release-truth gate requiring Android emulator install/launch success before CI can publish a downloadable debug APK candidate.
+- A 12-row physical Android QA matrix and machine-readable evidence template for a later real-device handoff; templates cannot be mistaken for completed device evidence.
 
 ### Changed
 

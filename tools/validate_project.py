@@ -7,6 +7,7 @@ texture constraint before an engine is available.
 """
 from __future__ import annotations
 
+import json
 import re
 import struct
 import subprocess
@@ -37,6 +38,18 @@ def main() -> None:
     release_gate = "steps.android_emulator.outcome == 'success'"
     if "id: android_emulator" not in workflow_text or release_gate not in workflow_text:
         error("downloadable APK publishing is not gated on Android emulator success")
+
+    physical_qa_template = ROOT / "docs/physical_qa_evidence.template.json"
+    if not physical_qa_template.is_file():
+        error("physical-device QA evidence template is missing")
+    try:
+        physical_qa = json.loads(physical_qa_template.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        error(f"physical-device QA evidence template is invalid JSON: {exc}")
+    required_device_rows = {f"D{number:02d}_" for number in range(1, 13)}
+    actual_device_rows = {key[:4] for key in physical_qa.get("matrix", {})}
+    if physical_qa.get("status") != "TEMPLATE_NOT_EVIDENCE" or not required_device_rows.issubset(actual_device_rows):
+        error("physical-device QA template is incomplete or misclassified")
 
     checked_links = 0
     for source in ROOT.rglob("*"):

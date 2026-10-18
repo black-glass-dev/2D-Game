@@ -37,6 +37,7 @@
 - [x] Route current combat and menu/settings feedback through SFX/UI buses; implement saved-volume-safe focus mute/restore and headless regression coverage.
 - [x] Make subtitles, reduced-motion, colorblind HUD, damage-number, haptic, and gamepad-deadzone preferences operational in Desert; add normal-Boot input/accessibility coverage.
 - [x] Add normal-Boot Android Back, Escape, controller-B, and paused-settings return/resume route coverage.
+- [x] Create a device-identity/evidence-bound physical Android QA matrix and in-place-update recording template.
 - [ ] Validate the complete touch, mouse, keyboard, gamepad, Android Back, focus-mute/restore, quality-tier, language, and audible mix matrix on real devices where available.
 - [x] Add one original background-music loop after provenance, mix, and mobile-memory review; keep physical-device listening/mix validation open as a separate requirement.
 - [x] Record a normal-Boot CI audio-flow result for the new Music-bus loop; retain physical-device listening validation as a separate requirement.

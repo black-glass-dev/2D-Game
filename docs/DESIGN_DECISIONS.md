@@ -255,3 +255,13 @@
 **Alternative considered:** Publish an APK after export/headless success with a warning, block all export artifacts until a physical device is available, or retroactively delete historical pre-releases.
 
 **Why not selected:** A warning can be missed and leaves an untested update downloadable. Blocking exports would eliminate valuable diagnostics and renderer evidence. Historical release deletion is destructive and would erase audit history; instead, `docs/RELEASE_GATING.md` explicitly records their non-tested status while the forward gate prevents recurrence.
+
+## D-027 — Physical-device evidence is a structured matrix, not a status assertion
+
+**Decision:** Use `docs/PHYSICAL_DEVICE_QA.md` and a completed `physical_qa_evidence.json` record for physical Android validation. The record must identify the APK/source/device, retain the `adb install -r` result, give every required control/audio/settings/survival row a PASS/FAIL/BLOCKED value, and point to concrete capture/log evidence. No template row, device field, or evidence path may be treated as completed evidence.
+
+**Reason:** The project has broad normal-Boot and renderer coverage but no functioning hosted emulator/device run. A precise matrix makes the eventual on-device review repeatable across touch, keyboard/mouse, gamepad, Android Back, focus, Bengali/English, quality tiers, music mix, and the three-wave operation. It also proves the in-place update route without replacing it with an uninstall/reinstall.
+
+**Alternative considered:** A short free-form tester note, a single launch screenshot, or marking all automated normal-Boot checks as a device pass.
+
+**Why not selected:** A free-form note can omit critical controls and cannot reliably identify the exact APK. One screenshot does not prove lifecycle, input safety, audio, settings persistence, or survival completion. Automated renderer/headless checks are valuable but run outside the target device.
