@@ -360,9 +360,18 @@ The marker is failure investigation evidence only—not APK, installation, foreg
 | --- | --- | --- | --- |
 | Runner parsing review | `ReactiveCircus/android-emulator-runner@v2` source via GitHub API | PASS — `parseScript()` splits YAML lines and executes each as separate `sh -c` commands; external script is required for loops/conditionals | Upstream `src/main.ts` and `src/script-parser.ts`, reviewed 2026-10-18 |
 | POSIX probe contract | `python3 tools/validate_project.py`; `/usr/bin/sh -n scripts/android_emulator_probe.sh` | PASS — workflow invokes exactly one tracked POSIX probe; install/package/foreground/crash checks and trace path are source-validated | `.github/workflows/android-apk.yml`; `scripts/android_emulator_probe.sh`; `tools/validate_project.py` |
-| Repaired probe run | GitHub Actions | PENDING — no emulator/device result is claimed before the single-file probe executes | CI run for this batch is required |
+| Repaired probe run | GitHub Actions run 39132269643 at `25d344e` | PARTIAL PASS — all preceding gates passed, but the relative external-script approach still returned `/usr/bin/sh` exit 1 and left no new checkout trace | [Run 39132269643](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39132269643) |
 
-The external probe corrects action parsing semantics, but remains subject to the same mandatory install, foreground, crash, and publication gates.
+The external probe corrects action parsing semantics, but the runner working directory was not proven by this run. It remains subject to the same mandatory install, foreground, crash, and publication gates.
+
+## Batch 26 — workspace-absolute probe invocation (workflow source gate)
+
+| Check | Command / route | Result | Evidence |
+| --- | --- | --- | --- |
+| Absolute action/probe paths | `python3 tools/validate_project.py`; `/usr/bin/sh -n scripts/android_emulator_probe.sh` | PASS — action calls the script via `$GITHUB_WORKSPACE`; script requires the same variable and writes APK/log evidence beneath the absolute workspace build path | `.github/workflows/android-apk.yml`; `scripts/android_emulator_probe.sh`; `tools/validate_project.py` |
+| Repaired probe run | GitHub Actions | PENDING — no emulator/device result is claimed before the workspace-absolute probe executes | CI run for this batch is required |
+
+The next failure marker includes the GitHub run identifier, preventing repeated opaque failures from being hidden by an unchanged diagnostic file.
 
 ## Outstanding test requirements
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.

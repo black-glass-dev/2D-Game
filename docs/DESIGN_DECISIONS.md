@@ -350,7 +350,7 @@
 
 **Decision:** Keep the Android-emulator-runner YAML input to one command, `sh scripts/android_emulator_probe.sh`, and keep all install/package/foreground control flow in that tracked POSIX `sh` file. Use `set -eu`/`set -x` and `[ ... ]` tests, not Bash-only `pipefail` or `[[ ... ]]`; statically syntax-check the file beside the existing evidence contract.
 
-**Reason:** CI run 39130099493 reached the new KVM/API-29 launch path, then failed with `/usr/bin/sh` exit code 1 before installation/launch evidence. Upstream action-source review shows `parseScript()` splits every YAML `script` line and invokes each independently as `sh -c`. Therefore the original multiline block could neither preserve shell state nor contain a multiline `if`/loop, even after Bash-only constructs were removed. Run 39130918946 retained the generic annotation, and run 39131623011's failure-only marker confirmed the block had not produced a persistent trace.
+**Reason:** CI run 39130099493 reached the new KVM/API-29 launch path, then failed with `/usr/bin/sh` exit code 1 before installation/launch evidence. Upstream action-source review shows `parseScript()` splits every YAML `script` line and invokes each independently as `sh -c`. Therefore the original multiline block could neither preserve shell state nor contain a multiline `if`/loop, even after Bash-only constructs were removed. Run 39130918946 retained the generic annotation, and run 39131623011's failure-only marker confirmed the block had not produced a persistent trace. Run 39132269643 still produced no tracked trace with a relative script path, so the action now invokes the file by `$GITHUB_WORKSPACE` and uses absolute evidence paths rather than assuming the action's current directory.
 
 **Alternative considered:** Treat the run as an emulator boot failure, remove strict shell options, or wrap a nested Bash command.
 
@@ -364,4 +364,4 @@
 
 **Alternative considered:** Re-run unchanged, suppress `set -e`, or add a Bash wrapper.
 
-**Why not selected:** An unchanged retry cannot narrow the failure. Suppressing failure behavior can falsely continue past a broken evidence command. A nested Bash wrapper obscures the action-native `sh` environment instead of recording the actual failing command.
+**Why not selected:** An unchanged retry cannot narrow the failure. Suppressing failure behavior can falsely continue past a broken evidence command. A nested Bash wrapper obscures the action-native `sh` environment instead of recording the actual failing command. The runner's unproven relative working directory is also not an acceptable evidence path, so the tracked script and every output path use `$GITHUB_WORKSPACE` explicitly.

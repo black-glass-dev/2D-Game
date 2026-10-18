@@ -47,7 +47,7 @@ def main() -> None:
         "-accel on",
         "disable-linux-hw-accel: false",
         "The action parses YAML block lines into independent `sh -c` commands.",
-        "script: sh scripts/android_emulator_probe.sh",
+        "script: sh \"$GITHUB_WORKSPACE/scripts/android_emulator_probe.sh\"",
         "Commit Android emulator diagnostics if probe fails",
         "ci: capture Android emulator probe diagnostics",
     )
@@ -59,9 +59,10 @@ def main() -> None:
     emulator_probe_text = emulator_probe.read_text(encoding="utf-8")
     probe_contract = (
         "#!/usr/bin/env sh",
-        "exec > build/android-emulator-probe.log 2>&1",
+        "workspace=${GITHUB_WORKSPACE:?GITHUB_WORKSPACE must be set}",
+        "exec > \"$build_dir/android-emulator-probe.log\" 2>&1",
         "set -x",
-        "adb install -r build/OperationRedline-debug.apk | tee build/android-emulator-install.log",
+        "adb install -r \"$build_dir/OperationRedline-debug.apk\" | tee \"$build_dir/android-emulator-install.log\"",
         "mResumedActivity.*com.operationredline.outpost",
         "if [ \"$foreground\" != true ]; then",
     )

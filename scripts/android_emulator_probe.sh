@@ -4,14 +4,16 @@
 # control flow must live in this POSIX script rather than in a YAML block.
 set -eu
 
-mkdir -p build
-exec > build/android-emulator-probe.log 2>&1
+workspace=${GITHUB_WORKSPACE:?GITHUB_WORKSPACE must be set}
+build_dir="$workspace/build"
+mkdir -p "$build_dir"
+exec > "$build_dir/android-emulator-probe.log" 2>&1
 set -x
 
 adb wait-for-device
 adb shell getprop sys.boot_completed | tr -d '\r' | grep -qx '1'
 adb logcat -c
-adb install -r build/OperationRedline-debug.apk | tee build/android-emulator-install.log
+adb install -r "$build_dir/OperationRedline-debug.apk" | tee "$build_dir/android-emulator-install.log"
 adb shell pm path com.operationredline.outpost | grep -q '^package:'
 adb shell monkey -p com.operationredline.outpost 1
 
@@ -26,8 +28,8 @@ while [ "$attempt" -le 30 ]; do
   attempt=$((attempt + 1))
 done
 
-adb logcat -d -t 1200 > build/android-emulator.log
-if grep -E 'FATAL EXCEPTION|AndroidRuntime.*Process.*com\.operationredline\.outpost' build/android-emulator.log; then
+adb logcat -d -t 1200 > "$build_dir/android-emulator.log"
+if grep -E 'FATAL EXCEPTION|AndroidRuntime.*Process.*com\.operationredline\.outpost' "$build_dir/android-emulator.log"; then
   echo "Android runtime crash found in logcat."
   exit 1
 fi

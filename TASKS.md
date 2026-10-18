@@ -49,6 +49,7 @@
 - [x] Keep the emulator action's inline install/foreground probe POSIX-shell compatible, matching its `/usr/bin/sh` execution environment.
 - [x] Persist the next failed emulator probe's POSIX command trace in a branch diagnostic so opaque hosted-action failures can be narrowed without fabricating launch evidence.
 - [x] Move emulator install/foreground control flow to one tracked POSIX script because the runner independently executes every YAML `script` line.
+- [x] Address the runner's unproven current directory by invoking the probe and all evidence paths through `$GITHUB_WORKSPACE`.
 
 ## M4 — Highrise graybox and systems
 

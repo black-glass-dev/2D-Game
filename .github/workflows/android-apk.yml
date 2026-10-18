@@ -384,8 +384,9 @@ jobs:
           disable-linux-hw-accel: false
           disable-animations: true
           # The action parses YAML block lines into independent `sh -c` commands.
-          # Invoke one tracked POSIX script so its control flow stays intact.
-          script: sh scripts/android_emulator_probe.sh
+          # Invoke one tracked POSIX script by workspace path so its control flow
+          # and evidence paths do not depend on the action's current directory.
+          script: sh "$GITHUB_WORKSPACE/scripts/android_emulator_probe.sh"
 
       - name: Commit Android emulator diagnostics if probe fails
         if: ${{ always() && steps.android_emulator.outcome == 'failure' }}
@@ -396,7 +397,7 @@ jobs:
           if [ -f build/android-emulator-probe.log ]; then
             cp build/android-emulator-probe.log ci-logs/android-emulator-probe.log
           else
-            echo "Android emulator action failed before its probe log was created." > ci-logs/android-emulator-probe-missing.txt
+            printf 'Android emulator action failed before its probe log was created. Run: %s\n' "${GITHUB_RUN_ID}" > ci-logs/android-emulator-probe-missing.txt
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
