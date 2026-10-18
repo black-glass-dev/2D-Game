@@ -1,0 +1,1 @@
+Android emulator action failed before its probe log was created.
