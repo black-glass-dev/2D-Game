@@ -275,3 +275,13 @@
 **Alternative considered:** Estimate a plausible rooftop from the 120 m × 90 m card, recreate dimensions from memory of the unavailable diagram, or start art before graybox input is complete.
 
 **Why not selected:** Estimated coordinates would undermine the exact B2 contract and make later nav/capture comparisons invalid. Starting art first violates Gate 2 sequencing and makes corrective layout changes expensive. The manifest gate preserves the user-visible map lock and the Desert regression baseline until real inputs are staged.
+
+## D-029 — Coordinate intake requires provenance, frame, and feature anchors
+
+**Decision:** Upgrade the M4 manifest to a versioned, test-covered coordinate-packet contract before receiving the B2 sources. A staged packet must hash and identify two distinct repository files (the coordinate appendix and top-down reference), describe its coordinate frame, trace each zone to the source, and supply semantic anchor records for every named gap, bridge, traversal link, supply node, and wave route. The map remains locked even when that intake gate passes.
+
+**Reason:** A zone-only list could claim that numbers were staged while leaving the reference unverifiable, coordinate axes ambiguous, or critical navigation features unplaced. An integrity-bound packet makes the later graybox reproducible and reviewable without inserting any invented map value into the current project.
+
+**Alternative considered:** Accept un-hashed prose notes, wait to design the data shape until graybox implementation starts, or unlock the card immediately after the zone rectangles are entered.
+
+**Why not selected:** Prose cannot be mechanically checked against a source file. Delaying the contract risks entangling source interpretation with scene construction. Zone rectangles alone do not establish lightwell, bridge, traversal, supply, or wave-route placement, and an unlocked card before navigation/capture review would bypass Gate 2.

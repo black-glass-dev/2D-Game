@@ -31,3 +31,7 @@ build/
 
 # Tool downloads kept outside source control
 .tools/
+
+# Python validation bytecode
+__pycache__/
+*.py[cod]

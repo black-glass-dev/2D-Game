@@ -115,7 +115,7 @@ Asset inventory during Recon: 40 files under `assets/` (~3.45 MiB source payload
 
 - The supplied top-down map diagram was visible in the task context and its zone logic matches the text specification: roof A/B/C, two lightwell gaps, bridges, office and lobby circulation, helipad, safe room, breach and wave routes.
 - The injected attachment path announced by the interface was not accessible from this workspace at Recon time, therefore no binary was copied to `docs/level_design/rooftop_highrise_map.png` and no hash can honestly be claimed.
-- This is **not a level-design blocker**: §B2’s explicit coordinates are the implementation authority until the image file is accessible. At M4, the image will be staged at the requested path if it becomes available; otherwise the Appendix coordinates and recorded assumptions will be used and noted in `docs/DESIGN_DECISIONS.md`.
+- এটি M4 graybox-এর blocker: §B2 coordinate appendix এবং image binary দুটিই বর্তমান checkout-এ অনুপস্থিত। দুটো source পাওয়া গেলে `docs/HIGHRISE_GRAYBOX_INPUTS.md`-এর schema-2, SHA-256-bound packet অনুযায়ী stage করতে হবে; কোনো assumption coordinate-এর বিকল্প হতে পারবে না।
 
 ## 8. Risk register and mandatory registration before touching files
 

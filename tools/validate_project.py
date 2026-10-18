@@ -52,6 +52,7 @@ def main() -> None:
         error("physical-device QA template is incomplete or misclassified")
 
     subprocess.run([sys.executable, str(ROOT / "tools/validate_highrise_manifest.py")], check=True)
+    subprocess.run([sys.executable, str(ROOT / "tools/test_validate_highrise_manifest.py")], check=True)
 
     checked_links = 0
     for source in ROOT.rglob("*"):

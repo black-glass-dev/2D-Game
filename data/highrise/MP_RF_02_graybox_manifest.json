@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "map_id": "MP_RF_02",
   "status": "AWAITING_AUTHORITATIVE_B2_COORDINATES",
   "declared_footprint_m": {
@@ -11,6 +11,39 @@
     "top_down_reference_available_in_workspace": false,
     "expected_reference_path": "docs/level_design/rooftop_highrise_map.png",
     "source_note": "The supplied task brief is the authority, but its coordinate appendix and reference binary are not present in this checkout. No zone position, height, gap, bridge, spawn, cover, or traversal value is invented here."
+  },
+  "coordinate_staging_contract": {
+    "coordinate_frame_fields": [
+      "origin_description",
+      "units",
+      "vertical_axis_description",
+      "x_axis_description",
+      "z_axis_description"
+    ],
+    "zone_record_fields": [
+      "depth",
+      "floor_y",
+      "source_reference",
+      "width",
+      "x",
+      "z"
+    ],
+    "feature_record_fields": [
+      "geometry_kind",
+      "anchors",
+      "source_reference"
+    ],
+    "feature_geometry_kinds": {
+      "lightwell_gap_1": "area",
+      "lightwell_gap_2": "area",
+      "bridge_1": "link",
+      "bridge_2": "link",
+      "rappel_link": "link",
+      "lift_shaft_link": "link",
+      "zipline_link": "link",
+      "supply_nodes": "point_collection",
+      "wave_routes": "path_collection"
+    }
   },
   "required_zones": [
     "roof_a",

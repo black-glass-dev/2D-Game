@@ -41,6 +41,7 @@ All notable production changes are documented here.
 - A release-truth gate requiring Android emulator install/launch success before CI can publish a downloadable debug APK candidate.
 - A 12-row physical Android QA matrix and machine-readable evidence template for a later real-device handoff; templates cannot be mistaken for completed device evidence.
 - An M4 Highrise graybox input manifest/validator that blocks guessed coordinates and keeps `MP_RF_02` non-launchable until authoritative B2 inputs are staged.
+- A schema-2, test-covered Highrise coordinate-packet contract that binds future B2 appendix/reference files by SHA-256 and requires explicit coordinate-frame, zone-source, and feature-anchor records before graybox construction.
 
 ### Changed
 
