@@ -238,9 +238,9 @@ Historical pre-releases are not physical-device-tested deliveries; this batch pr
 | Check | Command / route | Result | Evidence |
 | --- | --- | --- | --- |
 | Complete physical-device matrix | Checklist review | READY — 12 identity/evidence-bound rows cover in-place install, landscape, touch, keyboard/mouse, gamepad, Back/focus, settings/language/quality, audio, survival, and thermal observations | `docs/PHYSICAL_DEVICE_QA.md` |
-| Evidence record schema | JSON parse | PASS — template is valid JSON and defaults every row to `NOT_RUN` | `docs/physical_qa_evidence.template.json` |
+| Evidence record schema | JSON parse + project validator | PASS — template is valid JSON, defaults every row to `NOT_RUN`, and `tools/validate_project.py` now rejects a missing/misclassified/incomplete template | CI run 39102616120 source-test step; `docs/physical_qa_evidence.template.json` |
 | Historical delivery wording | Documentation audit | PASS — README and test report point to the forward release gate and retain old candidates only as untested audit history | `README.md`, `docs/TEST_REPORT.md`, `docs/RELEASE_GATING.md` |
-| Actual physical-device run | Android device or working emulator | OPEN — no device evidence was supplied or generated | A completed evidence JSON plus referenced install output/captures/logcat is required |
+| Actual physical-device run | Android device or working emulator | OPEN — CI run 39102616120 again timed out before hosted-emulator boot; no device evidence was supplied or generated | A completed evidence JSON plus referenced install output/captures/logcat is required |
 
 The handoff documents do not convert any prior headless/Xvfb/emulator-timeout result into a device pass. This batch is complete only as a reproducible test procedure; the real-device acceptance row remains deliberately open.
 
