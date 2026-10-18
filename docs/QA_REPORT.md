@@ -253,7 +253,7 @@ The handoff documents do not convert any prior headless/Xvfb/emulator-timeout re
 | Project gate integration | `python3 tools/validate_project.py` | PASS — Highrise contract runs with regular source/resource validation | 2026-10-18 local terminal log |
 | Graybox/nav/capture/Gate 2 | Real Godot scene and evidence pack | BLOCKED — authoritative B2 coordinates and the reference binary are not present in the checkout | `docs/HIGHRISE_GRAYBOX_INPUTS.md` |
 
-This batch does not invent coordinates, launch a placeholder Highrise scene, or alter Desert ownership, waves, score, HP, controls, HUD, or current release policy.
+This batch does not invent coordinates, launch a placeholder Highrise scene, or alter Desert ownership, waves, score, HP, controls, HUD, or current release policy. CI run [39103969150](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39103969150) also passed its source/native, import/export, normal-Boot gameplay, settings/menu, and genuine graphics-capture steps at `14a1bd6`; the Android emulator again timed out, release publication was skipped, and artifact upload was blocked by GitHub Actions storage quota. This remains source/runtime regression evidence, not Highrise graybox or physical-device evidence.
 
 ## Outstanding test requirements
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.

@@ -2,9 +2,9 @@
 
 **Historical baseline date:** 2026-10-14 (Asia/Dhaka)
 
-## Current delivery status — 2026-10-17
+## Current delivery status — 2026-10-18
 
-**No APK is currently offered by this project as a tested or supported downloadable delivery.** The forward workflow policy now requires source/export/normal-Boot/renderer success **and** Android emulator install/launch success before it can publish a new pre-release. CI run 39034299154 passed every non-device gate, then timed out at hosted-emulator boot and correctly skipped publication; no `apk-candidate-88` was created. Artifact storage remains quota-blocked.
+**No APK is currently offered by this project as a tested or supported downloadable delivery.** The forward workflow policy now requires source/export/normal-Boot/renderer success **and** Android emulator install/launch success before it can publish a new pre-release. CI run [39103969150](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39103969150) passed every non-device gate for `14a1bd6`, then timed out at hosted-emulator boot and correctly skipped publication. Artifact storage remains quota-blocked.
 
 The old [candidate #61](https://github.com/islamyousuf032-glitch/2D-Game/releases/tag/apk-candidate-61) is a retained historical pre-release record, not a current recommended delivery and not physical-device-tested. Its historical source/export/renderer evidence remains below for audit only. The current gate and exact evidence boundary are in [`RELEASE_GATING.md`](RELEASE_GATING.md).
 
@@ -13,8 +13,8 @@ The old [candidate #61](https://github.com/islamyousuf032-glitch/2D-Game/release
 | Check | Command / method | Result |
 | --- | --- | --- |
 | Original texture dimensions | `python3 tools/validate_project.py` reads PNG IHDR headers | **PASS** — 4 retained retro textures are exactly 128×128; the new generated PBR/detail textures are separate 512×512 presentation assets |
-| Referenced-resource consistency | `python3 tools/validate_project.py` scans committed `res://` references | **PASS** — 30 resource links resolve, including the curated CC0 model subset |
-| GDScript parse/type diagnostics | `npm ci && npm run test:gdscript` via pinned Godot 4.x analyzer | **PASS** — 13 scripts, 0 errors, 0 warnings |
+| Referenced-resource consistency | `python3 tools/validate_project.py` scans committed `res://` references | **PASS** — 54 resource links resolve, including the curated CC0 model subset and the Highrise input contract |
+| GDScript parse/type diagnostics | `npm ci && npm run test:gdscript` via pinned Godot 4.x analyzer | **PASS** — 23 scripts, 0 errors, 0 warnings |
 | C++ warning-clean compile | `g++ -std=c++20 -Wall -Wextra -Werror -pedantic ...` | **PASS** |
 | C++ survival pacing unit tests | `./scripts/run_native_tests.sh` | **PASS** — 3 waves, 27 spawns and completion state |
 | Godot project import | GitHub Actions Godot 4.7.2 headless import | **PASS** |
