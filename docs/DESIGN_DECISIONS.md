@@ -295,3 +295,13 @@
 **Alternative considered:** Add a speculative Highrise `NavigationRegion3D`, embed the graph in a Godot scene now, or wait until all art/navigation work begins.
 
 **Why not selected:** A speculative scene or endpoints would violate the coordinate gate. Scene-first logic would couple Godot navigation setup to unverified geometry. Waiting would postpone duplicate-link, direction, disabled-traversal, and fallback-route tests until the most failure-prone integration phase.
+
+## D-031 — Emulator evidence requires acceleration, install, and foreground proof
+
+**Decision:** Strengthen the existing Android release gate before its emulator action starts: require accessible KVM, require `-accel on`, retain a bounded boot allowance, capture exact `adb install -r` output, verify the package manager can resolve the installed package, and require the app to become the resumed Android activity before the crash-log scan. Preserve the existing rule that no candidate is published unless this same `android_emulator` step succeeds.
+
+**Reason:** Repeated hosted boot timeouts leave no useful distinction between missing acceleration, runner capacity, install failure, launch failure, or a process crash. These checks make the runner prerequisite explicit and turn a later success into auditable install-and-foreground evidence, while a failure retains a more actionable boundary than an unchecked launch delay.
+
+**Alternative considered:** Increase the boot timeout without diagnostics, publish after export with a warning, or treat a successful `adb install` as launch proof.
+
+**Why not selected:** A longer timeout alone may consume CI time without fixing software emulation. Warning-labelled downloads would violate the delivery gate. Installation only proves package acceptance; it does not prove that the process started and reached a foreground activity.

@@ -43,6 +43,7 @@
 - [x] Record a normal-Boot CI audio-flow result for the new Music-bus loop; retain physical-device listening validation as a separate requirement.
 - [x] Implement a forward-only downloadable-APK gate requiring Android install/launch; retain package ID and persistent debug-signing compatibility for in-place updates.
 - [x] Verify on CI that an emulator failure skips candidate publication; retain physical-device validation as a separate requirement.
+- [x] Harden the hosted Android-emulator gate with explicit KVM readiness, hardware acceleration, install-output capture, package verification, and foreground-activity proof.
 
 ## M4 — Highrise graybox and systems
 

@@ -343,14 +343,28 @@ jobs:
           git diff --cached --quiet || git commit -m "ci: capture Android export diagnostics"
           git push origin "HEAD:${GITHUB_REF_NAME}"
 
+      - name: Enable KVM acceleration for Android emulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          # A missing or inaccessible KVM device turns an x86_64 emulator into
+          # software emulation, which is indistinguishable from a boot timeout
+          # at the release gate. Fail with a direct runner diagnostic instead.
+          test -e /dev/kvm
+          sudo chmod 666 /dev/kvm
+          test -r /dev/kvm
+          test -w /dev/kvm
+          ls -l /dev/kvm
+
       - name: Install and launch APK in Android emulator
         id: android_emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
           # Android Test Device images are purpose-built for CI and are much
           # lighter than a full consumer image. API 30 remains sufficient to
-          # validate this Android-35-compiled, min-SDK-compatible APK while
-          # avoiding the repeated hosted-runner boot timeout of the prior image.
+          # validate this Android-35-compiled, min-SDK-compatible APK. KVM is
+          # explicitly enabled above and acceleration is required below, so a
+          # capacity failure is visible rather than being misreported as game IO.
           api-level: 30
           target: aosp_atd
           arch: x86_64
@@ -358,16 +372,32 @@ jobs:
           cores: 2
           ram-size: 2048M
           heap-size: 256M
-          emulator-boot-timeout: 360
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -no-snapshot-save
+          emulator-boot-timeout: 480
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -no-snapshot-save -no-metrics -accel on
           disable-animations: true
           script: |
-            adb install -r build/OperationRedline-debug.apk
+            set -euo pipefail
+            adb wait-for-device
+            adb shell getprop sys.boot_completed | tr -d '\r' | grep -qx '1'
+            adb logcat -c
+            adb install -r build/OperationRedline-debug.apk | tee build/android-emulator-install.log
+            adb shell pm path com.operationredline.outpost | grep -q '^package:'
             adb shell monkey -p com.operationredline.outpost 1
-            sleep 12
-            adb logcat -d -t 900 > build/android-emulator.log
+            foreground=false
+            for _ in $(seq 1 30); do
+              if adb shell dumpsys activity activities | grep -q 'mResumedActivity.*com.operationredline.outpost'; then
+                foreground=true
+                break
+              fi
+              sleep 1
+            done
+            adb logcat -d -t 1200 > build/android-emulator.log
             if grep -E "FATAL EXCEPTION|AndroidRuntime.*Process.*com\.operationredline\.outpost" build/android-emulator.log; then
               echo "Android runtime crash found in logcat."
+              exit 1
+            fi
+            if [[ "$foreground" != true ]]; then
+              echo "Operation Redline did not reach a resumed Android activity."
               exit 1
             fi
 
@@ -395,6 +425,7 @@ jobs:
           if-no-files-found: warn
           path: |
             build/OperationRedline-debug.apk
+            build/android-emulator-install.log
             build/android-emulator.log
             build/godot-import.log
             build/godot-export.log

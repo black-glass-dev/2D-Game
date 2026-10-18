@@ -7,9 +7,9 @@ A GitHub pre-release APK is a player-downloadable in-place update, not merely an
 1. source/static/native checks;
 2. Godot import, Android debug export, ZIP integrity, and APK signature verification;
 3. normal-Boot gameplay-flow checks and renderer capture gates; and
-4. the Android emulator install/launch step, including crash-log scan.
+4. the Android emulator install/launch step, including acceleration/readiness checks, install output, package/foreground proof, and crash-log scan.
 
-The release step explicitly requires the `android_export`, `gameplay_smoke`, and `android_emulator` step outcomes to be `success`. `tools/validate_project.py` rejects source changes that remove the named emulator gate from the workflow.
+The runner first verifies writable `/dev/kvm`, requires emulator hardware acceleration, and uses a bounded 480-second boot allowance. After boot it saves the exact `adb install -r` output, confirms the package path, starts the app, requires a resumed `com.operationredline.outpost` activity, and scans its logcat. The release step explicitly requires the `android_export`, `gameplay_smoke`, and `android_emulator` step outcomes to be `success`. `tools/validate_project.py` rejects source changes that remove the named emulator gate or its acceleration/install/foreground evidence contract from the workflow.
 
 ## In-place update compatibility
 

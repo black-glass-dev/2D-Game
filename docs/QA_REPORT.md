@@ -279,6 +279,17 @@ The staged schema deliberately keeps `MP_RF_02` locked. CI's Android emulator ti
 
 The native graph uses neutral test identifiers only. CI's Android emulator timed out again; candidate publication was skipped and evidence upload was blocked by GitHub Actions storage quota. It is not an `MP_RF_02` layout, does not replace Godot navigation, and cannot unlock the map.
 
+## Batch 18 — Android emulator evidence hardening (workflow source gate)
+
+| Check | Command / route | Result | Evidence |
+| --- | --- | --- | --- |
+| KVM readiness contract | Workflow review + `python3 tools/validate_project.py` | PASS — explicit `/dev/kvm` access/read/write assertions run before the emulator action | `.github/workflows/android-apk.yml`; `tools/validate_project.py` |
+| Accelerated emulator contract | Workflow review + project validator | PASS — emulator is required to use `-accel on` and has a bounded 480-second boot allowance | `.github/workflows/android-apk.yml` |
+| Install/foreground evidence contract | Workflow review + project validator | PASS — saves `adb install -r` output, verifies package path, requires resumed activity, then scans logcat | `.github/workflows/android-apk.yml` |
+| Revised hosted emulator run | GitHub Actions | PENDING — source gate is ready; no result is claimed before the changed workflow executes | CI run for this batch is required |
+
+This batch strengthens the definition of a later emulator pass. It does not bypass the named gate, publish an APK, or create physical-device evidence.
+
 ## Outstanding test requirements
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.
 - `MP_RF_02` bot navigation/floor/link/hazard tests before Gate 2 approval.

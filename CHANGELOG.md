@@ -43,6 +43,7 @@ All notable production changes are documented here.
 - An M4 Highrise graybox input manifest/validator that blocks guessed coordinates and keeps `MP_RF_02` non-launchable until authoritative B2 inputs are staged.
 - A schema-2, test-covered Highrise coordinate-packet contract that binds future B2 appendix/reference files by SHA-256 and requires explicit coordinate-frame, zone-source, and feature-anchor records before graybox construction.
 - A coordinate-free C++ `RouteTopology` core and regression suite for later map navigation links, directionality, disabled traversal, and fallback-route verification.
+- An Android-emulator readiness/evidence contract: KVM access, required hardware acceleration, install-output capture, package lookup, foreground-activity proof, and corresponding static release-gate validation.
 
 ### Changed
 

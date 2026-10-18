@@ -38,6 +38,15 @@ def main() -> None:
     release_gate = "steps.android_emulator.outcome == 'success'"
     if "id: android_emulator" not in workflow_text or release_gate not in workflow_text:
         error("downloadable APK publishing is not gated on Android emulator success")
+    emulator_contract = (
+        "Enable KVM acceleration for Android emulator",
+        "test -e /dev/kvm",
+        "-accel on",
+        "adb install -r build/OperationRedline-debug.apk | tee build/android-emulator-install.log",
+        "mResumedActivity.*com.operationredline.outpost",
+    )
+    if not all(requirement in workflow_text for requirement in emulator_contract):
+        error("Android emulator gate lacks the required acceleration/install/foreground evidence contract")
 
     physical_qa_template = ROOT / "docs/physical_qa_evidence.template.json"
     if not physical_qa_template.is_file():
