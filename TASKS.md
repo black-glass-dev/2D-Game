@@ -48,6 +48,7 @@
 
 - [x] Establish the coordinate-gated `MP_RF_02` graybox manifest and prevent a guessed layout from becoming playable.
 - [x] Define and test the provenance-bound B2 coordinate-packet contract before accepting map data.
+- [x] Add a map-neutral C++ route-topology core and regression suite without asserting any missing Highrise endpoints.
 - [ ] Stage the authoritative B2 coordinate appendix/reference, then build the roof/office/lobby graybox from those exact inputs.
 - [ ] Resolve navigation/floor links/spawns/cover, produce Gate 2 captures, and obtain director approval before art.
 

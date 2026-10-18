@@ -285,3 +285,13 @@
 **Alternative considered:** Accept un-hashed prose notes, wait to design the data shape until graybox implementation starts, or unlock the card immediately after the zone rectangles are entered.
 
 **Why not selected:** Prose cannot be mechanically checked against a source file. Delaying the contract risks entangling source interpretation with scene construction. Zone rectangles alone do not establish lightwell, bridge, traversal, supply, or wave-route placement, and an unlocked card before navigation/capture review would bypass Gate 2.
+
+## D-030 — Navigation behavior begins with a coordinate-free native topology core
+
+**Decision:** Add a portable C++ `RouteTopology` graph before M4 receives B2 geometry. The graph accepts only explicit zone IDs and registered traversal links, supports walk/bridge/rappel/lift-shaft/zipline semantics, directionality, enabled/disabled state, and deterministic fallback-route queries. It deliberately contains no Highrise zone endpoints or world coordinates. The future Godot adapter may populate it only from the validated graybox/navigation packet.
+
+**Reason:** Raider movement across floors and traversal links needs a testable route contract, yet recording even a single Highrise endpoint before the B2 source arrives would be an invented layout decision. The native core advances the requested C++ architecture and gives later navigation work a focused unit-test surface without touching Desert gameplay.
+
+**Alternative considered:** Add a speculative Highrise `NavigationRegion3D`, embed the graph in a Godot scene now, or wait until all art/navigation work begins.
+
+**Why not selected:** A speculative scene or endpoints would violate the coordinate gate. Scene-first logic would couple Godot navigation setup to unverified geometry. Waiting would postpone duplicate-link, direction, disabled-traversal, and fallback-route tests until the most failure-prone integration phase.

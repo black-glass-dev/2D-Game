@@ -18,6 +18,7 @@ The old [candidate #61](https://github.com/islamyousuf032-glitch/2D-Game/release
 | GDScript parse/type diagnostics | `npm ci && npm run test:gdscript` via pinned Godot 4.x analyzer | **PASS** — 23 scripts, 0 errors, 0 warnings |
 | C++ warning-clean compile | `g++ -std=c++20 -Wall -Wextra -Werror -pedantic ...` | **PASS** |
 | C++ survival pacing unit tests | `./scripts/run_native_tests.sh` | **PASS** — 3 waves, 27 spawns and completion state |
+| C++ route-topology unit tests | `./scripts/run_native_tests.sh` | **PASS** — validates generic registration, directionality, disabled traversal, fallback route, and unknown-endpoint behavior without map coordinates |
 | Godot project import | GitHub Actions Godot 4.7.2 headless import | **PASS** |
 | Gameplay scene startup | `godot --headless --path . --quit-after 180` | **PASS** — main scene starts without a parse/runtime stop |
 | Renderer graphics evidence | Godot 4.7.2 + OpenGL llvmpipe/Xvfb capture harness | **PASS** — 12 genuine `before` and 12 genuine `after` PNGs, including spawn, lane, crate, sign, horizon, 15 m/5 m Raider, weapon, ADS, firing, low-HP and reload/crouch states |

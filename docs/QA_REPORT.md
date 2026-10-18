@@ -267,6 +267,17 @@ This batch does not invent coordinates, launch a placeholder Highrise scene, or 
 
 The staged schema deliberately keeps `MP_RF_02` locked. CI's Android emulator timed out again; candidate publication was skipped and evidence upload was blocked by GitHub Actions storage quota. It is an input-integrity check, not a substitute for authoritative map data, Godot navigation, renderer captures, director review, or device testing.
 
+## M4 batch 17 — coordinate-free route topology (native source gate)
+
+| Check | Command / route | Result | Evidence |
+| --- | --- | --- | --- |
+| Warning-clean C++ compile | `./scripts/run_native_tests.sh` | PASS — C++20, `-Wall -Wextra -Werror -pedantic` compiles the existing survival core and new topology core | `scripts/run_native_tests.sh` |
+| Generic route behavior | `route_topology_test` | PASS — rejects malformed/duplicate topology, respects one-way/disabled links, finds a fallback route, and rejects unknown endpoints | `native/tests/route_topology_test.cpp` |
+| Desert preservation | Existing `OperationCore` test in same command | PASS — 3 waves, 27 spawns, completion state unchanged | `native/tests/operation_core_test.cpp` |
+| Highrise endpoint/nav proof | Valid B2 packet plus Godot graybox/navigation evidence | BLOCKED — no Highrise endpoints are registered and no Godot nav scene exists | `docs/NAVIGATION_TOPOLOGY_CONTRACT.md` |
+
+The native graph uses neutral test identifiers only. It is not an `MP_RF_02` layout, does not replace Godot navigation, and cannot unlock the map.
+
 ## Outstanding test requirements
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.
 - `MP_RF_02` bot navigation/floor/link/hazard tests before Gate 2 approval.

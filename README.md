@@ -18,9 +18,12 @@ The wave pacing / survival-state rules are written in portable C++20 in `native/
 
 - `native/include/operation_core.hpp`
 - `native/src/operation_core.cpp`
+- `native/include/route_topology.hpp`
+- `native/src/route_topology.cpp`
 - `native/tests/operation_core_test.cpp`
+- `native/tests/route_topology_test.cpp`
 
-This engine-independent core is appropriate for a Godot GDExtension or Android NDK compilation. It has no engine, renderer or platform dependencies, so its critical state transitions can be unit-tested deterministically. `scripts/wave_director.gd` is the current Godot scene adapter and mirrors this tested contract while an Android GDExtension binary is not yet built.
+These engine-independent cores are appropriate for a Godot GDExtension or Android NDK compilation. They have no engine, renderer or platform dependencies, so survival state and future map-route topology can be unit-tested deterministically. `RouteTopology` deliberately contains no Highrise coordinates or endpoints until the authoritative B2 packet is staged. `scripts/wave_director.gd` is the current Godot scene adapter and mirrors the survival contract while an Android GDExtension binary is not yet built.
 
 Run the native tests:
 

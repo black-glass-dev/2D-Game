@@ -68,9 +68,10 @@ Every anchor is an exact finite `x`/`y`/`z` triplet copied from the authoritativ
 ## Follow-on sequence after a valid packet
 
 1. retain the map lock and create the graybox strictly from the validated packet;
-2. resolve `NavigationRegion3D`, floor links, collision, spawns, wave routes, and at least twelve cover hotspots;
-3. capture roof corners, top-down, office/lobby walkthrough, and navigation evidence;
-4. attach those artifacts to QA; and
-5. request Gate 2 before any art pass or map unlock.
+2. populate the coordinate-free C++ `RouteTopology` only with the validated zone/link endpoints, then add map-specific route tests;
+3. resolve `NavigationRegion3D`, floor links, collision, spawns, wave routes, and at least twelve cover hotspots;
+4. capture roof corners, top-down, office/lobby walkthrough, and navigation evidence;
+5. attach those artifacts to QA; and
+6. request Gate 2 before any art pass or map unlock.
 
 This ledger and its tests are preparation artifacts only. They are not proof that Highrise gameplay, navigation, captures, Gate 2, or physical-device testing has completed.
