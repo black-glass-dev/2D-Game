@@ -286,9 +286,9 @@ The native graph uses neutral test identifiers only. CI's Android emulator timed
 | KVM readiness contract | Workflow review + `python3 tools/validate_project.py` | PASS — explicit `/dev/kvm` access/read/write assertions run before the emulator action | `.github/workflows/android-apk.yml`; `tools/validate_project.py` |
 | Accelerated emulator contract | Workflow review + project validator | PASS — emulator is required to use `-accel on` and has a bounded 480-second boot allowance | `.github/workflows/android-apk.yml` |
 | Install/foreground evidence contract | Workflow review + project validator | PASS — saves `adb install -r` output, verifies package path, requires resumed activity, then scans logcat | `.github/workflows/android-apk.yml` |
-| Revised hosted emulator run | GitHub Actions | PENDING — source gate is ready; no result is claimed before the changed workflow executes | CI run for this batch is required |
+| Revised hosted emulator run | GitHub Actions run 39121960890 at `7d6044c` | PASS for KVM/readiness and all non-device gates; BLOCKED for emulator launch — it timed out before boot even with KVM and 480 seconds | [Run 39121960890](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39121960890) |
 
-This batch strengthens the definition of a later emulator pass. It does not bypass the named gate, publish an APK, or create physical-device evidence.
+This batch strengthens the definition of a later emulator pass and proves that KVM access alone does not resolve the hosted runner's boot failure. It does not bypass the named gate, publish an APK, or create physical-device evidence.
 
 ## Outstanding test requirements
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.
