@@ -262,9 +262,10 @@ This batch does not invent coordinates, launch a placeholder Highrise scene, or 
 | Current waiting state | `python3 tools/validate_highrise_manifest.py` | PASS — schema 2 has no placement payload and retains the card lock | `data/highrise/MP_RF_02_graybox_manifest.json` |
 | Contract regression suite | `python3 tools/test_validate_highrise_manifest.py` | PASS — 3 tests cover the committed waiting state, reject coordinates while waiting, and verify staged-source hash/feature-anchor enforcement using only temporary synthetic fixtures | `tools/test_validate_highrise_manifest.py` |
 | Project-gate integration | `python3 tools/validate_project.py` | PASS — validator and its regression suite run before ordinary resource checks | `tools/validate_project.py` |
+| CI source/runtime regression | GitHub Actions run 39109089804 at `a980410` | PASS — source/native, Godot import/export, normal-Boot/gameplay, settings/menu, and graphics-capture steps succeeded | [Run 39109089804](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39109089804) |
 | Real B2 packet / graybox / Gate 2 | Authoritative appendix/reference plus Godot scene evidence | BLOCKED — both source artifacts remain absent; no scene was created | `docs/HIGHRISE_GRAYBOX_INPUTS.md` |
 
-The staged schema deliberately keeps `MP_RF_02` locked. It is an input-integrity check, not a substitute for authoritative map data, Godot navigation, renderer captures, director review, or device testing.
+The staged schema deliberately keeps `MP_RF_02` locked. CI's Android emulator timed out again; candidate publication was skipped and evidence upload was blocked by GitHub Actions storage quota. It is an input-integrity check, not a substitute for authoritative map data, Godot navigation, renderer captures, director review, or device testing.
 
 ## Outstanding test requirements
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.
