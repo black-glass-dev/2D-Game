@@ -325,3 +325,13 @@
 **Alternative considered:** Infer link endpoints from the nearest anchors after graybox construction, add only generic route tests, or record bridge endpoints now from the card names.
 
 **Why not selected:** Nearest-anchor inference can cross floors or gaps incorrectly. Generic tests do not prove a map's actual connections. Recording an association before its B2 source arrives would be the same fabricated-layout risk the M4 gate is intended to prevent.
+
+## D-034 — Probe the documented emulator baseline instead of retrying a timing-out image
+
+**Decision:** Keep the same Android release gate but replace the repeated API-30 AOSP ATD probe with the emulator-runner action's documented API-29/default x86_64 baseline. Apply its documented persistent KVM udev policy, explicitly retain Linux hardware acceleration, and increase the bounded boot allowance to 600 seconds. Preserve install-output, package, resumed-activity, crash-log, and publication conditions unchanged.
+
+**Reason:** KVM passed in two prior runs, yet the API-30 ATD image still timed out before boot. Repeating the identical configuration would provide no new diagnostic signal. The action documentation presents API 29/default on an accelerated Ubuntu runner as its primary working path; the exported x86_64 APK can install on that API-level baseline without changing the package or signing stream.
+
+**Alternative considered:** Keep retrying API-30 ATD, remove the device gate, or attempt an ARM emulator.
+
+**Why not selected:** Identical retries waste CI minutes. Removing the gate would recreate untested downloadable APK risk. ARM images are slower and the action documentation identifies modern x86/x86_64 images as the accelerated CI path.

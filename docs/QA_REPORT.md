@@ -313,6 +313,17 @@ The synthetic fixtures are test-only and are not Android evidence. The hosted em
 
 No endpoint association is recorded in project data. The hosted emulator still timed out, candidate publication was skipped, and artifact upload was quota-blocked. This is an intake contract only, not proof of a Highrise route, `NavigationLink3D`, bot behavior, or Gate 2.
 
+## Batch 21 — documented Android-emulator baseline (workflow source gate)
+
+| Check | Command / route | Result | Evidence |
+| --- | --- | --- | --- |
+| Persistent KVM configuration | Workflow review + `python3 tools/validate_project.py` | PASS — uses the emulator-runner documented udev rule and verifies `/dev/kvm` access before launch | `.github/workflows/android-apk.yml` |
+| Distinct boot hypothesis | Workflow review + project validator | PASS — API-29/default x86_64 with explicit Linux hardware acceleration replaces the repeatedly timing-out API-30 ATD image | `.github/workflows/android-apk.yml` |
+| Delivery/evidence guard | Workflow static validation | PASS — install output, package/foreground proof, crash scan, and named release dependency remain required | `.github/workflows/android-apk.yml`; `tools/validate_project.py` |
+| New hosted baseline run | GitHub Actions | PENDING — no device or emulator success is claimed until this changed configuration executes | CI run for this batch is required |
+
+The image change is a bounded diagnostic probe. It does not weaken APK publication, classify an APK as tested, or replace physical-device QA.
+
 ## Outstanding test requirements
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.
 - `MP_RF_02` bot navigation/floor/link/hazard tests before Gate 2 approval.

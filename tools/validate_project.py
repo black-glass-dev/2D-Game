@@ -39,8 +39,12 @@ def main() -> None:
         error("downloadable APK publishing is not gated on Android emulator success")
     emulator_contract = (
         "Enable KVM acceleration for Android emulator",
+        "99-kvm4all.rules",
         "test -e /dev/kvm",
+        "api-level: 29",
+        "target: default",
         "-accel on",
+        "disable-linux-hw-accel: false",
         "adb install -r build/OperationRedline-debug.apk | tee build/android-emulator-install.log",
         "mResumedActivity.*com.operationredline.outpost",
     )

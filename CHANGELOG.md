@@ -46,6 +46,7 @@ All notable production changes are documented here.
 - An Android-emulator readiness/evidence contract: KVM access, required hardware acceleration, install-output capture, package lookup, foreground-activity proof, and corresponding static release-gate validation.
 - A schema-versioned physical-device evidence validator and regression suite that prevents the QA template, incomplete identity, missing evidence, or a contradictory matrix from being labelled as physical-device-tested.
 - A schema-3 Highrise intake rule requiring source-referenced bridge/rappel/lift/zipline endpoint records before any future navigation adapter can populate the native route topology.
+- A documented Android-emulator fallback configuration using persistent KVM udev permissions and the action's API-29/default x86_64 baseline, while retaining the same release evidence gate.
 
 ### Changed
 

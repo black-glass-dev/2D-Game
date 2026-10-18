@@ -347,11 +347,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # A missing or inaccessible KVM device turns an x86_64 emulator into
-          # software emulation, which is indistinguishable from a boot timeout
-          # at the release gate. Fail with a direct runner diagnostic instead.
+          # Follow the emulator-runner documented udev path, then verify that
+          # the runner user can actually use KVM. A bare chmod can be undone by
+          # device-rule refreshes and does not prove the intended group policy.
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
           test -e /dev/kvm
-          sudo chmod 666 /dev/kvm
           test -r /dev/kvm
           test -w /dev/kvm
           ls -l /dev/kvm
@@ -360,20 +362,21 @@ jobs:
         id: android_emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          # Android Test Device images are purpose-built for CI and are much
-          # lighter than a full consumer image. API 30 remains sufficient to
-          # validate this Android-35-compiled, min-SDK-compatible APK. KVM is
-          # explicitly enabled above and acceleration is required below, so a
-          # capacity failure is visible rather than being misreported as game IO.
-          api-level: 30
-          target: aosp_atd
+          # The prior API-30 AOSP ATD configuration repeatedly timed out after
+          # KVM became available. Use the action's documented API-29/default
+          # x86_64 baseline before treating the hosted runner as irreparable.
+          # API 29 is compatible with this min-SDK Android export and validates
+          # the same package/signature/install/launch contract.
+          api-level: 29
+          target: default
           arch: x86_64
-          profile: Nexus 6
+          profile: pixel_7_pro
           cores: 2
           ram-size: 2048M
           heap-size: 256M
-          emulator-boot-timeout: 480
+          emulator-boot-timeout: 600
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -no-snapshot-save -no-metrics -accel on
+          disable-linux-hw-accel: false
           disable-animations: true
           script: |
             set -euo pipefail
