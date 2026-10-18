@@ -297,9 +297,10 @@ This batch strengthens the definition of a later emulator pass and proves that K
 | Committed template boundary | `python3 tools/validate_physical_qa_evidence.py` | PASS — schema-1 template remains `TEMPLATE_NOT_EVIDENCE`, all D01–D12 rows are `NOT_RUN`, and no release classification can be implied | `docs/physical_qa_evidence.template.json` |
 | Completed-record rules | `python3 tools/test_validate_physical_qa_evidence.py` | PASS — 3 tests reject a modified template and a false all-PASS classification; temporary synthetic fixtures prove valid PASS and honest BLOCKED record shapes | `tools/test_validate_physical_qa_evidence.py` |
 | Project-gate integration | `python3 tools/validate_project.py` | PASS — template validator and regression suite run with the regular source checks | `tools/validate_project.py` |
+| CI source/runtime regression | GitHub Actions run 39124905475 at `0220384` | PASS — source/native, import/export, normal-Boot/gameplay, settings/menu, graphics-capture, and KVM steps succeeded | [Run 39124905475](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39124905475) |
 | Actual device evidence | Android device or successful emulator plus completed record | OPEN — no physical record or working hosted-emulator run exists | `docs/PHYSICAL_DEVICE_QA.md` |
 
-The synthetic fixtures are test-only and are not Android evidence. This batch makes later evidence harder to misclassify; it does not convert the committed template, CI captures, or an emulator timeout into a device pass.
+The synthetic fixtures are test-only and are not Android evidence. The hosted emulator still timed out, candidate publication was skipped, and artifact upload was quota-blocked. This batch makes later evidence harder to misclassify; it does not convert the committed template, CI captures, or an emulator timeout into a device pass.
 
 ## Outstanding test requirements
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.
