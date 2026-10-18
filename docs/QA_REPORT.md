@@ -274,9 +274,10 @@ The staged schema deliberately keeps `MP_RF_02` locked. CI's Android emulator ti
 | Warning-clean C++ compile | `./scripts/run_native_tests.sh` | PASS — C++20, `-Wall -Wextra -Werror -pedantic` compiles the existing survival core and new topology core | `scripts/run_native_tests.sh` |
 | Generic route behavior | `route_topology_test` | PASS — rejects malformed/duplicate topology, respects one-way/disabled links, finds a fallback route, and rejects unknown endpoints | `native/tests/route_topology_test.cpp` |
 | Desert preservation | Existing `OperationCore` test in same command | PASS — 3 waves, 27 spawns, completion state unchanged | `native/tests/operation_core_test.cpp` |
+| CI source/runtime regression | GitHub Actions run 39120796836 at `6f2e5a7` | PASS — source/native, import/export, normal-Boot/gameplay, settings/menu, and graphics-capture steps succeeded | [Run 39120796836](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39120796836) |
 | Highrise endpoint/nav proof | Valid B2 packet plus Godot graybox/navigation evidence | BLOCKED — no Highrise endpoints are registered and no Godot nav scene exists | `docs/NAVIGATION_TOPOLOGY_CONTRACT.md` |
 
-The native graph uses neutral test identifiers only. It is not an `MP_RF_02` layout, does not replace Godot navigation, and cannot unlock the map.
+The native graph uses neutral test identifiers only. CI's Android emulator timed out again; candidate publication was skipped and evidence upload was blocked by GitHub Actions storage quota. It is not an `MP_RF_02` layout, does not replace Godot navigation, and cannot unlock the map.
 
 ## Outstanding test requirements
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.
