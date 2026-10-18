@@ -375,12 +375,10 @@ jobs:
           api-level: 29
           target: default
           arch: x86_64
-          profile: pixel_7_pro
-          cores: 2
-          ram-size: 2048M
-          heap-size: 256M
+          # Keep the rest of the documented API-29/default baseline at action
+          # defaults: previous extra AVD profile/memory and launch overrides
+          # failed before the pre-launch hook could establish an AVD boundary.
           emulator-boot-timeout: 600
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -no-snapshot-save -no-metrics -accel on
           disable-linux-hw-accel: false
           disable-animations: true
           # This runs after AVD creation and before boot, so a failed action can

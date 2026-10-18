@@ -375,3 +375,13 @@
 **Alternative considered:** Change the API/profile/acceleration inputs blindly, disable the strict action gate, or treat the generic annotation as device evidence.
 
 **Why not selected:** Changing several variables at once destroys failure attribution. Relaxing the gate or claiming a device result would violate the release contract. The pre-launch record narrows the execution boundary first while preserving KVM, API, acceleration, install, package, foreground, and crash requirements.
+
+## D-039 — Use action defaults beyond the explicit API-29/x86_64/KVM baseline
+
+**Decision:** Retain only API 29, `target: default`, `arch: x86_64`, the bounded 600-second allowance, and `disable-linux-hw-accel: false`; let android-emulator-runner supply its documented AVD profile/memory and launch-option defaults. Keep the pre-launch boundary probe.
+
+**Reason:** Run 39133730161 still did not reach the pre-launch hook, placing the opaque `sh` failure before the custom probe and before a proven boot path. The prior configuration had added a Pixel 7 Pro profile, RAM/heap overrides, and custom emulator options. A public Servo workflow uses the same action and API-29/default/x86_64 trio without those overrides. Returning to that supported minimum isolates those extra action inputs while preserving the required KVM acceleration policy.
+
+**Alternative considered:** Alter API level/target/architecture, disable KVM acceleration, or keep all overrides and retry unchanged.
+
+**Why not selected:** Altering the baseline invalidates the already selected API-29 test hypothesis. Disabling acceleration violates the release gate. Retrying identical pre-launch-unreached inputs cannot determine whether an override caused AVD setup failure.

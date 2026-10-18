@@ -378,9 +378,18 @@ The run-specific marker prevents repeated opaque failures from being hidden by a
 | Check | Command / route | Result | Evidence |
 | --- | --- | --- | --- |
 | AVD/launch boundary contract | `python3 tools/validate_project.py`; `/usr/bin/sh -n scripts/android_emulator_prelaunch_probe.sh` | PASS — workspace-absolute pre-launch hook records an AVD-created marker, action path values, emulator version, and AVD config presence before boot | `.github/workflows/android-apk.yml`; `scripts/android_emulator_prelaunch_probe.sh`; `tools/validate_project.py` |
-| Boundary probe run | GitHub Actions | PENDING — no emulator/device result is claimed before the pre-launch observation executes | CI run for this batch is required |
+| Boundary probe run | GitHub Actions run 39133730161 at `bcb0ccb` | PARTIAL PASS — all preceding gates passed, but neither pre-launch nor post-launch log existed when the action failed; failure precedes a proven custom action boundary | [Run 39133730161](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39133730161); `ci-logs/android-emulator-probe-missing.txt` at `b938c59` |
 
-The pre-launch log is diagnostic evidence only. It cannot substitute for completed install, package, foreground, crash, or physical-device validation.
+The pre-launch log remains diagnostic evidence only. It cannot substitute for completed install, package, foreground, crash, or physical-device validation.
+
+## Batch 28 — minimal documented action baseline (workflow source gate)
+
+| Check | Command / route | Result | Evidence |
+| --- | --- | --- | --- |
+| Baseline reduction | Workflow review + `python3 tools/validate_project.py` | PASS — preserves API-29/default/x86_64, 600-second allowance, mandatory Linux acceleration, and both diagnostics while removing unproven AVD profile/memory/launch overrides | `.github/workflows/android-apk.yml`; `tools/validate_project.py` |
+| Minimal baseline run | GitHub Actions | PENDING — no emulator/device result is claimed before the reduced baseline executes | CI run for this batch is required |
+
+The reduction is diagnostic isolation, not a relaxation of acceleration, install, foreground, crash, candidate-publication, or physical-device gates.
 
 ## Outstanding test requirements
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.

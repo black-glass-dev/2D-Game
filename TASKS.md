@@ -51,6 +51,7 @@
 - [x] Move emulator install/foreground control flow to one tracked POSIX script because the runner independently executes every YAML `script` line.
 - [x] Address the runner's unproven current directory by invoking the probe and all evidence paths through `$GITHUB_WORKSPACE`.
 - [x] Record the runner's post-AVD/pre-boot boundary separately so action failure can be attributed before changing emulator configuration again.
+- [x] Return the Android runner to documented AVD/launch defaults while retaining API-29/default/x86_64, acceleration, bounded boot, diagnostics, and release evidence gates.
 
 ## M4 — Highrise graybox and systems
 
