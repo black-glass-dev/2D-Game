@@ -302,6 +302,16 @@ This batch strengthens the definition of a later emulator pass and proves that K
 
 The synthetic fixtures are test-only and are not Android evidence. The hosted emulator still timed out, candidate publication was skipped, and artifact upload was quota-blocked. This batch makes later evidence harder to misclassify; it does not convert the committed template, CI captures, or an emulator timeout into a device pass.
 
+## M4 batch 20 — traversal-endpoint intake (local source gate)
+
+| Check | Command / route | Result | Evidence |
+| --- | --- | --- | --- |
+| Waiting topology boundary | `python3 tools/validate_highrise_manifest.py` | PASS — schema-3 waiting manifest contains no coordinate, feature, or traversal-endpoint payload and keeps the card locked | `data/highrise/MP_RF_02_graybox_manifest.json` |
+| Staged endpoint rules | `python3 tools/test_validate_highrise_manifest.py` | PASS — temporary synthetic packet must provide each bridge/rappel/lift/zipline with two different staged-zone endpoints, source reference, and directionality; a missing topology record is rejected | `tools/test_validate_highrise_manifest.py` |
+| Navigation integration | Godot graybox/navigation adapter | BLOCKED — B2 appendix/reference and therefore authoritative endpoints are absent | `docs/HIGHRISE_GRAYBOX_INPUTS.md`; `docs/NAVIGATION_TOPOLOGY_CONTRACT.md` |
+
+No endpoint association is recorded in project data. This is an intake contract only, not proof of a Highrise route, `NavigationLink3D`, bot behavior, or Gate 2.
+
 ## Outstanding test requirements
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.
 - `MP_RF_02` bot navigation/floor/link/hazard tests before Gate 2 approval.

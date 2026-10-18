@@ -22,10 +22,11 @@ A link has an explicit traversal kind (`walk`, `bridge`, `rappel`, `lift shaft`,
 After the authoritative B2 packet passes `tools/validate_highrise_manifest.py`:
 
 1. build graybox collision and navigation strictly from the staged coordinate/frame data;
-2. create the Godot navigation/traversal adapter from the **actual** validated endpoints;
-3. register only those actual zones and links in `RouteTopology`;
-4. add map-specific tests for every approved route, one-way condition, disabled-link fallback, spawn-to-objective path, and floor transition; and
-5. compare the tests with navigation/capture evidence before Gate 2.
+2. use the staged, source-referenced bridge/rappel/lift/zipline endpoint records rather than inferred zone adjacency;
+3. create the Godot navigation/traversal adapter from the **actual** validated endpoints;
+4. register only those actual zones and links in `RouteTopology`;
+5. add map-specific tests for every approved route, one-way condition, disabled-link fallback, spawn-to-objective path, and floor transition; and
+6. compare the tests with navigation/capture evidence before Gate 2.
 
 No endpoint pair or route is prefilled here because the authoritative B2 coordinates/top-down reference are still absent. The unit test uses neutral `alpha`/`bravo`/`charlie`/`delta` identifiers solely to verify generic graph behavior; it is not a map design substitute.
 

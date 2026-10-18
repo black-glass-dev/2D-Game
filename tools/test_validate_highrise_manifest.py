@@ -97,12 +97,29 @@ class HighriseManifestTests(unittest.TestCase):
                 }
                 for feature, geometry_kind in highrise.FEATURE_GEOMETRY_KINDS.items()
             }
+            synthetic_zones = sorted(highrise.EXPECTED_ZONES)
+            manifest["traversal_links"] = {
+                feature: {
+                    "feature_id": feature,
+                    "from_zone": synthetic_zones[index % len(synthetic_zones)],
+                    "to_zone": synthetic_zones[(index + 1) % len(synthetic_zones)],
+                    "bidirectional": index % 2 == 0,
+                    "source_reference": "synthetic test source",
+                }
+                for index, feature in enumerate(sorted(highrise.TRAVERSAL_FEATURES))
+            }
             manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
 
             self.assertEqual(
                 highrise.validate_manifest(manifest_path, map_path, workspace),
                 "coordinates_staged",
             )
+
+            missing_topology = copy.deepcopy(manifest)
+            del missing_topology["traversal_links"]["bridge_1"]
+            manifest_path.write_text(json.dumps(missing_topology), encoding="utf-8")
+            with self.assertRaisesRegex(highrise.ManifestValidationError, "topology record"):
+                highrise.validate_manifest(manifest_path, map_path, workspace)
 
             tampered_manifest = copy.deepcopy(manifest)
             tampered_manifest["features"]["bridge_1"]["anchors"] = [{"x": 0.0, "y": 0.0, "z": 0.0}]

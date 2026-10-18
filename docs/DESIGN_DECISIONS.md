@@ -315,3 +315,13 @@
 **Alternative considered:** Keep the JSON as an unvalidated template, reject all records with a non-PASS row, or let a reviewer select any release classification manually.
 
 **Why not selected:** Unvalidated JSON cannot reliably distinguish a procedure from proof. Rejecting failure records erases diagnostic information and discourages honest reporting. Manual classifications can contradict the matrix and are especially risky while hosted emulator evidence remains unavailable.
+
+## D-033 — Traversal endpoints must be source-referenced before navigation wiring
+
+**Decision:** Extend the Highrise intake contract to require one source-referenced topology record for each bridge, rappel, lift-shaft, and zipline when the B2 packet is staged. Each record must name its feature, two distinct staged zones, and whether traversal is bidirectional. The map stays locked and no endpoint record exists while the source inputs remain absent.
+
+**Reason:** Coordinate anchors show where a traversal feature sits, but they do not by themselves prove which two navigation zones it joins or whether an AI/player can travel in both directions. Validating that relationship before Godot wiring gives the native route graph a traceable input and prevents a plausible-but-invented connection from becoming gameplay behavior.
+
+**Alternative considered:** Infer link endpoints from the nearest anchors after graybox construction, add only generic route tests, or record bridge endpoints now from the card names.
+
+**Why not selected:** Nearest-anchor inference can cross floors or gaps incorrectly. Generic tests do not prove a map's actual connections. Recording an association before its B2 source arrives would be the same fabricated-layout risk the M4 gate is intended to prevent.

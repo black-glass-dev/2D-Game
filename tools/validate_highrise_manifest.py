@@ -58,6 +58,13 @@ ANCHOR_MINIMUMS = {
     "point_collection": 1,
     "path_collection": 2,
 }
+TRAVERSAL_FEATURES = {
+    "bridge_1",
+    "bridge_2",
+    "rappel_link",
+    "lift_shaft_link",
+    "zipline_link",
+}
 REQUIRED_FRAME_FIELDS = {
     "units",
     "origin_description",
@@ -66,11 +73,20 @@ REQUIRED_FRAME_FIELDS = {
     "vertical_axis_description",
 }
 REQUIRED_ZONE_FIELDS = {"x", "z", "width", "depth", "floor_y", "source_reference"}
+REQUIRED_TRAVERSAL_LINK_FIELDS = {
+    "feature_id",
+    "from_zone",
+    "to_zone",
+    "bidirectional",
+    "source_reference",
+}
 REQUIRED_STAGING_CONTRACT = {
     "coordinate_frame_fields": sorted(REQUIRED_FRAME_FIELDS),
     "zone_record_fields": sorted(REQUIRED_ZONE_FIELDS),
     "feature_record_fields": ["geometry_kind", "anchors", "source_reference"],
     "feature_geometry_kinds": FEATURE_GEOMETRY_KINDS,
+    "required_traversal_features": sorted(TRAVERSAL_FEATURES),
+    "traversal_link_record_fields": sorted(REQUIRED_TRAVERSAL_LINK_FIELDS),
 }
 SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 
@@ -142,7 +158,7 @@ def validate_waiting_manifest(manifest: dict[str, Any]) -> str:
     if source.get("expected_reference_path") != EXPECTED_REFERENCE_PATH:
         fail(f"authoritative_input.expected_reference_path must remain {EXPECTED_REFERENCE_PATH}")
     require_nonempty_string(source.get("source_note"), "authoritative_input.source_note")
-    for forbidden_key in ("coordinate_frame", "coordinates", "features"):
+    for forbidden_key in ("coordinate_frame", "coordinates", "features", "traversal_links"):
         if forbidden_key in manifest:
             fail(f"waiting manifest must not contain {forbidden_key} data")
     return "awaiting_coordinates"
@@ -188,6 +204,25 @@ def validate_feature_records(features: Any) -> None:
                 require_finite_number(anchor[axis], f"staged feature {feature} anchor {index}.{axis}")
 
 
+def validate_traversal_links(traversal_links: Any) -> None:
+    if not isinstance(traversal_links, dict) or set(traversal_links) != TRAVERSAL_FEATURES:
+        fail("staged manifest must provide one topology record per required traversal feature")
+    for feature, link in traversal_links.items():
+        if not isinstance(link, dict) or set(link) != REQUIRED_TRAVERSAL_LINK_FIELDS:
+            fail(f"traversal link {feature} must contain the complete endpoint/source field set")
+        if link["feature_id"] != feature:
+            fail(f"traversal link {feature} must identify its matching feature_id")
+        from_zone = require_nonempty_string(link["from_zone"], f"traversal link {feature}.from_zone")
+        to_zone = require_nonempty_string(link["to_zone"], f"traversal link {feature}.to_zone")
+        if from_zone not in EXPECTED_ZONES or to_zone not in EXPECTED_ZONES:
+            fail(f"traversal link {feature} must reference only staged Highrise zones")
+        if from_zone == to_zone:
+            fail(f"traversal link {feature} cannot connect a zone to itself")
+        if not isinstance(link["bidirectional"], bool):
+            fail(f"traversal link {feature}.bidirectional must be boolean")
+        require_nonempty_string(link["source_reference"], f"traversal link {feature}.source_reference")
+
+
 def validate_staged_manifest(manifest: dict[str, Any], repository_root: Path) -> str:
     source = manifest.get("authoritative_input")
     if not isinstance(source, dict):
@@ -216,6 +251,7 @@ def validate_staged_manifest(manifest: dict[str, Any], repository_root: Path) ->
     validate_coordinate_frame(manifest.get("coordinate_frame"))
     validate_zone_records(manifest.get("coordinates"))
     validate_feature_records(manifest.get("features"))
+    validate_traversal_links(manifest.get("traversal_links"))
     return "coordinates_staged"
 
 
@@ -226,8 +262,8 @@ def validate_manifest(
 ) -> str:
     """Validate a manifest and return its concise, reportable status."""
     manifest = load_json(manifest_path)
-    if manifest.get("schema_version") != 2 or manifest.get("map_id") != "MP_RF_02":
-        fail("schema_version and map_id must identify MP_RF_02 schema 2")
+    if manifest.get("schema_version") != 3 or manifest.get("map_id") != "MP_RF_02":
+        fail("schema_version and map_id must identify MP_RF_02 schema 3")
     if manifest.get("declared_footprint_m") != {"width": 120, "depth": 90}:
         fail("declared footprint must remain the reviewed 120 m by 90 m card value")
     if set(manifest.get("required_zones", [])) != EXPECTED_ZONES:

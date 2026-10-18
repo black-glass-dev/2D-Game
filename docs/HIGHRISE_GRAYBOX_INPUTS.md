@@ -1,6 +1,6 @@
 # MP_RF_02 Highrise Graybox Input Ledger
 
-## Batch 16 status
+## Batch 20 status
 
 M4 remains in technical preparation. No Highrise scene, collision, navigation mesh, spawn profile, cover point, art geometry, or launch route is created in this batch. The map remains an honest `COMING_SOON` card and cannot launch.
 
@@ -20,13 +20,13 @@ The director's B2 coordinate appendix and top-down reference—not an inferred i
 
 ## Enforced waiting gate
 
-`data/highrise/MP_RF_02_graybox_manifest.json` is schema version 2 and is the source-controlled M4 input contract. Its current status is `AWAITING_AUTHORITATIVE_B2_COORDINATES`.
+`data/highrise/MP_RF_02_graybox_manifest.json` is schema version 3 and is the source-controlled M4 input contract. Its current status is `AWAITING_AUTHORITATIVE_B2_COORDINATES`.
 
 `tools/validate_highrise_manifest.py`, called by `tools/validate_project.py`, requires all of the following while that status is active:
 
 1. the reviewed 120 m × 90 m card footprint and complete zone/feature lists remain intact;
 2. the source-absence note and expected reference location remain explicit;
-3. no `coordinate_frame`, zone `coordinates`, or feature placement data exists in the waiting manifest; and
+3. no `coordinate_frame`, zone `coordinates`, feature placement, or traversal-link endpoint data exists in the waiting manifest; and
 4. the Highrise card remains `COMING_SOON` with `playable = false`.
 
 The validator regression suite at `tools/test_validate_highrise_manifest.py` is also run by project validation. Its coordinate values are temporary synthetic test fixtures only; they are never stored as MP_RF_02 design data.
@@ -64,6 +64,12 @@ Every recorded feature must be traceable to the B2 source and include authoritat
 | `wave_routes` | path collection, at least two anchors |
 
 Every anchor is an exact finite `x`/`y`/`z` triplet copied from the authoritative packet. These are schema requirements, not placeholder positions.
+
+### 5. Traversal topology records
+
+The two bridges, rappel, lift-shaft, and zipline must each receive one distinct topology record. Every record identifies its matching feature ID, exact source-referenced `from_zone` and `to_zone`, and a source-defined `bidirectional` value. Both endpoints must be among the staged zones and may not be the same zone.
+
+This records topology only after the authoritative packet identifies it; it does **not** declare which zones any bridge or traversal feature connects today. The later Godot adapter and C++ `RouteTopology` may consume only these validated endpoints.
 
 ## Follow-on sequence after a valid packet
 

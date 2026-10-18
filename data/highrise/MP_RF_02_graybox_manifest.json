@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "map_id": "MP_RF_02",
   "status": "AWAITING_AUTHORITATIVE_B2_COORDINATES",
   "declared_footprint_m": {
@@ -43,7 +43,21 @@
       "zipline_link": "link",
       "supply_nodes": "point_collection",
       "wave_routes": "path_collection"
-    }
+    },
+    "required_traversal_features": [
+      "bridge_1",
+      "bridge_2",
+      "lift_shaft_link",
+      "rappel_link",
+      "zipline_link"
+    ],
+    "traversal_link_record_fields": [
+      "bidirectional",
+      "feature_id",
+      "from_zone",
+      "source_reference",
+      "to_zone"
+    ]
   },
   "required_zones": [
     "roof_a",
