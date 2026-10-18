@@ -308,9 +308,10 @@ The synthetic fixtures are test-only and are not Android evidence. The hosted em
 | --- | --- | --- | --- |
 | Waiting topology boundary | `python3 tools/validate_highrise_manifest.py` | PASS — schema-3 waiting manifest contains no coordinate, feature, or traversal-endpoint payload and keeps the card locked | `data/highrise/MP_RF_02_graybox_manifest.json` |
 | Staged endpoint rules | `python3 tools/test_validate_highrise_manifest.py` | PASS — temporary synthetic packet must provide each bridge/rappel/lift/zipline with two different staged-zone endpoints, source reference, and directionality; a missing topology record is rejected | `tools/test_validate_highrise_manifest.py` |
+| CI source/runtime regression | GitHub Actions run 39127188550 at `98a2623` | PASS — source/native, import/export, normal-Boot/gameplay, settings/menu, graphics-capture, and KVM steps succeeded | [Run 39127188550](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39127188550) |
 | Navigation integration | Godot graybox/navigation adapter | BLOCKED — B2 appendix/reference and therefore authoritative endpoints are absent | `docs/HIGHRISE_GRAYBOX_INPUTS.md`; `docs/NAVIGATION_TOPOLOGY_CONTRACT.md` |
 
-No endpoint association is recorded in project data. This is an intake contract only, not proof of a Highrise route, `NavigationLink3D`, bot behavior, or Gate 2.
+No endpoint association is recorded in project data. The hosted emulator still timed out, candidate publication was skipped, and artifact upload was quota-blocked. This is an intake contract only, not proof of a Highrise route, `NavigationLink3D`, bot behavior, or Gate 2.
 
 ## Outstanding test requirements
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.
