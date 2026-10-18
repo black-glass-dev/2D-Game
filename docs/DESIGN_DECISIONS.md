@@ -354,4 +354,14 @@
 
 **Alternative considered:** Treat the run as an emulator boot failure, remove strict shell options, or wrap a nested Bash command without validating it.
 
-**Why not selected:** The annotation identifies a shell-process failure rather than a boot timeout. Removing error handling would hide failed ADB/package checks. An unguarded nested shell adds quoting risk; POSIX syntax keeps the action-native execution path explicit and reviewable.
+**Why not selected:** The annotation identifies a shell-process failure rather than a boot timeout. Removing error handling would hide failed ADB/package checks. An unguarded nested shell adds quoting risk; POSIX syntax keeps the action-native execution path explicit and reviewable. Run 39130918946 still ended in the action's generic shell-exit annotation after the POSIX repair, so that run confirms the action reached the probe but does not prove syntax was the sole root cause or provide any install/launch evidence.
+
+## D-037 — Persist failed emulator-probe command traces in the branch
+
+**Decision:** Redirect the POSIX emulator probe's traced stdout/stderr to `build/android-emulator-probe.log` and, only if the action fails, copy that log to `ci-logs/` and commit it to the same branch. Include it in the normal evidence artifact when storage permits.
+
+**Reason:** GitHub run 39130918946 still returned only the action-level `/usr/bin/sh` exit annotation, while signed job-log retrieval is unavailable in this environment and artifact upload is quota-blocked. A tracked failure-only diagnostic gives the next review an exact command boundary without treating it as successful device evidence.
+
+**Alternative considered:** Re-run unchanged, suppress `set -e`, or add a Bash wrapper.
+
+**Why not selected:** An unchanged retry cannot narrow the failure. Suppressing failure behavior can falsely continue past a broken evidence command. A nested Bash wrapper obscures the action-native `sh` environment instead of recording the actual failing command.

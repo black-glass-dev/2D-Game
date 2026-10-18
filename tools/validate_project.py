@@ -47,8 +47,11 @@ def main() -> None:
         "-accel on",
         "disable-linux-hw-accel: false",
         "android-emulator-runner invokes this block with /usr/bin/sh",
-        "set -eu",
+        "exec > build/android-emulator-probe.log 2>&1",
+        "set -eux",
         "if [ \"$foreground\" != true ]; then",
+        "Commit Android emulator diagnostics if probe fails",
+        "ci: capture Android emulator probe diagnostics",
         "adb install -r build/OperationRedline-debug.apk | tee build/android-emulator-install.log",
         "mResumedActivity.*com.operationredline.outpost",
     )

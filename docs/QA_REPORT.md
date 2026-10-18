@@ -339,11 +339,20 @@ The fallback does not downgrade KVM verification: a missing or inaccessible `/de
 
 | Check | Command / route | Result | Evidence |
 | --- | --- | --- | --- |
-| Shell portability contract | Workflow review + `python3 tools/validate_project.py` | PASS — action script uses POSIX `set -eu` and `[ ... ]`, not Bash-only options/conditionals | `.github/workflows/android-apk.yml`; `tools/validate_project.py` |
+| Shell portability contract | Workflow review + `python3 tools/validate_project.py` | PASS — action script uses POSIX `set -eux` and `[ ... ]`, not Bash-only options/conditionals | `.github/workflows/android-apk.yml`; `tools/validate_project.py` |
 | Evidence path retained | Workflow source review | PASS — `adb install -r`, package lookup, resumed-activity check, and logcat scan remain unchanged after the shell repair | `.github/workflows/android-apk.yml` |
-| Repaired API-29 run | GitHub Actions | PENDING — no emulator/device result is claimed before the POSIX-compatible probe executes | CI run for this batch is required |
+| Repaired API-29 run | GitHub Actions run 39130918946 at `bae86be` | PARTIAL PASS — all prior source/export/Boot/menu/graphics/KVM gates passed, but the action again returned generic `/usr/bin/sh` exit 1 before install/launch evidence | [Run 39130918946](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39130918946) |
 
-The repair addresses an action-shell failure, not an APK or device pass. Candidate publication remains gated on a successful full emulator step.
+The repair removes the identified non-POSIX constructs but is not claimed to be the sole root-cause fix: the hosted action still failed without retrievable inner-shell stderr. Candidate publication remains gated on a successful full emulator step.
+
+## Batch 24 — failure-only emulator-probe diagnostics (workflow source gate)
+
+| Check | Command / route | Result | Evidence |
+| --- | --- | --- | --- |
+| Probe trace persistence | Workflow source review + `python3 tools/validate_project.py` | PASS — POSIX probe redirects traced output to `build/android-emulator-probe.log`; only an action failure commits it under `ci-logs/` | `.github/workflows/android-apk.yml`; `tools/validate_project.py` |
+| Repaired diagnostic run | GitHub Actions | PENDING — no emulator/device result is claimed before the diagnostic probe executes | CI run for this batch is required |
+
+The committed diagnostic, if any, is failure investigation evidence only—not APK, installation, foreground, or physical-device proof.
 
 ## Outstanding test requirements
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.
