@@ -394,4 +394,4 @@
 
 **Alternative considered:** Relax the emulator gate, remove `-noaudio`, change Android image/API, or install an unbounded desktop-audio package set.
 
-**Why not selected:** None addresses the recorded dynamic-loader error as directly. `-noaudio` does not remove QEMU's linked library requirement. Unrelated image/API changes would conflate causes, while broad packages add unnecessary runner surface.
+**Why not selected:** None addresses the recorded dynamic-loader error as directly. `-noaudio` does not remove QEMU's linked library requirement. Unrelated image/API changes would conflate causes, while broad packages add unnecessary runner surface. Run 39136026161 then proved the repair: the pre-launch record reports emulator version 37.2.12.0 and `test.avd/config.ini` without a loader error. The action nevertheless used its full 600-second allowance and timed out waiting for boot, so this is runtime-dependency confirmation only—not emulator, APK, or device success.

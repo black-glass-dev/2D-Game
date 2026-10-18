@@ -53,6 +53,7 @@
 - [x] Record the runner's post-AVD/pre-boot boundary separately so action failure can be attributed before changing emulator configuration again.
 - [x] Return the Android runner to documented AVD/launch defaults while retaining API-29/default/x86_64, acceleration, bounded boot, diagnostics, and release evidence gates.
 - [x] Install and verify the minimal `libpulse0` loader dependency identified by a committed pre-launch QEMU diagnostic before the emulator action.
+- [x] Re-run the dependency-backed API-29 emulator gate: QEMU/AVD pre-launch evidence passed, but hosted boot still timed out at the full 600-second bound; candidate publication remained blocked.
 
 ## M4 — Highrise graybox and systems
 

@@ -396,9 +396,9 @@ The reduction is diagnostic isolation, not a relaxation of acceleration, install
 | Check | Command / route | Result | Evidence |
 | --- | --- | --- | --- |
 | Loader-dependency repair | Workflow source review + `python3 tools/validate_project.py` | PASS — installs only `libpulse0` and verifies `libpulse.so.0` immediately before the action | `.github/workflows/android-apk.yml`; `tools/validate_project.py` |
-| Runtime repair run | GitHub Actions | PENDING — no emulator/device result is claimed before the dependency-backed probe executes | CI run for this batch is required |
+| Runtime repair run | GitHub Actions run 39136026161 at `aa27467` | PARTIAL PASS — all preceding gates and `libpulse0` setup passed; pre-launch record confirms QEMU 37.2.12.0/AVD config without loader error; runner timed out after the full 600-second boot allowance | [Run 39136026161](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39136026161); `ci-logs/android-emulator-prelaunch.log` at `901264f` |
 
-`libpulse0` repairs the documented QEMU dynamic-loader dependency. It is not a claim that emulator boot, APK install, app foregrounding, or device validation succeeded.
+`libpulse0` repairs the documented QEMU dynamic-loader dependency. The post-repair run did **not** boot the emulator, install the APK, reach app foreground, publish a candidate, produce a usable artifact, or supply physical-device validation.
 
 ## Outstanding test requirements
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.
