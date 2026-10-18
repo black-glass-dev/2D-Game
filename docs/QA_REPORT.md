@@ -244,6 +244,17 @@ Historical pre-releases are not physical-device-tested deliveries; this batch pr
 
 The handoff documents do not convert any prior headless/Xvfb/emulator-timeout result into a device pass. This batch is complete only as a reproducible test procedure; the real-device acceptance row remains deliberately open.
 
+## M4 batch 15 — Highrise coordinate gate (local source gate)
+
+| Check | Command / route | Result | Evidence |
+| --- | --- | --- | --- |
+| Graybox manifest shape | `python3 tools/validate_highrise_manifest.py` | PASS — M4 input manifest identifies `MP_RF_02`, reviewed card footprint, required zones/features, and waiting status | `data/highrise/MP_RF_02_graybox_manifest.json` |
+| No guessed geometry | Highrise validator | PASS — waiting manifest has no coordinate records and `MP_RF_02` remains `COMING_SOON` / non-launchable | `tools/validate_highrise_manifest.py`; `data/maps/MP_RF_02.tres` |
+| Project gate integration | `python3 tools/validate_project.py` | PASS — Highrise contract runs with regular source/resource validation | 2026-10-18 local terminal log |
+| Graybox/nav/capture/Gate 2 | Real Godot scene and evidence pack | BLOCKED — authoritative B2 coordinates and the reference binary are not present in the checkout | `docs/HIGHRISE_GRAYBOX_INPUTS.md` |
+
+This batch does not invent coordinates, launch a placeholder Highrise scene, or alter Desert ownership, waves, score, HP, controls, HUD, or current release policy.
+
 ## Outstanding test requirements
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.
 - `MP_RF_02` bot navigation/floor/link/hazard tests before Gate 2 approval.

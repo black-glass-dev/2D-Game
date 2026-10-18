@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "map_id": "MP_RF_02",
+  "status": "AWAITING_AUTHORITATIVE_B2_COORDINATES",
+  "declared_footprint_m": {
+    "width": 120,
+    "depth": 90
+  },
+  "authoritative_input": {
+    "coordinate_spec_available_in_workspace": false,
+    "top_down_reference_available_in_workspace": false,
+    "expected_reference_path": "docs/level_design/rooftop_highrise_map.png",
+    "source_note": "The supplied task brief is the authority, but its coordinate appendix and reference binary are not present in this checkout. No zone position, height, gap, bridge, spawn, cover, or traversal value is invented here."
+  },
+  "required_zones": [
+    "roof_a",
+    "roof_b",
+    "roof_c",
+    "office",
+    "lobby",
+    "helipad",
+    "safe_room",
+    "breach"
+  ],
+  "required_features": [
+    "lightwell_gap_1",
+    "lightwell_gap_2",
+    "bridge_1",
+    "bridge_2",
+    "rappel_link",
+    "lift_shaft_link",
+    "zipline_link",
+    "supply_nodes",
+    "wave_routes"
+  ],
+  "activation_requirements": [
+    "Stage the authoritative B2 coordinate values with a source note.",
+    "Build the graybox strictly from those coordinates.",
+    "Resolve NavigationRegion3D, floor links, spawns, and at least twelve cover hotspots.",
+    "Capture roof corners, top-down, office/lobby walkthrough, and navigation report.",
+    "Obtain Gate 2 approval before any art pass or map unlock."
+  ]
+}

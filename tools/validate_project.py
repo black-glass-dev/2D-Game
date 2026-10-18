@@ -51,6 +51,8 @@ def main() -> None:
     if physical_qa.get("status") != "TEMPLATE_NOT_EVIDENCE" or not required_device_rows.issubset(actual_device_rows):
         error("physical-device QA template is incomplete or misclassified")
 
+    subprocess.run([sys.executable, str(ROOT / "tools/validate_highrise_manifest.py")], check=True)
+
     checked_links = 0
     for source in ROOT.rglob("*"):
         relative_source = source.relative_to(ROOT)

@@ -44,6 +44,12 @@
 - [x] Implement a forward-only downloadable-APK gate requiring Android install/launch; retain package ID and persistent debug-signing compatibility for in-place updates.
 - [x] Verify on CI that an emulator failure skips candidate publication; retain physical-device validation as a separate requirement.
 
+## M4 — Highrise graybox and systems
+
+- [x] Establish the coordinate-gated `MP_RF_02` graybox manifest and prevent a guessed layout from becoming playable.
+- [ ] Stage the authoritative B2 coordinate appendix/reference, then build the roof/office/lobby graybox from those exact inputs.
+- [ ] Resolve navigation/floor links/spawns/cover, produce Gate 2 captures, and obtain director approval before art.
+
 ## Guardrails
 
 - [ ] Preserve the existing playable Desert Outpost at every commit.

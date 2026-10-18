@@ -265,3 +265,13 @@
 **Alternative considered:** A short free-form tester note, a single launch screenshot, or marking all automated normal-Boot checks as a device pass.
 
 **Why not selected:** A free-form note can omit critical controls and cannot reliably identify the exact APK. One screenshot does not prove lifecycle, input safety, audio, settings persistence, or survival completion. Automated renderer/headless checks are valuable but run outside the target device.
+
+## D-028 — Highrise graybox is coordinate-gated rather than guessed
+
+**Decision:** Keep `MP_RF_02` non-launchable while the authoritative B2 coordinate appendix and top-down reference are absent from the checkout. Record the known 120 m × 90 m card footprint, named zones, and required features in a source-controlled manifest; validate that the waiting manifest contains no coordinates and that the map remains `COMING_SOON`. Only a later manifest that truthfully stages the authoritative values may unlock geometry work.
+
+**Reason:** The M4 exit criteria require exact footprint, heights, gaps, bridges, skylights, navigation, cover, and captures. The current repository carries the topology but not the coordinate source. A technical gate enables productive contract/test preparation without inventing a level that could be mistaken for the director-approved design.
+
+**Alternative considered:** Estimate a plausible rooftop from the 120 m × 90 m card, recreate dimensions from memory of the unavailable diagram, or start art before graybox input is complete.
+
+**Why not selected:** Estimated coordinates would undermine the exact B2 contract and make later nav/capture comparisons invalid. Starting art first violates Gate 2 sequencing and makes corrective layout changes expensive. The manifest gate preserves the user-visible map lock and the Desert regression baseline until real inputs are staged.
