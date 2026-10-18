@@ -349,10 +349,20 @@ The repair removes the identified non-POSIX constructs but is not claimed to be 
 
 | Check | Command / route | Result | Evidence |
 | --- | --- | --- | --- |
-| Probe trace persistence | Workflow source review + `python3 tools/validate_project.py` | PASS — POSIX probe redirects traced output to `build/android-emulator-probe.log`; only an action failure commits it under `ci-logs/` | `.github/workflows/android-apk.yml`; `tools/validate_project.py` |
-| Repaired diagnostic run | GitHub Actions | PENDING — no emulator/device result is claimed before the diagnostic probe executes | CI run for this batch is required |
+| Probe trace persistence | Workflow source review + `python3 tools/validate_project.py` | PASS — failure route copies a probe trace when present and commits an explicit marker when absent | `.github/workflows/android-apk.yml`; `tools/validate_project.py` |
+| Diagnostic run | GitHub Actions run 39131623011 at `0ccbc91` | PARTIAL PASS — all preceding gates passed; action failed and committed the expected missing-trace marker, proving its YAML lines had not run as one persistent shell | [Run 39131623011](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39131623011); `ci-logs/android-emulator-probe-missing.txt` at `4bd6070` |
 
-The committed diagnostic, if any, is failure investigation evidence only—not APK, installation, foreground, or physical-device proof.
+The marker is failure investigation evidence only—not APK, installation, foreground, or physical-device proof.
+
+## Batch 25 — single-file POSIX probe (workflow source gate)
+
+| Check | Command / route | Result | Evidence |
+| --- | --- | --- | --- |
+| Runner parsing review | `ReactiveCircus/android-emulator-runner@v2` source via GitHub API | PASS — `parseScript()` splits YAML lines and executes each as separate `sh -c` commands; external script is required for loops/conditionals | Upstream `src/main.ts` and `src/script-parser.ts`, reviewed 2026-10-18 |
+| POSIX probe contract | `python3 tools/validate_project.py`; `/usr/bin/sh -n scripts/android_emulator_probe.sh` | PASS — workflow invokes exactly one tracked POSIX probe; install/package/foreground/crash checks and trace path are source-validated | `.github/workflows/android-apk.yml`; `scripts/android_emulator_probe.sh`; `tools/validate_project.py` |
+| Repaired probe run | GitHub Actions | PENDING — no emulator/device result is claimed before the single-file probe executes | CI run for this batch is required |
+
+The external probe corrects action parsing semantics, but remains subject to the same mandatory install, foreground, crash, and publication gates.
 
 ## Outstanding test requirements
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.

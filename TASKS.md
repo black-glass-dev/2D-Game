@@ -48,6 +48,7 @@
 - [x] Probe the runner's documented KVM udev policy and API-29/default x86_64 baseline; retain direct-node fallback when live udev refresh is unavailable rather than repeatedly retrying the timing-out API-30 ATD image.
 - [x] Keep the emulator action's inline install/foreground probe POSIX-shell compatible, matching its `/usr/bin/sh` execution environment.
 - [x] Persist the next failed emulator probe's POSIX command trace in a branch diagnostic so opaque hosted-action failures can be narrowed without fabricating launch evidence.
+- [x] Move emulator install/foreground control flow to one tracked POSIX script because the runner independently executes every YAML `script` line.
 
 ## M4 — Highrise graybox and systems
 

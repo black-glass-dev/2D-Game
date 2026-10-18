@@ -346,21 +346,21 @@
 
 **Why not selected:** Removing udev loses a documented durable configuration path. Leaving the hard failure prevents testing the distinct API-29 image hypothesis. Waiving KVM would hide the acceleration prerequisite that the release gate is meant to verify.
 
-## D-036 — Emulator action scripts must remain POSIX-shell compatible
+## D-036 — Emulator action probe is one tracked POSIX script
 
-**Decision:** Make the Android-emulator-runner `script` block POSIX `sh` compatible: use `set -eu` and `[ ... ]` tests, not Bash-only `pipefail` or `[[ ... ]]`. Statically validate the portability markers beside the existing install/package/foreground evidence contract.
+**Decision:** Keep the Android-emulator-runner YAML input to one command, `sh scripts/android_emulator_probe.sh`, and keep all install/package/foreground control flow in that tracked POSIX `sh` file. Use `set -eu`/`set -x` and `[ ... ]` tests, not Bash-only `pipefail` or `[[ ... ]]`; statically syntax-check the file beside the existing evidence contract.
 
-**Reason:** CI run 39130099493 reached the new KVM/API-29 launch path, then failed the action script with `/usr/bin/sh` exit code 1 before installation/launch evidence could run. The action's inline script is executed with `sh`, so shell features that work in the surrounding GitHub `bash` steps are not portable there.
+**Reason:** CI run 39130099493 reached the new KVM/API-29 launch path, then failed with `/usr/bin/sh` exit code 1 before installation/launch evidence. Upstream action-source review shows `parseScript()` splits every YAML `script` line and invokes each independently as `sh -c`. Therefore the original multiline block could neither preserve shell state nor contain a multiline `if`/loop, even after Bash-only constructs were removed. Run 39130918946 retained the generic annotation, and run 39131623011's failure-only marker confirmed the block had not produced a persistent trace.
 
-**Alternative considered:** Treat the run as an emulator boot failure, remove strict shell options, or wrap a nested Bash command without validating it.
+**Alternative considered:** Treat the run as an emulator boot failure, remove strict shell options, or wrap a nested Bash command.
 
-**Why not selected:** The annotation identifies a shell-process failure rather than a boot timeout. Removing error handling would hide failed ADB/package checks. An unguarded nested shell adds quoting risk; POSIX syntax keeps the action-native execution path explicit and reviewable. Run 39130918946 still ended in the action's generic shell-exit annotation after the POSIX repair, so that run confirms the action reached the probe but does not prove syntax was the sole root cause or provide any install/launch evidence.
+**Why not selected:** The annotation identifies an action-shell failure rather than a boot timeout. Removing error handling would hide failed ADB/package checks. A nested Bash wrapper obscures the action-native environment; one tracked POSIX script preserves control flow, makes local `/usr/bin/sh -n` verification meaningful, and leaves the action input unambiguous.
 
 ## D-037 — Persist failed emulator-probe command traces in the branch
 
 **Decision:** Redirect the POSIX emulator probe's traced stdout/stderr to `build/android-emulator-probe.log` and, only if the action fails, copy that log to `ci-logs/` and commit it to the same branch. Include it in the normal evidence artifact when storage permits.
 
-**Reason:** GitHub run 39130918946 still returned only the action-level `/usr/bin/sh` exit annotation, while signed job-log retrieval is unavailable in this environment and artifact upload is quota-blocked. A tracked failure-only diagnostic gives the next review an exact command boundary without treating it as successful device evidence.
+**Reason:** GitHub run 39130918946 still returned only the action-level `/usr/bin/sh` exit annotation, while signed job-log retrieval is unavailable in this environment and artifact upload is quota-blocked. Run 39131623011 committed the explicit missing-log marker, which exposed that the action's line parser had prevented the previous inline redirection from persisting. With D-036's single tracked script, the same failure-only path now gives the next review an exact command boundary without treating it as successful device evidence.
 
 **Alternative considered:** Re-run unchanged, suppress `set -e`, or add a Bash wrapper.
 

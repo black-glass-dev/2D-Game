@@ -46,17 +46,28 @@ def main() -> None:
         "target: default",
         "-accel on",
         "disable-linux-hw-accel: false",
-        "android-emulator-runner invokes this block with /usr/bin/sh",
-        "exec > build/android-emulator-probe.log 2>&1",
-        "set -eux",
-        "if [ \"$foreground\" != true ]; then",
+        "The action parses YAML block lines into independent `sh -c` commands.",
+        "script: sh scripts/android_emulator_probe.sh",
         "Commit Android emulator diagnostics if probe fails",
         "ci: capture Android emulator probe diagnostics",
-        "adb install -r build/OperationRedline-debug.apk | tee build/android-emulator-install.log",
-        "mResumedActivity.*com.operationredline.outpost",
     )
     if not all(requirement in workflow_text for requirement in emulator_contract):
         error("Android emulator gate lacks the required acceleration/install/foreground evidence contract")
+    emulator_probe = ROOT / "scripts/android_emulator_probe.sh"
+    if not emulator_probe.is_file():
+        error("Android emulator probe script is missing")
+    emulator_probe_text = emulator_probe.read_text(encoding="utf-8")
+    probe_contract = (
+        "#!/usr/bin/env sh",
+        "exec > build/android-emulator-probe.log 2>&1",
+        "set -x",
+        "adb install -r build/OperationRedline-debug.apk | tee build/android-emulator-install.log",
+        "mResumedActivity.*com.operationredline.outpost",
+        "if [ \"$foreground\" != true ]; then",
+    )
+    if not all(requirement in emulator_probe_text for requirement in probe_contract):
+        error("Android emulator probe lacks the required POSIX install/foreground evidence contract")
+    subprocess.run(["/usr/bin/sh", "-n", str(emulator_probe)], check=True)
 
     subprocess.run([sys.executable, str(ROOT / "tools/validate_physical_qa_evidence.py")], check=True)
     subprocess.run([sys.executable, str(ROOT / "tools/test_validate_physical_qa_evidence.py")], check=True)

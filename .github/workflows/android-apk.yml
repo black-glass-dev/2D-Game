@@ -383,37 +383,9 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -no-snapshot-save -no-metrics -accel on
           disable-linux-hw-accel: false
           disable-animations: true
-          script: |
-            # android-emulator-runner invokes this block with /usr/bin/sh.
-            # Keep it POSIX so the device probe is reached after boot. Preserve
-            # the command trace in the checkout because hosted log ZIP delivery
-            # can fail independently of the action's shell exit annotation.
-            mkdir -p build
-            exec > build/android-emulator-probe.log 2>&1
-            set -eux
-            adb wait-for-device
-            adb shell getprop sys.boot_completed | tr -d '\r' | grep -qx '1'
-            adb logcat -c
-            adb install -r build/OperationRedline-debug.apk | tee build/android-emulator-install.log
-            adb shell pm path com.operationredline.outpost | grep -q '^package:'
-            adb shell monkey -p com.operationredline.outpost 1
-            foreground=false
-            for _ in $(seq 1 30); do
-              if adb shell dumpsys activity activities | grep -q 'mResumedActivity.*com.operationredline.outpost'; then
-                foreground=true
-                break
-              fi
-              sleep 1
-            done
-            adb logcat -d -t 1200 > build/android-emulator.log
-            if grep -E "FATAL EXCEPTION|AndroidRuntime.*Process.*com\.operationredline\.outpost" build/android-emulator.log; then
-              echo "Android runtime crash found in logcat."
-              exit 1
-            fi
-            if [ "$foreground" != true ]; then
-              echo "Operation Redline did not reach a resumed Android activity."
-              exit 1
-            fi
+          # The action parses YAML block lines into independent `sh -c` commands.
+          # Invoke one tracked POSIX script so its control flow stays intact.
+          script: sh scripts/android_emulator_probe.sh
 
       - name: Commit Android emulator diagnostics if probe fails
         if: ${{ always() && steps.android_emulator.outcome == 'failure' }}
