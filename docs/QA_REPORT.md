@@ -409,6 +409,16 @@ The reduction is diagnostic isolation, not a relaxation of acceleration, install
 
 Guest serial remains source instrumentation only; no serial evidence was produced by this hosted runner. It cannot replace completed boot, install, package, foreground, crash, candidate-publication, or physical-device evidence.
 
+## Batch 31 — physical-device evidence handoff (source contract)
+
+| Check | Command / route | Result | Evidence |
+| --- | --- | --- | --- |
+| Collector shell syntax | `/usr/bin/sh -n docs/capture_physical_android_qa.sh` | PASS — exact `adb install -r`, package, launch, resumed-activity, bounded-logcat, and crash-scan collection path is syntactically valid | `docs/capture_physical_android_qa.sh` |
+| Classification boundary | Handoff/document review | PASS — collector does not create a D01–D12 result or physical-device classification; reviewer + schema-1 validation remain required | `docs/PHYSICAL_ANDROID_HANDOFF.md`; `docs/physical_qa_evidence.template.json` |
+| Physical run | Attached Android device | PENDING — no device was connected in this environment | A named-device evidence record is required |
+
+The handoff is prepared tooling only. It is not installation, gameplay, device, or APK-delivery evidence.
+
 ## Outstanding test requirements
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.
 - `MP_RF_02` bot navigation/floor/link/hazard tests before Gate 2 approval.

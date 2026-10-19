@@ -15,6 +15,8 @@ The runner attempts the emulator-runner documented KVM udev rule, then verifies 
 
 The workflow continues to use the existing package identifier and restores/caches the persistent `operation-redline-debug.keystore`. This preserves the package/signing prerequisites for Android's `adb install -r` update path. It does not prove a device update unless the emulator/device install gate actually succeeds.
 
+For a real attached device, `docs/capture_physical_android_qa.sh` collects the exact `adb install -r` output, APK SHA-256, device facts, package lookup, launch/resumed-activity data, and bounded logcat. It does not classify a run; `docs/PHYSICAL_ANDROID_HANDOFF.md` requires a named reviewer to complete and validate all D01–D12 rows separately.
+
 ## Historical candidate status
 
 Earlier workflow revisions could publish pre-release candidates after export/headless success even when the Android emulator timed out. Those historical releases are retained as auditable records and are not retroactively relabelled or removed in this batch. They are **not** physical-device-tested deliveries and must not be offered as such. The new gate applies to every future candidate release.

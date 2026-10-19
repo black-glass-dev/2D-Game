@@ -79,11 +79,11 @@ python3 tools/validate_project.py
 
 The APK is intentionally ignored by Git. Source, export preset, asset generator, native tests and test report remain versioned.
 
-A reproducible GitHub Actions lane is included at [`.github/workflows/android-apk.yml`](.github/workflows/android-apk.yml). It runs source checks, exports this exact Android preset, checks the APK archive/signature, launches normal-Boot/renderer gates, and attempts install/launch on an API 30 Android Test Device. A new downloadable candidate is published only when all of those gates, including Android install/launch, succeed. Artifact storage or an emulator timeout is not an APK delivery.
+A reproducible GitHub Actions lane is included at [`.github/workflows/android-apk.yml`](.github/workflows/android-apk.yml). It runs source checks, exports this exact Android preset, checks the APK archive/signature, launches normal-Boot/renderer gates, and attempts install/launch on the documented API-29/default x86_64 hosted probe. A new downloadable candidate is published only when all of those gates, including Android install/launch, succeed. Artifact storage or an emulator timeout is not an APK delivery.
 
 ## Verification status
 
-See [`docs/TEST_REPORT.md`](docs/TEST_REPORT.md), [`docs/RELEASE_GATING.md`](docs/RELEASE_GATING.md), and [`docs/PHYSICAL_DEVICE_QA.md`](docs/PHYSICAL_DEVICE_QA.md) for the exact evidence boundary. An APK must not be labelled **tested** until the Godot Android toolchain generates it, install/launch validation is recorded, and the required device matrix evidence exists.
+See [`docs/TEST_REPORT.md`](docs/TEST_REPORT.md), [`docs/RELEASE_GATING.md`](docs/RELEASE_GATING.md), [`docs/PHYSICAL_DEVICE_QA.md`](docs/PHYSICAL_DEVICE_QA.md), and [`docs/PHYSICAL_ANDROID_HANDOFF.md`](docs/PHYSICAL_ANDROID_HANDOFF.md) for the exact evidence boundary. An APK must not be labelled **tested** until the Godot Android toolchain generates it, install/launch validation is recorded, and the required device matrix evidence exists.
 
 ## Asset provenance
 

@@ -39,6 +39,7 @@
 - [x] Add normal-Boot Android Back, Escape, controller-B, and paused-settings return/resume route coverage.
 - [x] Create a device-identity/evidence-bound physical Android QA matrix and in-place-update recording template.
 - [x] Add a schema-versioned validator/test suite that rejects template misuse and incomplete or falsely classified physical-device evidence.
+- [x] Prepare a factual physical Android capture/handoff path for APK hash, `adb install -r`, device identity, package/launch/foreground evidence, bounded logcat, and reviewer-owned D01–D12 completion.
 - [ ] Validate the complete touch, mouse, keyboard, gamepad, Android Back, focus-mute/restore, quality-tier, language, and audible mix matrix on real devices where available.
 - [x] Add one original background-music loop after provenance, mix, and mobile-memory review; keep physical-device listening/mix validation open as a separate requirement.
 - [x] Record a normal-Boot CI audio-flow result for the new Music-bus loop; retain physical-device listening validation as a separate requirement.

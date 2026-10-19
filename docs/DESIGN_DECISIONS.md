@@ -405,3 +405,13 @@
 **Alternative considered:** Increase the boot timeout again, change API/image parameters, or classify the run as a successful emulator test.
 
 **Why not selected:** Increasing an already bounded 600-second wait without new information wastes CI time. Changing the tested baseline conflates variables. A timeout contains no install/foreground proof and cannot be classified as success. Run 39203792018 again timed out, and no serial file was committed; the existing pre-launch record remains the only persisted action diagnostic. The serial option is retained as harmless source instrumentation, but no further unchanged hosted retry is justified without a newly available runner or physical device.
+
+## D-042 — Physical-device capture is factual collection, never automatic QA classification
+
+**Decision:** Provide a device-side collector and handoff that record the exact APK hash, `adb install -r` output, package lookup, launch/resumed-activity data, bounded logcat, crash scan, and raw device properties. Keep it outside the CI trigger path. The collector never writes D01–D12 results or `PHYSICAL_DEVICE_TESTED`; a named reviewer must complete and validate the existing schema-1 record.
+
+**Reason:** The emulator gate remains boot-blocked after source, KVM, runtime-library, and boot diagnostics. A real Android device is now the only evidence path that can exercise touch, landscape, input hardware, audio, thermal behavior, and in-place update semantics. Capturing machine facts reduces handoff error while keeping human gameplay review and the all-PASS rule authoritative.
+
+**Alternative considered:** Automatically convert successful ADB install/launch into D01–D12 PASS, edit the committed template into evidence, or mark an exported APK as device-tested.
+
+**Why not selected:** ADB facts cannot prove touch safety, quality, language, audio, survival, or thermal behavior. The committed template is deliberately non-evidence, and any automatic pass label would violate the physical-QA contract.
