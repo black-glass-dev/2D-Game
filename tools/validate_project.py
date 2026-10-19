@@ -44,6 +44,27 @@ def main() -> None:
     )
     if not all(requirement in workflow_text for requirement in import_contract):
         error("Godot clean-import stabilization contract is missing")
+    artifact_contract = (
+        "Upload tested build evidence",
+        "steps.android_export.outcome != 'success' || steps.gameplay_smoke.outcome != 'success' || steps.android_emulator.outcome == 'success'",
+        "retention-days: 7",
+    )
+    if not all(requirement in workflow_text for requirement in artifact_contract):
+        error("artifact retention/upload contract is missing")
+    cleanup_workflow = ROOT / ".github/workflows/cleanup-legacy-artifacts.yml"
+    if not cleanup_workflow.is_file():
+        error("bounded legacy-artifact cleanup workflow is missing")
+    cleanup_contract = (
+        "workflow_dispatch:",
+        "actions: write",
+        "DELETE_LEGACY_ARTIFACTS",
+        'artifact.name === "operation-redline-android-debug"',
+        "Date.parse(artifact.created_at) < cutoff",
+        "github.rest.actions.deleteArtifact",
+    )
+    cleanup_text = cleanup_workflow.read_text(encoding="utf-8")
+    if not all(requirement in cleanup_text for requirement in cleanup_contract):
+        error("legacy-artifact cleanup workflow is not explicitly bounded")
     audio_service = ROOT / "scripts/services/audio_service.gd"
     main_script = ROOT / "scripts/main.gd"
     audio_contract = (

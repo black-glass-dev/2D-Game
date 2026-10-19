@@ -446,10 +446,14 @@ jobs:
             --notes "Automated source/native checks, Godot import, APK archive/signature verification, normal-Boot flow checks, renderer captures, and Android emulator install/launch all passed. The package ID and persistent debug signing stream are retained for in-place updates."
 
       - name: Upload tested build evidence
-        if: always()
+        # Renderer frames are committed after validation; keep artifact storage for
+        # actionable import/runtime failures or an actually device-validated APK.
+        # A known emulator-only timeout must not accumulate another APK archive.
+        if: ${{ always() && (steps.android_export.outcome != 'success' || steps.gameplay_smoke.outcome != 'success' || steps.android_emulator.outcome == 'success') }}
         uses: actions/upload-artifact@v5
         with:
           name: operation-redline-android-debug
+          retention-days: 7
           if-no-files-found: warn
           path: |
             build/OperationRedline-debug.apk

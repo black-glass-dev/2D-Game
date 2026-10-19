@@ -1,0 +1,70 @@
+name: Cleanup legacy CI artifacts
+
+on:
+  workflow_dispatch:
+    inputs:
+      cutoff:
+        description: "Delete only operation-redline-android-debug artifacts created before this ISO-8601 time"
+        required: true
+        default: "2026-10-14T00:00:00Z"
+        type: string
+      confirmation:
+        description: "Type DELETE_LEGACY_ARTIFACTS to authorize the bounded cleanup"
+        required: true
+        default: ""
+        type: string
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  cleanup:
+    name: Delete audited legacy build artifacts
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Delete only confirmed pre-cutoff debug artifacts
+        env:
+          RETENTION_CUTOFF: ${{ inputs.cutoff }}
+          RETENTION_CONFIRMATION: ${{ inputs.confirmation }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const expected = "DELETE_LEGACY_ARTIFACTS";
+            const confirmation = process.env.RETENTION_CONFIRMATION;
+            if (confirmation !== expected) {
+              core.setFailed(`Confirmation must equal ${expected}. No artifacts were deleted.`);
+              return;
+            }
+
+            const cutoffText = process.env.RETENTION_CUTOFF;
+            const cutoff = Date.parse(cutoffText);
+            if (Number.isNaN(cutoff)) {
+              core.setFailed(`Invalid ISO-8601 cutoff: ${cutoffText}`);
+              return;
+            }
+
+            const artifacts = await github.paginate(
+              github.rest.actions.listArtifactsForRepo,
+              { owner: context.repo.owner, repo: context.repo.repo, per_page: 100 },
+            );
+            const candidates = artifacts.filter((artifact) =>
+              artifact.name === "operation-redline-android-debug" &&
+              !artifact.expired &&
+              Date.parse(artifact.created_at) < cutoff,
+            );
+            const bytes = candidates.reduce((total, artifact) => total + artifact.size_in_bytes, 0);
+            core.info(`Deleting ${candidates.length} audited artifacts (${bytes} bytes) created before ${cutoffText}.`);
+            core.summary.addHeading("Legacy artifact cleanup")
+              .addRaw(`Cutoff: ${cutoffText}\n\n`)
+              .addRaw(`Deleted candidates: ${candidates.length}\n\n`)
+              .addRaw(`Requested storage recovery: ${bytes} bytes\n\n`)
+              .addList(candidates.map((artifact) => `${artifact.id} — ${artifact.created_at} — ${artifact.size_in_bytes} bytes`));
+            for (const artifact of candidates) {
+              await github.rest.actions.deleteArtifact({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                artifact_id: artifact.id,
+              });
+            }
+            await core.summary.write();

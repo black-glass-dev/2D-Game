@@ -465,3 +465,13 @@
 **Alternative considered:** Rely on manual catalog review, generate Godot import artifacts, or claim the source catalog proves device localization.
 
 **Why not selected:** Manual review does not catch every consumer route; generated artifacts are deliberately not tracked; and source strings cannot prove font rendering, locale switching, or touch readability. The validator is an additive source safeguard only.
+
+## D-048 — Bound CI artifact retention and make legacy cleanup explicitly authorized
+
+**Decision:** Retain Android evidence artifacts for seven days and upload them only for Android export/normal-Boot failures or a successful Android launch gate. Add a separate manually dispatched cleanup workflow that requires the exact `DELETE_LEGACY_ARTIFACTS` confirmation, a supplied cutoff, and deletes only non-expired `operation-redline-android-debug` artifacts created before that cutoff.
+
+**Reason:** The artifact audit found 75 duplicate bundles totaling about 4.95 GB. Their storage-quota exhaustion blocks uploads even though renderer evidence is committed and no emulator-only timeout should be represented as delivery. The current CLI token may list but cannot delete artifacts (HTTP 403), so the repository-owned workflow needs narrowly scoped `actions: write` authority rather than broadening unrelated build permissions.
+
+**Alternative considered:** Keep uploading every timeout, delete artifacts automatically on every build, add broad `actions: write` to the Android build workflow, or silently discard historical evidence.
+
+**Why not selected:** Repeated timeout uploads recreate the quota issue. Automatic cleanup is destructive and hard to audit. The Android build does not need artifact-deletion authority. The manual workflow makes the target, cutoff, confirmation, and action log reviewable while commits/releases remain untouched.

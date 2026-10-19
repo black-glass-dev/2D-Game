@@ -436,6 +436,14 @@ The handoff is prepared tooling only. It is not installation, gameplay, device, 
 | Stabilized normal-Boot + renderer CI | GitHub Actions run 39250923376 at `5ee3bd1` | PASS — clean import/export, every normal-Boot verifier (including audio), pause/Bengali and quality captures, and all 12 genuine before/after graphics frames | [Run 39250923376](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39250923376); committed capture refresh `219f2eb` |
 | Hosted Android emulator/release delivery | Same run | BLOCKED — KVM/dependency setup passed, but the API-29/default/x86_64 emulator timed out during boot; candidate publication was skipped and artifact upload hit the existing storage quota | [Run 39250923376](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39250923376) |
 
+## Batch 36 — artifact-retention source boundary
+
+| Check | Command / route | Result | Evidence |
+| --- | --- | --- | --- |
+| Storage audit | GitHub Actions artifacts API | PASS — enumerated 75 active duplicate debug artifacts, 4,954,824,380 bytes; identified 53 pre-2026-10-14 candidates (3,337,865,269 bytes) | `docs/ARTIFACT_RETENTION.md` |
+| Direct deletion authority | `gh api --method DELETE .../actions/artifacts/<audited-id>` | BLOCKED — current CLI integration returned HTTP 403; no artifact deletion claimed | `docs/ARTIFACT_RETENTION.md` |
+| Future upload/cleanup source contract | Workflow review + `python3 tools/validate_project.py` | PASS — seven-day retention; no artifact for emulator-only timeout; manual cleanup requires exact confirmation/name/cutoff | `.github/workflows/android-apk.yml`; `.github/workflows/cleanup-legacy-artifacts.yml`; `tools/validate_project.py` |
+
 ## Batch 35 — localization-catalog source contracts
 
 | Check | Command / route | Result | Evidence |
