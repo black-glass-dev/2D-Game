@@ -443,6 +443,7 @@ The handoff is prepared tooling only. It is not installation, gameplay, device, 
 | Foundation contract validator | `python3 tools/validate_foundation_contracts.py` | PASS — validates versioned settings/save paths, default Desert progression, monotonic result preservation, guarded pause transitions, and data-driven map validity/launch boundaries | `tools/validate_foundation_contracts.py` |
 | Foundation contract regressions | `python3 tools/test_validate_foundation_contracts.py` | PASS — 4 tests: committed baseline plus rejection of schema regression, unguarded pause entry, and non-monotonic best score | `tools/test_validate_foundation_contracts.py` |
 | Integrated project validation | `python3 tools/validate_project.py` | PASS — invokes the M6 contracts with existing evidence, Highrise, and delivery contracts | `tools/validate_project.py` |
+| Expanded CI suite | GitHub Actions run 39259336341 at `134aea2` | PASS (non-device) — source contracts, import/export, normal-Boot flows, UI captures, and genuine graphics capture all passed | [Run 39259336341](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39259336341); capture refresh `60fa2c1` |
 | Runtime / device interpretation | Godot or physical Android | NOT CLAIMED — source contracts do not substitute for runtime, emulator, or D01–D12 evidence | `docs/PHYSICAL_DEVICE_QA.md`; `docs/RELEASE_GATING.md` |
 
 ## Outstanding test requirements

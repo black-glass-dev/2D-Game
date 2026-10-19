@@ -62,7 +62,7 @@
 
 ## M6 started — source-level regression and release foundations
 
-- [x] Expand dependency-free source-contract tests for settings/save schemas and migration paths, monotonic operation records, state-authoritative pause restoration, and data-driven map validity/launch boundaries.
+- [x] Expand dependency-free source-contract tests for settings/save schemas and migration paths, monotonic operation records, state-authoritative pause restoration, and data-driven map validity/launch boundaries; run 39259336341 passed the expanded non-device CI suite.
 - [ ] Complete the manual desktop/mobile input matrix and physical Android D01–D12 review with a real device and evidence record.
 - [ ] Publish a signed release candidate only after the existing same-run Android launch gate passes and storage is available; do not substitute historical exports or hosted boot timeouts.
 
