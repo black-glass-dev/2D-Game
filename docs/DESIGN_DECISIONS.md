@@ -404,4 +404,4 @@
 
 **Alternative considered:** Increase the boot timeout again, change API/image parameters, or classify the run as a successful emulator test.
 
-**Why not selected:** Increasing an already bounded 600-second wait without new information wastes CI time. Changing the tested baseline conflates variables. A timeout contains no install/foreground proof and cannot be classified as success.
+**Why not selected:** Increasing an already bounded 600-second wait without new information wastes CI time. Changing the tested baseline conflates variables. A timeout contains no install/foreground proof and cannot be classified as success. Run 39203792018 again timed out, and no serial file was committed; the existing pre-launch record remains the only persisted action diagnostic. The serial option is retained as harmless source instrumentation, but no further unchanged hosted retry is justified without a newly available runner or physical device.

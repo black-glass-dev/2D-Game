@@ -54,7 +54,7 @@
 - [x] Return the Android runner to documented AVD/launch defaults while retaining API-29/default/x86_64, acceleration, bounded boot, diagnostics, and release evidence gates.
 - [x] Install and verify the minimal `libpulse0` loader dependency identified by a committed pre-launch QEMU diagnostic before the emulator action.
 - [x] Re-run the dependency-backed API-29 emulator gate: QEMU/AVD pre-launch evidence passed, but hosted boot still timed out at the full 600-second bound; candidate publication remained blocked.
-- [x] Preserve the next hosted boot timeout's QEMU guest serial output without changing the API-29/default/x86_64/KVM release hypothesis.
+- [x] Attempt to preserve hosted boot-timeout QEMU serial output without changing the API-29/default/x86_64/KVM release hypothesis; the runner emitted no serial file and still timed out, so no unchanged retry is scheduled.
 
 ## M4 — Highrise graybox and systems
 

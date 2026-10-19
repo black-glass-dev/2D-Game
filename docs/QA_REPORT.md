@@ -405,9 +405,9 @@ The reduction is diagnostic isolation, not a relaxation of acceleration, install
 | Check | Command / route | Result | Evidence |
 | --- | --- | --- | --- |
 | Guest boot trace contract | Workflow review + `python3 tools/validate_project.py` | PASS — preserves the action's documented headless options and writes QEMU serial output to the workspace for failure-only branch capture | `.github/workflows/android-apk.yml`; `tools/validate_project.py` |
-| Guest-serial run | GitHub Actions | PENDING — no emulator/device result is claimed before the trace-enabled action executes | CI run for this batch is required |
+| Guest-serial run | GitHub Actions run 39203792018 at `036d9ff` | PARTIAL PASS — all preceding gates passed; the action again timed out at boot, and no guest serial file materialized for branch capture | [Run 39203792018](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39203792018) |
 
-Guest serial content is diagnostic evidence only. It cannot replace completed boot, install, package, foreground, crash, candidate-publication, or physical-device evidence.
+Guest serial remains source instrumentation only; no serial evidence was produced by this hosted runner. It cannot replace completed boot, install, package, foreground, crash, candidate-publication, or physical-device evidence.
 
 ## Outstanding test requirements
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.
