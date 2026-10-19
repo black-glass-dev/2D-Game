@@ -443,6 +443,8 @@ The handoff is prepared tooling only. It is not installation, gameplay, device, 
 | Storage audit | GitHub Actions artifacts API | PASS — enumerated 75 active duplicate debug artifacts, 4,954,824,380 bytes; identified 53 pre-2026-10-14 candidates (3,337,865,269 bytes) | `docs/ARTIFACT_RETENTION.md` |
 | Direct deletion authority | `gh api --method DELETE .../actions/artifacts/<audited-id>` | BLOCKED — current CLI integration returned HTTP 403; no artifact deletion claimed | `docs/ARTIFACT_RETENTION.md` |
 | Future upload/cleanup source contract | Workflow review + `python3 tools/validate_project.py` | PASS — seven-day retention; no artifact for emulator-only timeout; manual cleanup requires exact confirmation/name/cutoff | `.github/workflows/android-apk.yml`; `.github/workflows/cleanup-legacy-artifacts.yml`; `tools/validate_project.py` |
+| Full non-device CI confirmation | GitHub Actions run 39271155212 at `7511f58` | PASS — source/import/export/normal-Boot/capture/KVM/dependency gates passed; emulator alone timed out; artifact upload was correctly skipped, without the earlier storage-quota failure | [Run 39271155212](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39271155212); capture refresh `3b397c1` |
+| Cleanup dispatch | GitHub workflow dispatch | BLOCKED — Actions workflows are dispatchable only once the cleanup file exists on the default branch; it is currently on this working branch | `docs/ARTIFACT_RETENTION.md` |
 
 ## Batch 35 — localization-catalog source contracts
 

@@ -52,6 +52,8 @@ APK archive while still retaining source logs and committed evidence. Legacy
 cleanup is deliberately manual through the bounded confirmation workflow above;
 it is never performed automatically during a build.
 
+CI run [39271155212](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39271155212) then confirmed the forward policy: all non-device gates passed, the hosted emulator alone timed out, and `Upload tested build evidence` was skipped rather than quota-failing. GitHub permits manual workflow dispatch only when the workflow is present on the default branch, so the bounded legacy cleanup cannot execute from this working branch yet.
+
 GitHub states that artifact usage can take several hours to recalculate. This
 storage recovery does not prove an emulator launch, physical-device test, APK
 delivery, or release candidate. The existing same-run Android launch gate stays

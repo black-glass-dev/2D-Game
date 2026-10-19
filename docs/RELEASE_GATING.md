@@ -25,7 +25,7 @@ Earlier workflow revisions could publish pre-release candidates after export/hea
 
 Artifact upload quota and hosted-emulator availability remain independent infrastructure risks. A quota-blocked archive is not an APK delivery. An emulator timeout is not a passing device result. A successful future release created through this gate still represents emulator evidence; physical-device testing is separately recorded.
 
-The Android workflow retains an artifact for seven days only when export/normal-Boot QA fails or the Android launch gate succeeds; a hosted-emulator-only timeout no longer creates another debug-APK archive. `docs/ARTIFACT_RETENTION.md` records the legacy storage audit. Its legacy cleanup is a separate manually dispatched, confirmation-gated workflow and does not alter source commits, releases, or this launch gate.
+The Android workflow retains an artifact for seven days only when export/normal-Boot QA fails or the Android launch gate succeeds; a hosted-emulator-only timeout no longer creates another debug-APK archive. CI run 39271155212 confirmed that the upload is skipped on that timeout. `docs/ARTIFACT_RETENTION.md` records the legacy storage audit. Its legacy cleanup is a separate manually dispatched, confirmation-gated workflow and does not alter source commits, releases, or this launch gate; GitHub requires it to exist on the default branch before dispatch.
 
 ## First gate evidence
 

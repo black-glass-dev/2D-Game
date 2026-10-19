@@ -64,7 +64,7 @@
 
 - [x] Expand dependency-free source-contract tests for settings/save schemas and migration paths, monotonic operation records, state-authoritative pause restoration, and data-driven map validity/launch boundaries; run 39259336341 passed the expanded non-device CI suite.
 - [x] Enforce the bilingual `keys,en,bn` localization catalog and every current GDScript translation-key route; reject duplicate, blank Bengali/English, missing-key, or locale-loader regressions in source.
-- [x] Constrain Android evidence retention to seven days and provide a confirmation-gated workflow that can remove only audited pre-cutoff duplicate debug artifacts; the current CLI integration cannot execute deletion (`HTTP 403`), so dispatch remains pending.
+- [x] Constrain Android evidence retention to seven days and provide a confirmation-gated workflow that can remove only audited pre-cutoff duplicate debug artifacts; run 39271155212 confirmed emulator-only timeout upload is skipped. The current CLI integration cannot execute deletion (`HTTP 403`) and the cleanup workflow awaits default-branch availability for dispatch.
 - [ ] Complete the manual desktop/mobile input matrix and physical Android D01–D12 review with a real device and evidence record.
 - [ ] Publish a signed release candidate only after the existing same-run Android launch gate passes and storage is available; do not substitute historical exports or hosted boot timeouts.
 
