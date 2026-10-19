@@ -1,7 +1,7 @@
 Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
 
 MENU_BACKGROUND_MODE quality=AUTO mode=static_outpost
-ERROR: Audio-flow verification could not resume enabled background music.
+ERROR: Audio-flow verification could not resume enabled background music (playing=false muted=false requested_volume=0.50).
    at: push_error (core/variant/variant_utility.cpp:1023)
    GDScript backtrace (most recent call first):
        [0] _run_audio_flow_verification (res://scripts/main.gd:1043)
