@@ -419,6 +419,14 @@ Guest serial remains source instrumentation only; no serial evidence was produce
 
 The handoff is prepared tooling only. It is not installation, gameplay, device, or APK-delivery evidence.
 
+## Batch 32 — executable delivery guardrails (source contract)
+
+| Check | Command / route | Result | Evidence |
+| --- | --- | --- | --- |
+| Guardrail baseline | `python3 tools/validate_delivery_guardrails.py` | PASS — landscape Boot entrypoint, Android direct-update identity, playable Desert profile, locked Highrise status, and CC0 provenance records are intact | `tools/validate_delivery_guardrails.py` |
+| Guardrail regression | `python3 tools/test_validate_delivery_guardrails.py` | PASS — 3 tests; detects changed package ID and premature Highrise unlock | `tools/test_validate_delivery_guardrails.py` |
+| Device / Highrise completion | Physical Android device / authoritative B2 packet | BLOCKED — source guardrails cannot substitute for D01–D12 or coordinate packet | `docs/PHYSICAL_ANDROID_HANDOFF.md`; `docs/HIGHRISE_GRAYBOX_INPUTS.md` |
+
 ## Outstanding test requirements
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.
 - `MP_RF_02` bot navigation/floor/link/hazard tests before Gate 2 approval.

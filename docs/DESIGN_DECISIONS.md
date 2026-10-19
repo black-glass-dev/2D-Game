@@ -415,3 +415,13 @@
 **Alternative considered:** Automatically convert successful ADB install/launch into D01–D12 PASS, edit the committed template into evidence, or mark an exported APK as device-tested.
 
 **Why not selected:** ADB facts cannot prove touch safety, quality, language, audio, survival, or thermal behavior. The committed template is deliberately non-evidence, and any automatic pass label would violate the physical-QA contract.
+
+## D-043 — Make source-level delivery guardrails executable
+
+**Decision:** Add a dependency-free delivery-guardrail validator and regression suite. It asserts the landscape Boot entrypoint, direct-update package/signing/architectures, playable Desert map identity and 6/9/12 profile, Highrise lock, and the committed CC0 provenance records. Integrate it into the normal project validator.
+
+**Reason:** M3 physical-device evidence and M4 authoritative B2 input remain external blockers, but the roadmap still requires the Desert to remain playable, package identity to remain stable, the future map to remain locked, and permissive asset provenance to remain auditable on every source change. These are enforceable now without inventing map geometry or device results.
+
+**Alternative considered:** Mark the guardrails complete only in documentation, or unlock/construct Highrise placeholders while waiting for B2.
+
+**Why not selected:** Documentation alone cannot prevent a later accidental package change, Desert profile regression, or premature Highrise unlock. A placeholder Highrise scene would violate the coordinate gate. The executable checks give forward progress while preserving those boundaries.

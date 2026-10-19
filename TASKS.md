@@ -68,7 +68,7 @@
 
 ## Guardrails
 
-- [ ] Preserve the existing playable Desert Outpost at every commit.
-- [ ] Keep Android package identifier and persistent debug signing stream unchanged.
-- [ ] Do not use commercial-game assets, branding, maps, names, or ripped content.
-- [ ] Do not mark a physical-device test as passed without evidence.
+- [x] Enforce the existing playable Desert Outpost entry/profile in the delivery-guardrail validator at every source check.
+- [x] Enforce the Android package identifier/signing/architecture export contract in the delivery-guardrail validator; CI still restores the persistent debug signing stream.
+- [x] Enforce recorded CC0 provenance for the imported Kenney/KayKit subset; do not add commercial-game assets, branding, maps, names, or ripped content.
+- [x] Enforce the schema-1 physical-evidence boundary so a physical-device test cannot be marked passed without evidence.
