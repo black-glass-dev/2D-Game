@@ -58,6 +58,7 @@
 - [x] Install and verify the minimal `libpulse0` loader dependency identified by a committed pre-launch QEMU diagnostic before the emulator action.
 - [x] Re-run the dependency-backed API-29 emulator gate: QEMU/AVD pre-launch evidence passed, but hosted boot still timed out at the full 600-second bound; candidate publication remained blocked.
 - [x] Attempt to preserve hosted boot-timeout QEMU serial output without changing the API-29/default/x86_64/KVM release hypothesis; the runner emitted no serial file and still timed out, so no unchanged retry is scheduled.
+- [x] Revalidate every non-device CI gate after clean-import/Music-resume repairs; run 39250923376 passed them all, then the unchanged hosted emulator again timed out, so no further emulator-only retry is scheduled.
 
 ## M4 — Highrise graybox and systems
 

@@ -433,7 +433,8 @@ The handoff is prepared tooling only. It is not installation, gameplay, device, 
 | --- | --- | --- | --- |
 | Guardrail CI run | GitHub Actions run 39249610440 at `4142790` | PARTIAL PASS — source/native, guardrail, and export gates passed; first import logged WAV-preload/autoload errors and the later normal Boot/audio flow failed at its final Music resume assertion | [Run 39249610440](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39249610440); `ci-logs/godot-import.log`; `ci-logs/godot-audio-flow.log` at `850223d` |
 | Two-pass import + guarded resume source contract | Workflow/source review + `python3 tools/validate_project.py` | PASS — first import creates metadata; second import must contain no parse/autoload failure, and the service rebuilds/retries only an inactive requested loop after the frame | `.github/workflows/android-apk.yml`; `scripts/services/audio_service.gd`; `tools/validate_project.py` |
-| Stabilized runtime run | GitHub Actions | PENDING — no Boot/audio or device result is claimed until the changed workflow/service executes | CI run for this batch is required |
+| Stabilized normal-Boot + renderer CI | GitHub Actions run 39250923376 at `5ee3bd1` | PASS — clean import/export, every normal-Boot verifier (including audio), pause/Bengali and quality captures, and all 12 genuine before/after graphics frames | [Run 39250923376](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39250923376); committed capture refresh `219f2eb` |
+| Hosted Android emulator/release delivery | Same run | BLOCKED — KVM/dependency setup passed, but the API-29/default/x86_64 emulator timed out during boot; candidate publication was skipped and artifact upload hit the existing storage quota | [Run 39250923376](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39250923376) |
 
 ## Outstanding test requirements
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.

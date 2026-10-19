@@ -54,6 +54,7 @@ All notable production changes are documented here.
 
 ### Changed
 
+- CI run 39250923376 passed all source/import/export/normal-Boot/renderer-capture gates after the clean-import and Music-resume repairs; the hosted emulator still timed out, candidate publication stayed skipped, and artifact upload remains quota-blocked.
 - `project.godot` now boots `Boot.tscn` and registers the foundation services as autoloads; `LocalizationService` loads the reviewed CSV catalog at runtime into Godot Translation resources without committing generated import artifacts.
 - `Main.tscn` remains directly runnable; it now marks the global game state as Playing when the legacy Desert runtime takes ownership after loading.
 - Existing Desert gameplay, direct touch/keyboard input, runtime world builder, Android package/signing, and current HUD remain intact during the boot-flow migration.
