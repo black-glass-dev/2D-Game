@@ -60,6 +60,12 @@
 - [x] Attempt to preserve hosted boot-timeout QEMU serial output without changing the API-29/default/x86_64/KVM release hypothesis; the runner emitted no serial file and still timed out, so no unchanged retry is scheduled.
 - [x] Revalidate every non-device CI gate after clean-import/Music-resume repairs; run 39250923376 passed them all, then the unchanged hosted emulator again timed out, so no further emulator-only retry is scheduled.
 
+## M6 started — source-level regression and release foundations
+
+- [x] Expand dependency-free source-contract tests for settings/save schemas and migration paths, monotonic operation records, state-authoritative pause restoration, and data-driven map validity/launch boundaries.
+- [ ] Complete the manual desktop/mobile input matrix and physical Android D01–D12 review with a real device and evidence record.
+- [ ] Publish a signed release candidate only after the existing same-run Android launch gate passes and storage is available; do not substitute historical exports or hosted boot timeouts.
+
 ## M4 — Highrise graybox and systems
 
 - [x] Establish the coordinate-gated `MP_RF_02` graybox manifest and prevent a guessed layout from becoming playable.

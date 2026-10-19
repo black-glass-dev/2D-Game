@@ -2,9 +2,9 @@
 
 **Historical baseline date:** 2026-10-14 (Asia/Dhaka)
 
-## Current delivery status — 2026-10-18
+## Current delivery status — 2026-10-19
 
-**No APK is currently offered by this project as a tested or supported downloadable delivery.** The forward workflow policy now requires source/export/normal-Boot/renderer success **and** Android emulator install/launch success before it can publish a new pre-release. CI run [39127188550](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39127188550) passed every non-device gate and its KVM-readiness step for `98a2623`, then still timed out at hosted-emulator boot and correctly skipped publication. Artifact storage remains quota-blocked.
+**No APK is currently offered by this project as a tested or supported downloadable delivery.** The forward workflow policy requires source/export/normal-Boot/renderer success **and** Android emulator install/launch success before it can publish a new pre-release. CI run [39250923376](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39250923376) passed every non-device gate, including the repaired clean-import/audio flow, both UI capture routes, and genuine graphics frames, then still timed out at hosted-emulator boot and correctly skipped publication. Artifact storage remains quota-blocked.
 
 The old [candidate #61](https://github.com/islamyousuf032-glitch/2D-Game/releases/tag/apk-candidate-61) is a retained historical pre-release record, not a current recommended delivery and not physical-device-tested. Its historical source/export/renderer evidence remains below for audit only. The current gate and exact evidence boundary are in [`RELEASE_GATING.md`](RELEASE_GATING.md).
 

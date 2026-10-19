@@ -436,6 +436,15 @@ The handoff is prepared tooling only. It is not installation, gameplay, device, 
 | Stabilized normal-Boot + renderer CI | GitHub Actions run 39250923376 at `5ee3bd1` | PASS — clean import/export, every normal-Boot verifier (including audio), pause/Bengali and quality captures, and all 12 genuine before/after graphics frames | [Run 39250923376](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39250923376); committed capture refresh `219f2eb` |
 | Hosted Android emulator/release delivery | Same run | BLOCKED — KVM/dependency setup passed, but the API-29/default/x86_64 emulator timed out during boot; candidate publication was skipped and artifact upload hit the existing storage quota | [Run 39250923376](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39250923376) |
 
+## Batch 34 — M6 foundation-service source contracts
+
+| Check | Command / route | Result | Evidence |
+| --- | --- | --- | --- |
+| Foundation contract validator | `python3 tools/validate_foundation_contracts.py` | PASS — validates versioned settings/save paths, default Desert progression, monotonic result preservation, guarded pause transitions, and data-driven map validity/launch boundaries | `tools/validate_foundation_contracts.py` |
+| Foundation contract regressions | `python3 tools/test_validate_foundation_contracts.py` | PASS — 4 tests: committed baseline plus rejection of schema regression, unguarded pause entry, and non-monotonic best score | `tools/test_validate_foundation_contracts.py` |
+| Integrated project validation | `python3 tools/validate_project.py` | PASS — invokes the M6 contracts with existing evidence, Highrise, and delivery contracts | `tools/validate_project.py` |
+| Runtime / device interpretation | Godot or physical Android | NOT CLAIMED — source contracts do not substitute for runtime, emulator, or D01–D12 evidence | `docs/PHYSICAL_DEVICE_QA.md`; `docs/RELEASE_GATING.md` |
+
 ## Outstanding test requirements
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.
 - `MP_RF_02` bot navigation/floor/link/hazard tests before Gate 2 approval.

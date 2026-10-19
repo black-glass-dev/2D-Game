@@ -445,3 +445,13 @@
 **Alternative considered:** Mark Music as resumed without an active player, continuously restart it on every nonzero volume update, or make an unchanged retry.
 
 **Why not selected:** Declaring success without a player weakens the regression contract. Continuous restarts interrupt a listener moving the volume slider. An unchanged retry would preserve the diagnosed inactive-player state. The targeted recovery preserves user-selected mute state and makes a changed source contract available for validation.
+
+## D-046 — Test M6 foundation contracts without inventing runtime/device evidence
+
+**Decision:** Add a dependency-free source validator and regression suite for the current `SettingsService`, `SaveService`, `GameManager`, `RedlineMapData`, and `MapRegistry` contracts. It checks schema-versioned migration surfaces, protected Desert defaults, monotonic operation results, guarded pause/restore state, input option fallback, and data-driven map validity/launch boundaries; `tools/validate_project.py` runs it on every source check.
+
+**Reason:** M6 explicitly calls for expanded tests of map profiles, settings migrations, and state transitions. Physical Android evidence and Highrise B2 geometry remain blocked externally, but these existing source rules can regress silently before those inputs arrive. The contract provides measurable unblocked M6 progress without claiming that static analysis is gameplay or device QA.
+
+**Alternative considered:** Wait for a device/B2 packet, write a headless Godot test locally despite the unavailable local engine, or add a synthetic Highrise profile.
+
+**Why not selected:** Waiting leaves high-value Desert services unprotected. Local Godot runtime validation is unavailable in this workspace. A synthetic Highrise profile would violate the coordinate gate. The suite only validates existing source responsibilities and leaves physical/runtime claims to their actual gates.
