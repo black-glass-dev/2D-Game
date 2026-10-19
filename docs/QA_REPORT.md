@@ -400,6 +400,15 @@ The reduction is diagnostic isolation, not a relaxation of acceleration, install
 
 `libpulse0` repairs the documented QEMU dynamic-loader dependency. The post-repair run did **not** boot the emulator, install the APK, reach app foreground, publish a candidate, produce a usable artifact, or supply physical-device validation.
 
+## Batch 30 — guest-serial boot diagnostics (workflow source gate)
+
+| Check | Command / route | Result | Evidence |
+| --- | --- | --- | --- |
+| Guest boot trace contract | Workflow review + `python3 tools/validate_project.py` | PASS — preserves the action's documented headless options and writes QEMU serial output to the workspace for failure-only branch capture | `.github/workflows/android-apk.yml`; `tools/validate_project.py` |
+| Guest-serial run | GitHub Actions | PENDING — no emulator/device result is claimed before the trace-enabled action executes | CI run for this batch is required |
+
+Guest serial content is diagnostic evidence only. It cannot replace completed boot, install, package, foreground, crash, candidate-publication, or physical-device evidence.
+
 ## Outstanding test requirements
 - Menu, touch, mouse, keyboard, gamepad and Android-back matrix after M2/M3.
 - `MP_RF_02` bot navigation/floor/link/hazard tests before Gate 2 approval.

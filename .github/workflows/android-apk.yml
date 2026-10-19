@@ -383,10 +383,11 @@ jobs:
           api-level: 29
           target: default
           arch: x86_64
-          # Keep the rest of the documented API-29/default baseline at action
-          # defaults: previous extra AVD profile/memory and launch overrides
-          # failed before the pre-launch hook could establish an AVD boundary.
+          # Keep the documented API-29/default launch baseline. The final QEMU
+          # serial sink is diagnostics-only: it preserves guest boot output when
+          # the runner reaches its 600-second bound before our APK probe starts.
           emulator-boot-timeout: 600
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -qemu -serial file:$GITHUB_WORKSPACE/build/android-emulator-serial.log
           disable-linux-hw-accel: false
           disable-animations: true
           # This runs after AVD creation and before boot, so a failed action can
@@ -404,7 +405,7 @@ jobs:
           set -euo pipefail
           mkdir -p ci-logs
           found_diagnostic=false
-          for log_name in android-emulator-prelaunch.log android-emulator-probe.log; do
+          for log_name in android-emulator-prelaunch.log android-emulator-serial.log android-emulator-probe.log; do
             if [ -f "build/${log_name}" ]; then
               cp "build/${log_name}" "ci-logs/${log_name}"
               found_diagnostic=true
@@ -447,6 +448,7 @@ jobs:
             build/android-emulator-install.log
             build/android-emulator.log
             build/android-emulator-prelaunch.log
+            build/android-emulator-serial.log
             build/android-emulator-probe.log
             build/godot-import.log
             build/godot-export.log

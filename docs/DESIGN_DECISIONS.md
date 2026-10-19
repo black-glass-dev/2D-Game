@@ -395,3 +395,13 @@
 **Alternative considered:** Relax the emulator gate, remove `-noaudio`, change Android image/API, or install an unbounded desktop-audio package set.
 
 **Why not selected:** None addresses the recorded dynamic-loader error as directly. `-noaudio` does not remove QEMU's linked library requirement. Unrelated image/API changes would conflate causes, while broad packages add unnecessary runner surface. Run 39136026161 then proved the repair: the pre-launch record reports emulator version 37.2.12.0 and `test.avd/config.ini` without a loader error. The action nevertheless used its full 600-second allowance and timed out waiting for boot, so this is runtime-dependency confirmation only—not emulator, APK, or device success.
+
+## D-041 — Persist guest serial output for boot-timeout attribution
+
+**Decision:** Preserve the runner's documented headless emulator options and add only the QEMU serial sink `-qemu -serial file:$GITHUB_WORKSPACE/build/android-emulator-serial.log`. On action failure, copy that file into `ci-logs/`; include it in normal build evidence when artifact storage permits.
+
+**Reason:** Run 39136026161 proved that QEMU and the AVD load after the targeted `libpulse0` repair, then timed out at boot before the post-boot probe can execute. The guest serial stream is the narrowest available host-side record of kernel/init progress inside this existing action invocation.
+
+**Alternative considered:** Increase the boot timeout again, change API/image parameters, or classify the run as a successful emulator test.
+
+**Why not selected:** Increasing an already bounded 600-second wait without new information wastes CI time. Changing the tested baseline conflates variables. A timeout contains no install/foreground proof and cannot be classified as success.

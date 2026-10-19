@@ -47,6 +47,7 @@ def main() -> None:
         "libpulse\\.so\\.0",
         "api-level: 29",
         "target: default",
+        "-serial file:$GITHUB_WORKSPACE/build/android-emulator-serial.log",
         "disable-linux-hw-accel: false",
         "pre-emulator-launch-script: sh \"$GITHUB_WORKSPACE/scripts/android_emulator_prelaunch_probe.sh\"",
         "The action parses YAML block lines into independent `sh -c` commands.",
