@@ -68,19 +68,23 @@ func _ensure_bus(bus_name: String) -> void:
 func _build_music_player() -> void:
 	music_player = AudioStreamPlayer.new()
 	music_player.name = "Outpost Watch Music"
-	# Duplicate the imported stream before setting loop metadata so the asset stays
-	# immutable for any future one-shot use.
-	var loop_stream := BACKGROUND_MUSIC.duplicate(true) as AudioStreamWAV
-	if loop_stream != null:
-		loop_stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
-		loop_stream.loop_begin = 0
-		loop_stream.loop_end = 0
-	music_player.stream = loop_stream if loop_stream != null else BACKGROUND_MUSIC
+	music_player.stream = _new_background_music_stream()
 	music_player.bus = BUS_MUSIC
 	# At the default 75% Music setting this yields about -18.5 dB, intentionally
 	# below the current -5 to -12 dB weapon/landing effects.
 	music_player.volume_db = MUSIC_MIX_VOLUME_DB
 	add_child(music_player)
+
+func _new_background_music_stream() -> AudioStream:
+	# A playback instance owns its own looping WAV resource. In particular, a
+	# stopped stream can be rebuilt cleanly before a later explicit unmute.
+	var loop_stream := BACKGROUND_MUSIC.duplicate(true) as AudioStreamWAV
+	if loop_stream != null:
+		loop_stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+		loop_stream.loop_begin = 0
+		loop_stream.loop_end = 0
+		return loop_stream
+	return BACKGROUND_MUSIC
 
 func _update_music_playback(linear_volume: float) -> void:
 	if music_player == null or music_player.stream == null:
@@ -100,6 +104,7 @@ func _retry_requested_music_playback() -> void:
 		return
 	var requested_volume := clampf(float(SettingsService.get_setting("music_volume", 0.0)), 0.0, 1.0)
 	if not is_zero_approx(requested_volume):
+		music_player.stream = _new_background_music_stream()
 		music_player.play()
 
 func _build_ui_feedback() -> void:

@@ -48,7 +48,7 @@ All notable production changes are documented here.
 - A factual physical-Android capture/handoff path that records APK hash, `adb install -r` output, device facts, package/launch/foreground state, and bounded logcat while reserving D01–D12 classification for a named human reviewer.
 - An executable delivery-guardrail validator/regression suite protecting the landscape Boot entrypoint, direct-update Android identity, playable Desert profile, locked Highrise card, and imported CC0 provenance records.
 - A clean-checkout Godot import stabilization gate that keeps the first editor scan as a diagnostic, validates a second import for parse/autoload errors, and runs export/runtime QA only after audio import metadata exists.
-- One state-guarded deferred retry for requested background-music restart, plus explicit resume-state diagnostics in the normal-Boot audio verifier.
+- One state-guarded deferred recovery with a fresh looping WAV resource for requested background-music restart, plus explicit resume-state diagnostics in the normal-Boot audio verifier.
 - A schema-3 Highrise intake rule requiring source-referenced bridge/rappel/lift/zipline endpoint records before any future navigation adapter can populate the native route topology.
 - A documented Android-emulator API-29/default x86_64 baseline with persistent KVM udev setup and direct-node permission fallback for hosted images that reject a live udev trigger, action-default AVD/launch configuration, the narrowly required `libpulse0` QEMU loader dependency, plus workspace-absolute pre-launch, guest-serial, and single-file POSIX probes with failure-only command-trace persistence compatible with the runner's per-line execution semantics, while retaining the same release evidence gate.
 

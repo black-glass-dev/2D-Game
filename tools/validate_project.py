@@ -49,8 +49,10 @@ def main() -> None:
     audio_contract = (
         "call_deferred(\"_retry_requested_music_playback\")",
         "func _retry_requested_music_playback() -> void:",
+        "func _new_background_music_stream() -> AudioStream:",
         "if music_player == null or music_player.stream == null or music_player.playing:",
         "not is_zero_approx(requested_volume)",
+        "music_player.stream = _new_background_music_stream()",
     )
     if not audio_service.is_file() or not all(requirement in audio_service.read_text(encoding="utf-8") for requirement in audio_contract):
         error("background-music guarded resume contract is missing")

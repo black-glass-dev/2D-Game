@@ -438,10 +438,10 @@
 
 ## D-045 — Retry deferred background-music start only when a loop is still inactive
 
-**Decision:** After a nonzero Music-volume update starts an inactive background loop, schedule one deferred recheck. It starts the loop once more only if the current saved volume remains nonzero and the player is still inactive.
+**Decision:** After a nonzero Music-volume update starts an inactive background loop, schedule one deferred recheck. It creates a fresh duplicated looping WAV resource and starts it only if the current saved volume remains nonzero and the player is still inactive.
 
-**Reason:** The normal-Boot audio verifier in CI run 39249610440 reached the final unmute/resume assertion but observed no active background player after a stop/start transition. The exact player/mute substate was not preserved in that run, so the source repair is deliberately narrow: it handles a one-frame audio-registration delay without claiming a device/audio-output result.
+**Reason:** The normal-Boot audio verifier in CI run 39249610440 reached the final unmute/resume assertion but observed no active background player after a stop/start transition. The subsequent changed-run diagnostic preserved the substate (`playing=false`, Music bus unmuted, requested volume `0.50`) even after an ordinary deferred retry. The source repair is deliberately narrow: it rebuilds the stopped playback resource only for that inactive requested resume, without claiming a device/audio-output result.
 
-**Alternative considered:** Mark Music as resumed without an active player, continuously restart it on every nonzero volume update, or make an unverified retry.
+**Alternative considered:** Mark Music as resumed without an active player, continuously restart it on every nonzero volume update, or make an unchanged retry.
 
-**Why not selected:** Declaring success without a player weakens the regression contract. Continuous restarts interrupt a listener moving the volume slider. The targeted retry preserves user-selected mute state and makes a changed source contract available for validation rather than repeating the prior workflow.
+**Why not selected:** Declaring success without a player weakens the regression contract. Continuous restarts interrupt a listener moving the volume slider. An unchanged retry would preserve the diagnosed inactive-player state. The targeted recovery preserves user-selected mute state and makes a changed source contract available for validation.

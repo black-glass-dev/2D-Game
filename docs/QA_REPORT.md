@@ -432,7 +432,7 @@ The handoff is prepared tooling only. It is not installation, gameplay, device, 
 | Check | Command / route | Result | Evidence |
 | --- | --- | --- | --- |
 | Guardrail CI run | GitHub Actions run 39249610440 at `4142790` | PARTIAL PASS — source/native, guardrail, and export gates passed; first import logged WAV-preload/autoload errors and the later normal Boot/audio flow failed at its final Music resume assertion | [Run 39249610440](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39249610440); `ci-logs/godot-import.log`; `ci-logs/godot-audio-flow.log` at `850223d` |
-| Two-pass import + guarded resume source contract | Workflow/source review + `python3 tools/validate_project.py` | PASS — first import creates metadata; second import must contain no parse/autoload failure, and the service retries only an inactive requested loop after the frame | `.github/workflows/android-apk.yml`; `scripts/services/audio_service.gd`; `tools/validate_project.py` |
+| Two-pass import + guarded resume source contract | Workflow/source review + `python3 tools/validate_project.py` | PASS — first import creates metadata; second import must contain no parse/autoload failure, and the service rebuilds/retries only an inactive requested loop after the frame | `.github/workflows/android-apk.yml`; `scripts/services/audio_service.gd`; `tools/validate_project.py` |
 | Stabilized runtime run | GitHub Actions | PENDING — no Boot/audio or device result is claimed until the changed workflow/service executes | CI run for this batch is required |
 
 ## Outstanding test requirements

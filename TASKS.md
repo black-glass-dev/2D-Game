@@ -44,7 +44,7 @@
 - [x] Add one original background-music loop after provenance, mix, and mobile-memory review; keep physical-device listening/mix validation open as a separate requirement.
 - [x] Record a normal-Boot CI audio-flow result for the new Music-bus loop; retain physical-device listening validation as a separate requirement.
 - [x] Stabilize clean-checkout WAV import by requiring a successful second Godot editor-import pass before export or normal-Boot runtime QA.
-- [x] Make an otherwise requested but inactive Music loop retry once after the current frame; preserve stop/mute behavior and record actual resume state on a future failure.
+- [x] Make an otherwise requested but inactive Music loop rebuild/retry once after the current frame; preserve stop/mute behavior and record actual resume state on a future failure.
 - [x] Implement a forward-only downloadable-APK gate requiring Android install/launch; retain package ID and persistent debug-signing compatibility for in-place updates.
 - [x] Verify on CI that an emulator failure skips candidate publication; retain physical-device validation as a separate requirement.
 - [x] Harden the hosted Android-emulator gate with explicit KVM readiness, hardware acceleration, install-output capture, package verification, and foreground-activity proof.
