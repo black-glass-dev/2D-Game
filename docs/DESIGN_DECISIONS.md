@@ -455,3 +455,13 @@
 **Alternative considered:** Wait for a device/B2 packet, write a headless Godot test locally despite the unavailable local engine, or add a synthetic Highrise profile.
 
 **Why not selected:** Waiting leaves high-value Desert services unprotected. Local Godot runtime validation is unavailable in this workspace. A synthetic Highrise profile would violate the coordinate gate. The suite only validates existing source responsibilities and leaves physical/runtime claims to their actual gates.
+
+## D-047 — Enforce catalog/source localization parity before rendered QA
+
+**Decision:** Add a dependency-free localization validator and regression suite. It requires `data/localization/redline.csv` to contain the exact `keys,en,bn` header, valid unique keys, non-empty English/Bengali values with Bengali-script content, the existing `LocalizationService` loader/locale registration contract, and coverage for literal, helper-routed, input-binding, caption, settings, and session-mode GDScript keys.
+
+**Reason:** The roadmap calls for English/Bengali UI, live locale selection, and accessibility/localization completion. The catalog already contains reviewed bilingual content, but a future UI key or CSV edit could silently leave one language untranslated. The check protects those existing routes while physical rendered-glyph/device review remains unavailable.
+
+**Alternative considered:** Rely on manual catalog review, generate Godot import artifacts, or claim the source catalog proves device localization.
+
+**Why not selected:** Manual review does not catch every consumer route; generated artifacts are deliberately not tracked; and source strings cannot prove font rendering, locale switching, or touch readability. The validator is an additive source safeguard only.

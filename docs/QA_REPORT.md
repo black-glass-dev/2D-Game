@@ -436,6 +436,14 @@ The handoff is prepared tooling only. It is not installation, gameplay, device, 
 | Stabilized normal-Boot + renderer CI | GitHub Actions run 39250923376 at `5ee3bd1` | PASS — clean import/export, every normal-Boot verifier (including audio), pause/Bengali and quality captures, and all 12 genuine before/after graphics frames | [Run 39250923376](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39250923376); committed capture refresh `219f2eb` |
 | Hosted Android emulator/release delivery | Same run | BLOCKED — KVM/dependency setup passed, but the API-29/default/x86_64 emulator timed out during boot; candidate publication was skipped and artifact upload hit the existing storage quota | [Run 39250923376](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39250923376) |
 
+## Batch 35 — localization-catalog source contracts
+
+| Check | Command / route | Result | Evidence |
+| --- | --- | --- | --- |
+| Localization catalog validator | `python3 tools/validate_localization_catalog.py` | PASS — validates the exact bilingual CSV shape, unique non-empty entries, Bengali-script content, source loader contract, and used key coverage | `tools/validate_localization_catalog.py`; `data/localization/redline.csv` |
+| Localization catalog regressions | `python3 tools/test_validate_localization_catalog.py` | PASS — 4 tests reject duplicate key, blank Bengali translation, and missing source key | `tools/test_validate_localization_catalog.py` |
+| Runtime/device interpretation | Godot renderer or physical Android | NOT CLAIMED — catalog validity cannot prove rendered glyph, locale switching, touch layout, or device readability | `docs/PHYSICAL_DEVICE_QA.md` |
+
 ## Batch 34 — M6 foundation-service source contracts
 
 | Check | Command / route | Result | Evidence |

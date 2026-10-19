@@ -10,9 +10,15 @@ Last updated: 2026-10-19 (Asia/Dhaka)
 | M3 — Deliverable A QA | In progress | Pause lifecycle, results, SFX/UI buses, live accessibility/input/layout/rebinding adapters, tactical captions, Back-route regression coverage, original Music-bus loop contract, release-truth gate, and an evidence-bound physical-device matrix are implemented. Actual device input/audio evidence remains. |
 | M4 — Highrise graybox and systems | In progress — input gate | `MP_RF_02` remains locked while a validated manifest records the known topology and blocks guessed geometry. Authoritative B2 coordinates/reference, graybox/nav/capture evidence, and Gate 2 review remain. |
 | M5 — Highrise art and optimization | Not started | CC0/procedural assets, audio, lighting, performance budgets. |
-| M6 — QA and release | Not started | Two-map acceptance matrix and signed release candidate. |
+| M6 — QA and release | In progress — source/CI foundations | Foundation and bilingual-catalog regression contracts are active; current CI passes all non-device gates. Two-map acceptance, physical QA, storage availability, and a launch-gated signed candidate remain. |
+
+## Roadmap completion snapshot — 2026-10-19
+
+**Estimated planned-scope completion: 65%; remaining: 35%.** This is a truthful planning measure, not a device/release quality claim. M0–M2 source scope is complete (100% each); M3 is approximately 85% with the real-device matrix open; M4 is approximately 20% because its source-safe intake/topology foundation is done but the authoritative B2 packet is absent; M5 is 0% pending Gate 2; and M6 is approximately 55% with source/CI foundations progressing while physical QA and release delivery remain blocked.
 
 ## Current batch
+
+**Batch 35 — localization catalog contracts:** The reviewed English/Bengali CSV and `LocalizationService` now have dependency-free validation plus four regression tests. They require the exact `keys,en,bn` catalog shape, unique valid keys, non-empty English/Bengali content containing Bengali script, source catalog loading/locale registration, and catalog coverage for every current GDScript translation-key route. This is source integrity coverage—not rendered-glyph, device-language, or touch-UI evidence.
 
 **Batch 34 — M6 foundation regression contracts:** Added a dependency-free validator plus four regressions for schema-versioned settings/save migration, default unlocked Desert/no premature progress assumption, monotonic best score/wave persistence, guarded pause/restore transitions, sanitized session options, and data-driven map registry/launch conditions. It is wired into the project validator alongside physical-evidence, Highrise, and delivery guards. CI run [39259336341](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39259336341) passed the expanded source suite plus every import/export/normal-Boot/capture gate, then hit the same hosted-emulator boot timeout; release stayed skipped and artifacts quota-blocked. This does not unblock `MP_RF_02` construction or physical Android evidence.
 
