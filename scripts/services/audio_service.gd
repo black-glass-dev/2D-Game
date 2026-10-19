@@ -90,6 +90,17 @@ func _update_music_playback(linear_volume: float) -> void:
 			music_player.stop()
 	elif not music_player.playing:
 		music_player.play()
+		# A stop/start issued across adjacent audio-mix frames can report inactive
+		# once before the new playback is registered (most visibly in headless
+		# runners). Recheck after this frame without restarting an active loop.
+		call_deferred("_retry_requested_music_playback")
+
+func _retry_requested_music_playback() -> void:
+	if music_player == null or music_player.stream == null or music_player.playing:
+		return
+	var requested_volume := clampf(float(SettingsService.get_setting("music_volume", 0.0)), 0.0, 1.0)
+	if not is_zero_approx(requested_volume):
+		music_player.play()
 
 func _build_ui_feedback() -> void:
 	ui_feedback = AudioStreamPlayer.new()

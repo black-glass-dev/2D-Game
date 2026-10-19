@@ -425,3 +425,23 @@
 **Alternative considered:** Mark the guardrails complete only in documentation, or unlock/construct Highrise placeholders while waiting for B2.
 
 **Why not selected:** Documentation alone cannot prevent a later accidental package change, Desert profile regression, or premature Highrise unlock. A placeholder Highrise scene would violate the coordinate gate. The executable checks give forward progress while preserving those boundaries.
+
+## D-044 — Stabilize Godot clean imports before runtime QA
+
+**Decision:** On a fresh CI checkout, run Godot editor import twice before Android export and headless gameplay checks. Preserve the first log separately and make the second pass fail on a GDScript parse error or failed autoload creation.
+
+**Reason:** CI run 39249610440 passed source/native, Android export, and the new delivery-guardrail tests but its committed first-import log shows that `AudioService` tried to preload WAV files before initial WAV import metadata existed, leaving the autoload uncompiled. A first editor scan creates that metadata; the second pass confirms the actual project compiles before any export/runtime acceptance claim. The same run's later audio-resume failure is tracked separately in D-045; the available logs do not establish a causal relationship.
+
+**Alternative considered:** Remove audio preloads, ignore the import diagnostic because export succeeded, or rerun the existing workflow unchanged.
+
+**Why not selected:** Removing audio regresses a required gameplay system. Export alone did not prove a clean compile. An unchanged retry retains a clean-checkout race rather than validating the full project lifecycle.
+
+## D-045 — Retry deferred background-music start only when a loop is still inactive
+
+**Decision:** After a nonzero Music-volume update starts an inactive background loop, schedule one deferred recheck. It starts the loop once more only if the current saved volume remains nonzero and the player is still inactive.
+
+**Reason:** The normal-Boot audio verifier in CI run 39249610440 reached the final unmute/resume assertion but observed no active background player after a stop/start transition. The exact player/mute substate was not preserved in that run, so the source repair is deliberately narrow: it handles a one-frame audio-registration delay without claiming a device/audio-output result.
+
+**Alternative considered:** Mark Music as resumed without an active player, continuously restart it on every nonzero volume update, or make an unverified retry.
+
+**Why not selected:** Declaring success without a player weakens the regression contract. Continuous restarts interrupt a listener moving the volume slider. The targeted retry preserves user-selected mute state and makes a changed source contract available for validation rather than repeating the prior workflow.

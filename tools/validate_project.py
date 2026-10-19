@@ -37,6 +37,25 @@ def main() -> None:
     release_gate = "steps.android_emulator.outcome == 'success'"
     if "id: android_emulator" not in workflow_text or release_gate not in workflow_text:
         error("downloadable APK publishing is not gated on Android emulator success")
+    import_contract = (
+        "godot-import-first-pass.log",
+        "Godot import did not stabilize on the second pass.",
+        "Parse Error|Failed to create an autoload",
+    )
+    if not all(requirement in workflow_text for requirement in import_contract):
+        error("Godot clean-import stabilization contract is missing")
+    audio_service = ROOT / "scripts/services/audio_service.gd"
+    main_script = ROOT / "scripts/main.gd"
+    audio_contract = (
+        "call_deferred(\"_retry_requested_music_playback\")",
+        "func _retry_requested_music_playback() -> void:",
+        "if music_player == null or music_player.stream == null or music_player.playing:",
+        "not is_zero_approx(requested_volume)",
+    )
+    if not audio_service.is_file() or not all(requirement in audio_service.read_text(encoding="utf-8") for requirement in audio_contract):
+        error("background-music guarded resume contract is missing")
+    if not main_script.is_file() or "playing=%s muted=%s requested_volume=%.2f" not in main_script.read_text(encoding="utf-8"):
+        error("audio-flow resume diagnostic is missing")
     emulator_contract = (
         "Enable KVM acceleration for Android emulator",
         "99-kvm4all.rules",

@@ -157,7 +157,15 @@ jobs:
           set -euo pipefail
           export PATH="$HOME/.local/bin:$PATH"
           mkdir -p build
+          # A fresh checkout imports WAV resources only after the first editor
+          # scan. Run a second clean editor pass so AudioService preloads are
+          # compiled against generated import metadata before export/headless QA.
+          godot --headless --path . --editor --quit 2>&1 | tee build/godot-import-first-pass.log
           godot --headless --path . --editor --quit 2>&1 | tee build/godot-import.log
+          if grep -Eq "Parse Error|Failed to create an autoload" build/godot-import.log; then
+            echo "Godot import did not stabilize on the second pass."
+            exit 1
+          fi
           godot --headless --path . --export-debug "Android Debug" build/OperationRedline-debug.apk 2>&1 | tee build/godot-export.log
           test -s build/OperationRedline-debug.apk
           unzip -t build/OperationRedline-debug.apk
@@ -450,6 +458,7 @@ jobs:
             build/android-emulator-prelaunch.log
             build/android-emulator-serial.log
             build/android-emulator-probe.log
+            build/godot-import-first-pass.log
             build/godot-import.log
             build/godot-export.log
             build/godot-runtime.log

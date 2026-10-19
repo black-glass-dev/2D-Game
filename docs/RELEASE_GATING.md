@@ -5,7 +5,7 @@
 A GitHub pre-release APK is a player-downloadable in-place update, not merely an export artifact. Starting with the Batch 13 workflow policy, it may be created only when all of these checks succeed in the same run:
 
 1. source/static/native checks;
-2. Godot import, Android debug export, ZIP integrity, and APK signature verification;
+2. a fresh editor-import scan followed by a clean second editor-import pass with no parse/autoload failure, then Android debug export, ZIP integrity, and APK signature verification;
 3. normal-Boot gameplay-flow checks and renderer capture gates; and
 4. the Android emulator install/launch step, including acceleration/readiness checks, install output, package/foreground proof, and crash-log scan.
 

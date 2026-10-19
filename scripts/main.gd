@@ -1040,7 +1040,7 @@ func _run_audio_flow_verification() -> void:
 	SettingsService.set_setting("music_volume", 0.50, false)
 	await get_tree().process_frame
 	if not AudioService.music_player.playing or AudioServer.is_bus_mute(music_index):
-		push_error("Audio-flow verification could not resume enabled background music.")
+		push_error("Audio-flow verification could not resume enabled background music (playing=%s muted=%s requested_volume=%.2f)." % [AudioService.music_player.playing, AudioServer.is_bus_mute(music_index), float(SettingsService.get_setting("music_volume", -1.0))])
 		get_tree().quit(1)
 		return
 	AudioService.set_bus_linear_volume(AudioService.BUS_SFX, 0.40)
