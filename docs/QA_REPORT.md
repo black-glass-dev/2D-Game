@@ -244,6 +244,18 @@ Historical pre-releases are not physical-device-tested deliveries; this batch pr
 
 This batch corrects the label and protects the existing forward gate; it does not relabel historical candidates or turn a hosted emulator result into a physical-device result.
 
+## M6 batch 39 — independent legacy-artifact audit (source/infrastructure gate)
+
+| Check | Command / route | Result | Evidence |
+| --- | --- | --- | --- |
+| Exact active-name/cutoff filtering | `python3 tools/test_audit_legacy_artifacts.py` | PASS — paginated pages count only active `operation-redline-android-debug` artifacts strictly before the supplied cutoff; expired, newer, and unrelated artifacts are excluded | 6 deterministic regression tests |
+| Post-cleanup assertion | Audit test suite | PASS — `--verify-cleanup` passes only at zero active pre-cutoff candidates and reports any remainder as a failure | `tools/audit_legacy_artifacts.py` |
+| Delete boundary | Source inspection plus test | PASS — live mode invokes only read-only `gh api --paginate --jq '.artifacts[]'`; no delete endpoint or artifact-deletion permission exists in the tool | `tools/test_audit_legacy_artifacts.py` |
+| Live inventory | 2026-10-20 read-only GitHub API audit | PASS — 75 active exact-name artifacts; 53 candidates before `2026-10-14T00:00:00Z`; 3,337,865,269 candidate bytes | `python3 tools/audit_legacy_artifacts.py --repo islamyousuf032-glitch/2D-Game --cutoff 2026-10-14T00:00:00Z --expect-pre-cutoff-count 53` |
+| Actual deletion / storage recovery | Default-branch manual workflow plus independent post-run audit | BLOCKED — no artifact was deleted; the workflow still awaits default-branch availability and exact confirmation/cutoff dispatch | `docs/ARTIFACT_RETENTION.md` |
+
+This batch makes the required independent verification repeatable without broadening deletion authority. It does not execute cleanup, alter release assets, prove storage quota recovery, or substitute for Android launch evidence.
+
 ## M3 batch 14 — physical-device QA handoff (documentation gate)
 
 | Check | Command / route | Result | Evidence |

@@ -1,6 +1,6 @@
 # CI Artifact Retention and Storage Recovery
 
-**Date:** 2026-10-19 (Asia/Dhaka)
+**Last audited:** 2026-10-20 (Asia/Dhaka)
 
 ## Purpose
 
@@ -12,7 +12,8 @@ the launch-gated GitHub pre-release path in `RELEASE_GATING.md`.
 
 ## Audit before cleanup
 
-A GitHub Actions API inventory on 2026-10-19 found **75 active** artifacts named
+A GitHub Actions API inventory was first recorded on 2026-10-19 and repeated
+read-only on 2026-10-20. Both audits found **75 active** artifacts named
 `operation-redline-android-debug`, totaling **4,954,824,380 bytes**. Repeated
 hosted-emulator boot timeouts had retained duplicate debug APK/capture bundles
 from routine non-device runs and exhausted the repository's artifact-storage
@@ -41,6 +42,40 @@ Selected artifact IDs, recorded for the confirmed cleanup workflow:
 11793245764, 11801701309, 11802143197, 11803755653, 11811931447,
 11819390558, 11820470378, 11826842882
 ```
+
+## Independent post-cleanup verification
+
+The cleanup workflow is the only repository component that may delete an
+artifact. `tools/audit_legacy_artifacts.py` is deliberately **read-only**: it
+uses `gh api --paginate --jq '.artifacts[]'` only to list every page, then
+filters the exact audited name, active state, and cutoff locally. It does not
+call a delete endpoint and can be run with a listing-only integration.
+
+Before dispatch, a reviewer can confirm the audited scope still matches the
+recorded inventory:
+
+```sh
+python3 tools/audit_legacy_artifacts.py \
+  --repo islamyousuf032-glitch/2D-Game \
+  --cutoff 2026-10-14T00:00:00Z \
+  --expect-pre-cutoff-count 53
+```
+
+Only after the workflow is available on the default branch, manually dispatched
+with the exact `DELETE_LEGACY_ARTIFACTS` confirmation and cutoff, and has a
+completed GitHub Actions result, independently verify that it left no active
+matching artifact before that cutoff:
+
+```sh
+python3 tools/audit_legacy_artifacts.py \
+  --repo islamyousuf032-glitch/2D-Game \
+  --cutoff 2026-10-14T00:00:00Z \
+  --verify-cleanup
+```
+
+A zero-candidate result verifies the bounded inventory state, not an Android
+launch, physical-device run, APK delivery, or immediate storage-quota refresh.
+GitHub's reported usage may still take several hours to recalculate.
 
 ## Forward policy
 

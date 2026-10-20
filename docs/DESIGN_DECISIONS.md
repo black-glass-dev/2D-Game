@@ -495,3 +495,13 @@
 **Alternative considered:** Keep the historical shorthand, wait to correct the label only after a passing emulator run, or block all future candidate terminology until a physical device is available.
 
 **Why not selected:** The shorthand is inaccurate now, independent of future runner availability. Waiting preserves a misleading contract in source. A passing emulator is sufficient for the declared forward release gate but remains distinct from the separately required physical-device matrix, so precise terminology retains both safeguards without inventing a new block.
+
+## D-051 — Independently audit the bounded cleanup without adding another deletion path
+
+**Decision:** Add a dependency-free read-only artifact inventory tool with paginated GitHub CLI listing, exact name/active/cutoff filtering, and a post-cleanup zero-candidate assertion. The tool contains no deletion request and is not granted Actions write authority; only the manually confirmed cleanup workflow can delete the bounded set.
+
+**Reason:** A successful manual cleanup must be independently checked before storage availability can be claimed. The normal integration can list artifacts but returned HTTP 403 when a direct deletion was attempted, and the cleanup workflow itself cannot be dispatched until it reaches the default branch. A source-controlled reader makes the verification repeatable now and preserves separation between review/audit capability and destructive capability.
+
+**Alternative considered:** Trust only the cleanup workflow summary, add direct-delete support to the CLI tool, or wait to write verification until after a manual dispatch.
+
+**Why not selected:** A workflow summary is useful but not an independent inventory check. A second delete path expands risk and would repeat the known permission problem. Waiting would leave no deterministic way to distinguish a completed bounded cleanup from an asserted one. The audit remains read-only and explicitly does not prove quota recalculation, Android launch, physical QA, or delivery.

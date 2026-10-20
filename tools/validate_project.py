@@ -142,6 +142,7 @@ def main() -> None:
     subprocess.run([sys.executable, str(ROOT / "tools/test_validate_localization_catalog.py")], check=True)
     subprocess.run([sys.executable, str(ROOT / "tools/validate_release_contract.py")], check=True)
     subprocess.run([sys.executable, str(ROOT / "tools/test_validate_release_contract.py")], check=True)
+    subprocess.run([sys.executable, str(ROOT / "tools/test_audit_legacy_artifacts.py")], check=True)
 
     checked_links = 0
     for source in ROOT.rglob("*"):
