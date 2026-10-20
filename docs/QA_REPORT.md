@@ -267,6 +267,17 @@ This batch makes the required independent verification repeatable without broade
 
 This source gate preserves the destructive operation's boundaries; it grants neither a new deletion path nor any storage/release/device result.
 
+## M6 batch 41 — evidence storage before candidate publication (source gate)
+
+| Check | Command / route | Result | Evidence |
+| --- | --- | --- |
+| Candidate ordering | Workflow/source contract | PASS — `Upload tested build evidence` has stable `tested_build_evidence` ID and precedes candidate publication | `.github/workflows/android-apk.yml` |
+| Same-run publication condition | `python3 tools/validate_release_contract.py` | PASS — candidate requires export, normal-Boot, Android emulator, and tested evidence upload outcomes all be `success` | `tools/validate_release_contract.py` |
+| Regression mutations | `python3 tools/test_validate_release_contract.py` | PASS — 6 tests reject omitted emulator/storage conditions, reversed evidence ordering, misleading label, and retention expansion | `tools/test_validate_release_contract.py` |
+| Candidate/emulator/device delivery | Future successful CI run and release review | BLOCKED — no Android emulator launch, successful evidence upload, pre-release, physical D01–D12 review, or player delivery exists | `docs/RELEASE_GATING.md` |
+
+This batch turns storage availability into a pre-publication condition. It does not delete artifacts, recover quota, produce an APK, or reclassify emulator evidence as physical-device evidence.
+
 ## M3 batch 14 — physical-device QA handoff (documentation gate)
 
 | Check | Command / route | Result | Evidence |

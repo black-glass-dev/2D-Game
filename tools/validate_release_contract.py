@@ -42,7 +42,8 @@ def validate(root: Path = ROOT) -> None:
     publish_condition = (
         "steps.android_export.outcome == 'success' && "
         "steps.gameplay_smoke.outcome == 'success' && "
-        "steps.android_emulator.outcome == 'success'"
+        "steps.android_emulator.outcome == 'success' && "
+        "steps.tested_build_evidence.outcome == 'success'"
     )
     require_snippets(
         workflow_path,
@@ -51,17 +52,22 @@ def validate(root: Path = ROOT) -> None:
             "id: android_export",
             "id: gameplay_smoke",
             "id: android_emulator",
+            "id: tested_build_evidence",
             "- name: Publish an emulator-launch-gated debug APK candidate",
             publish_condition,
             'gh release create "apk-candidate-${GITHUB_RUN_NUMBER}" build/OperationRedline-debug.apk',
             '--target "${GITHUB_SHA}"',
             "--prerelease",
-            "Android emulator install/launch all passed.",
+            "Android emulator install/launch, and tested-build evidence storage all passed.",
             "- name: Upload tested build evidence",
             "steps.android_export.outcome != 'success' || steps.gameplay_smoke.outcome != 'success' || steps.android_emulator.outcome == 'success'",
             "retention-days: 7",
         ),
     )
+    if workflow.index("id: tested_build_evidence") > workflow.index(
+        "- name: Publish an emulator-launch-gated debug APK candidate"
+    ):
+        fail(f"{workflow_path} must store tested evidence before candidate publication")
     if "device-validated" in workflow.lower():
         fail(f"{workflow_path} must not label emulator-only candidate evidence as device-validated")
 
@@ -73,6 +79,7 @@ def validate(root: Path = ROOT) -> None:
         (
             "A successful future release created through this gate still represents emulator evidence; physical-device testing is separately recorded.",
             "Publish an emulator-launch-gated debug APK candidate",
+            "tested_build_evidence",
             "not a passing device result",
         ),
     )
@@ -112,7 +119,7 @@ def main() -> None:
     except ReleaseContractError as exc:
         print(f"RELEASE_CONTRACT_ERROR: {exc}", file=sys.stderr)
         raise SystemExit(1) from exc
-    print("RELEASE_CONTRACT_PASS emulator_gate=truthful physical_qa=separate artifacts=bounded")
+    print("RELEASE_CONTRACT_PASS emulator_gate=evidence_gated physical_qa=separate artifacts=bounded")
 
 
 if __name__ == "__main__":

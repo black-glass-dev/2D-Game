@@ -85,10 +85,12 @@ GitHub's reported usage may still take several hours to recalculate.
 The Android workflow now uses a seven-day artifact retention period. It uploads
 the bundle only when Android export or normal-Boot runtime QA itself fails, or
 when the Android launch gate succeeds. Renderer captures are already committed
-after validation. A hosted-emulator-only timeout therefore cannot consume another
-APK archive while still retaining source logs and committed evidence. Legacy
-cleanup is deliberately manual through the bounded confirmation workflow above;
-it is never performed automatically during a build.
+after validation. On the successful-launch path, that upload now has to succeed
+before a pre-release candidate can be published. A hosted-emulator-only timeout
+therefore cannot consume another APK archive while still retaining source logs
+and committed evidence. Legacy cleanup is deliberately manual through the
+bounded confirmation workflow above; it is never performed automatically during
+a build.
 
 CI run [39271155212](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39271155212) then confirmed the forward policy: all non-device gates passed, the hosted emulator alone timed out, and `Upload tested build evidence` was skipped rather than quota-failing. GitHub permits manual workflow dispatch only when the workflow is present on the default branch, so the bounded legacy cleanup cannot execute from this working branch yet.
 

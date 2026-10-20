@@ -18,6 +18,8 @@ Last updated: 2026-10-20 (Asia/Dhaka)
 
 ## Current batch
 
+**Batch 41 — storage-before-publication gate:** Reordered the Android workflow so qualifying tested-build evidence uploads before candidate publication and added `tested_build_evidence` as a required same-run success condition. The release contract now has six regressions, rejecting a missing emulator/storage outcome or a candidate ordered before its evidence. This avoids a player-downloadable candidate when artifact storage is quota/error-blocked; it does not create an APK, free storage, or prove emulator/device launch.
+
 **Batch 40 — cleanup-workflow safety contract:** Replaced the earlier inline workflow-string check with a dedicated validator and five mutation tests. The source gate now rejects an automatic trigger, altered exact confirmation, broadened artifact name, or non-strict cutoff, while requiring manual dispatch, narrow `actions: write`, active-artifact guard, summary, and the existing deletion route. This protects the prepared workflow without dispatching it, deleting any artifact, or claiming storage recovery.
 
 **Batch 39 — independent legacy-artifact audit:** Added a dependency-free, paginated read-only GitHub Actions artifact auditor and six regression tests. It filters only active `operation-redline-android-debug` artifacts before the exact cutoff and can assert a zero-candidate post-cleanup state; it has no delete code or deletion permission. A 2026-10-20 live read-only audit reconfirmed 75 active named artifacts, 53 pre-cutoff candidates, and 3,337,865,269 candidate bytes. The verifier is prepared for—but does not execute—the manual default-branch cleanup.

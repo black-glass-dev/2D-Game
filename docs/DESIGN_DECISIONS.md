@@ -515,3 +515,13 @@
 **Alternative considered:** Rely on reviewer inspection at dispatch time, remove the cleanup workflow until storage access is restored, or grant the read-only audit tool delete support.
 
 **Why not selected:** Dispatch-time inspection is too late to protect the committed default-branch workflow. Removing the workflow loses the narrow recovery path. A separate delete client would broaden destructive authority. The validator/test pair is source-only, leaves runtime deletion exclusively to the explicit manual workflow, and does not claim it has run.
+
+## D-053 — Require qualifying evidence storage before candidate publication
+
+**Decision:** Move the qualifying `Upload tested build evidence` step before pre-release creation, give it a stable `tested_build_evidence` identifier, and require that step to succeed along with export, normal-Boot, and Android emulator launch before a candidate can publish. Extend the release-contract regression suite to reject missing storage gating or reversed step order.
+
+**Reason:** A launch-gated candidate still needs retrievable same-run evidence. Previously the release was created before the upload attempt, so a storage-quota/error failure could leave a player-downloadable pre-release without the qualifying evidence bundle. The task board requires storage availability as part of release delivery; ordering makes that requirement executable rather than documentary.
+
+**Alternative considered:** Leave upload after publication with a warning, make evidence optional on a successful emulator path, or block all export diagnostics whenever storage is full.
+
+**Why not selected:** A warning does not prevent an unsupported delivery. Optional evidence breaks the same-run audit trail. Blocking failure diagnostics would hide actionable source/import failures. The upload remains conditional and seven-day-retained; only the successful candidate path must wait for its successful evidence storage.

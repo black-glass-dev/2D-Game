@@ -48,6 +48,32 @@ class ReleaseContractTests(unittest.TestCase):
             with self.assertRaisesRegex(contract.ReleaseContractError, "steps.android_emulator.outcome"):
                 contract.validate(workspace)
 
+    def test_rejects_candidate_without_successful_evidence_storage(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            workspace = Path(temporary_directory)
+            copy_contract_sources(workspace)
+            workflow = workspace / ".github/workflows/android-apk.yml"
+            workflow.write_text(
+                workflow.read_text(encoding="utf-8").replace(
+                    " && steps.tested_build_evidence.outcome == 'success'", ""
+                ),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(contract.ReleaseContractError, "tested_build_evidence"):
+                contract.validate(workspace)
+
+    def test_rejects_candidate_that_precedes_evidence_storage(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            workspace = Path(temporary_directory)
+            copy_contract_sources(workspace)
+            workflow = workspace / ".github/workflows/android-apk.yml"
+            content = workflow.read_text(encoding="utf-8").replace(
+                "id: tested_build_evidence", "id: renamed_test_evidence", 1
+            )
+            workflow.write_text(content + "\n      id: tested_build_evidence\n", encoding="utf-8")
+            with self.assertRaisesRegex(contract.ReleaseContractError, "before candidate publication"):
+                contract.validate(workspace)
+
     def test_rejects_misleading_device_validated_candidate_label(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
             workspace = Path(temporary_directory)
