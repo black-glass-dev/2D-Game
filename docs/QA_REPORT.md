@@ -256,6 +256,17 @@ This batch corrects the label and protects the existing forward gate; it does no
 
 This batch makes the required independent verification repeatable without broadening deletion authority. It does not execute cleanup, alter release assets, prove storage quota recovery, or substitute for Android launch evidence.
 
+## M6 batch 40 — cleanup-workflow safety contract (source gate)
+
+| Check | Command / route | Result | Evidence |
+| --- | --- | --- | --- |
+| Current workflow contract | `python3 tools/validate_cleanup_workflow.py` | PASS — requires manual dispatch, exact confirmation/cutoff inputs, narrow `actions: write`, exact active-name filter, strict pre-cutoff comparison, summary, and the existing deletion API route | `.github/workflows/cleanup-legacy-artifacts.yml` |
+| Mutation regression suite | `python3 tools/test_validate_cleanup_workflow.py` | PASS — 5 tests reject automatic push, altered confirmation comparison, broadened name filter, and non-strict cutoff; committed workflow validates | `tools/test_validate_cleanup_workflow.py` |
+| Project-gate integration | `python3 tools/validate_project.py` | PASS — dedicated validator/regressions replace the prior inline fragment and run with the source bundle | `tools/validate_project.py` |
+| Actual dispatch/deletion | Default-branch manual workflow | BLOCKED — no dispatch or deletion occurred; default-branch availability, exact reviewer confirmation/cutoff, completion, and read-only post-run verification remain required | `docs/ARTIFACT_RETENTION.md` |
+
+This source gate preserves the destructive operation's boundaries; it grants neither a new deletion path nor any storage/release/device result.
+
 ## M3 batch 14 — physical-device QA handoff (documentation gate)
 
 | Check | Command / route | Result | Evidence |

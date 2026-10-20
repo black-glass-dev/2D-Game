@@ -49,7 +49,10 @@ The cleanup workflow is the only repository component that may delete an
 artifact. `tools/audit_legacy_artifacts.py` is deliberately **read-only**: it
 uses `gh api --paginate --jq '.artifacts[]'` only to list every page, then
 filters the exact audited name, active state, and cutoff locally. It does not
-call a delete endpoint and can be run with a listing-only integration.
+call a delete endpoint and can be run with a listing-only integration. Separately,
+`tools/validate_cleanup_workflow.py` and its mutation suite make source checks
+reject an automatic trigger, weakened confirmation, broadened name filter, or
+non-strict cutoff before the destructive workflow can reach the default branch.
 
 Before dispatch, a reviewer can confirm the audited scope still matches the
 recorded inventory:

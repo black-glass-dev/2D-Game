@@ -68,6 +68,7 @@
 - [x] Exercise the physical Android factual collector against a deterministic fake `adb`, including install/package/launch evidence files and a truthful blocked package-lookup path; retain real D01–D12 review as a separate device-only task.
 - [x] Enforce truthful emulator-launch-gated candidate wording, same-run source/Boot/emulator release conditions, bounded qualifying-artifact retention, and the separate physical-QA boundary with dependency-free regression tests.
 - [x] Prepare a read-only, paginated GitHub artifact audit and post-cleanup zero-candidate verifier; it cannot delete artifacts and awaits default-branch cleanup dispatch/results.
+- [x] Add mutation-tested source protection that keeps the legacy cleanup workflow manual-only, exact-confirmation-gated, exact-name/cutoff-bounded, and separately authorized for deletion.
 - [ ] Complete the manual desktop/mobile input matrix and physical Android D01–D12 review with a real device and evidence record.
 - [ ] Publish a signed release candidate only after the existing same-run Android launch gate passes and storage is available; do not substitute historical exports or hosted boot timeouts.
 

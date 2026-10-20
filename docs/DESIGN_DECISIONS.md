@@ -505,3 +505,13 @@
 **Alternative considered:** Trust only the cleanup workflow summary, add direct-delete support to the CLI tool, or wait to write verification until after a manual dispatch.
 
 **Why not selected:** A workflow summary is useful but not an independent inventory check. A second delete path expands risk and would repeat the known permission problem. Waiting would leave no deterministic way to distinguish a completed bounded cleanup from an asserted one. The audit remains read-only and explicitly does not prove quota recalculation, Android launch, physical QA, or delivery.
+
+## D-052 — Mutation-test the destructive workflow boundary before default-branch availability
+
+**Decision:** Replace the project validator's short inline cleanup-workflow fragment with a dedicated cleanup-workflow contract and regression suite. It requires the workflow to remain manual-only, confirmation-gated, exact-name/active/strict-cutoff bounded, summarised, and narrowly deletion-capable; tests mutate each critical boundary to prove rejection.
+
+**Reason:** The cleanup can eventually have `actions: write`, so source drift is a high-consequence risk even before it is dispatchable. A few untested string checks would not exercise accidental automatic triggers, inverted confirmation logic, wildcard scope, or an inclusive cutoff. The dedicated contract protects the workflow while it waits for merge/default-branch availability.
+
+**Alternative considered:** Rely on reviewer inspection at dispatch time, remove the cleanup workflow until storage access is restored, or grant the read-only audit tool delete support.
+
+**Why not selected:** Dispatch-time inspection is too late to protect the committed default-branch workflow. Removing the workflow loses the narrow recovery path. A separate delete client would broaden destructive authority. The validator/test pair is source-only, leaves runtime deletion exclusively to the explicit manual workflow, and does not claim it has run.
