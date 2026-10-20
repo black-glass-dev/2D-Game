@@ -29,6 +29,6 @@ The Android workflow retains an artifact for seven days only when export/normal-
 
 ## First gate evidence
 
-[CI run 39034299154](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39034299154) passed source/native/import/export/normal-Boot/renderer gates but timed out at Android emulator boot. The `Publish a device-validated debug APK candidate` step was skipped, and the subsequent `gh release list` audit showed no `apk-candidate-88` release. This proves the intended failure-safe publication behavior without representing the run as a device pass.
+[CI run 39034299154](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39034299154) passed source/native/import/export/normal-Boot/renderer gates but timed out at Android emulator boot. The `Publish an emulator-launch-gated debug APK candidate` step was skipped, and the subsequent `gh release list` audit showed no `apk-candidate-88` release. This proves the intended failure-safe publication behavior without representing the run as a device pass.
 
 [CI run 39121960890](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39121960890) later passed the hardened KVM-readiness step and every non-device gate, but the hosted API 30 ATD still timed out before boot despite required acceleration and the 480-second allowance. Publication was again skipped and artifact upload was quota-blocked. This narrows the remaining failure to hosted-emulator boot rather than source/export or missing KVM readiness; it remains neither emulator success nor physical-device evidence.

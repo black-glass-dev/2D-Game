@@ -66,6 +66,7 @@
 - [x] Enforce the bilingual `keys,en,bn` localization catalog and every current GDScript translation-key route; reject duplicate, blank Bengali/English, missing-key, or locale-loader regressions in source.
 - [x] Constrain Android evidence retention to seven days and provide a confirmation-gated workflow that can remove only audited pre-cutoff duplicate debug artifacts; run 39271155212 confirmed emulator-only timeout upload is skipped. The current CLI integration cannot execute deletion (`HTTP 403`) and the cleanup workflow awaits default-branch availability for dispatch.
 - [x] Exercise the physical Android factual collector against a deterministic fake `adb`, including install/package/launch evidence files and a truthful blocked package-lookup path; retain real D01–D12 review as a separate device-only task.
+- [x] Enforce truthful emulator-launch-gated candidate wording, same-run source/Boot/emulator release conditions, bounded qualifying-artifact retention, and the separate physical-QA boundary with dependency-free regression tests.
 - [ ] Complete the manual desktop/mobile input matrix and physical Android D01–D12 review with a real device and evidence record.
 - [ ] Publish a signed release candidate only after the existing same-run Android launch gate passes and storage is available; do not substitute historical exports or hosted boot timeouts.
 

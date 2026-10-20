@@ -51,6 +51,7 @@ All notable production changes are documented here.
 - A bilingual localization-catalog validator/regression suite protecting the exact `keys,en,bn` source format, non-empty Bengali/English translations, locale-loader behavior, and every current GDScript localization-key consumer.
 - A constrained, confirmation-gated legacy-artifact cleanup workflow and seven-day Android evidence retention policy, preventing known emulator-only timeouts from repeatedly storing debug APK archives.
 - A deterministic fake-`adb` regression harness for the physical Android factual collector, validating collection/blocked-package behavior while explicitly not simulating D01–D12 device evidence.
+- A release-truth contract validator and four dependency-free regressions that require same-run export/normal-Boot/emulator success for a pre-release candidate, seven-day qualifying-artifact retention, and strictly distinguish an emulator-launch-gated candidate from physical-device QA.
 - A clean-checkout Godot import stabilization gate that keeps the first editor scan as a diagnostic, validates a second import for parse/autoload errors, and runs export/runtime QA only after audio import metadata exists.
 - One state-guarded deferred recovery with a fresh looping WAV resource for requested background-music restart, plus explicit resume-state diagnostics in the normal-Boot audio verifier.
 - A schema-3 Highrise intake rule requiring source-referenced bridge/rappel/lift/zipline endpoint records before any future navigation adapter can populate the native route topology.

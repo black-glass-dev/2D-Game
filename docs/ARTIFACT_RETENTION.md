@@ -5,7 +5,7 @@
 ## Purpose
 
 GitHub Actions artifacts are useful for actionable import/runtime failures and a
-future device-validated APK, but they are not the project's release-delivery
+future emulator-launch-gated APK candidate, but they are not the project's release-delivery
 record. Verified renderer frames and failure diagnostics are retained in the
 branch; a successful future player-downloadable APK must be published through
 the launch-gated GitHub pre-release path in `RELEASE_GATING.md`.

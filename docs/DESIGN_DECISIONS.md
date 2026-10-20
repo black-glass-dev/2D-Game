@@ -485,3 +485,13 @@
 **Alternative considered:** Skip automated coverage, simulate a complete device matrix, or treat a fake successful install as physical QA.
 
 **Why not selected:** Skipping coverage leaves a practical handoff script untested. Synthetic controls/audio/thermal data would be fabricated. The harness is restricted to collection mechanics and explicitly preserves the human real-device D01–D12 boundary.
+
+## D-050 — Keep candidate-release nomenclature truthful to the actual Android gate
+
+**Decision:** Name forward GitHub pre-releases **emulator-launch-gated debug APK candidates**, not device-validated candidates. Add source-level validation and regression tests that require the same-run export, normal-Boot, and emulator-success condition, seven-day qualifying-artifact retention, aligned release/handoff documentation, and the preserved physical-QA distinction.
+
+**Reason:** The workflow's final automated launch step is a hosted Android emulator. It is a valuable delivery safeguard, but it does not observe a physical Android device or complete D01–D12. Calling its output device-validated could cause a player-facing release label to overstate available evidence, especially while the actual hosted emulator is boot-blocked and physical QA is still open.
+
+**Alternative considered:** Keep the historical shorthand, wait to correct the label only after a passing emulator run, or block all future candidate terminology until a physical device is available.
+
+**Why not selected:** The shorthand is inaccurate now, independent of future runner availability. Waiting preserves a misleading contract in source. A passing emulator is sufficient for the declared forward release gate but remains distinct from the separately required physical-device matrix, so precise terminology retains both safeguards without inventing a new block.

@@ -2,7 +2,7 @@
 
 **Historical baseline date:** 2026-10-14 (Asia/Dhaka)
 
-## Current delivery status — 2026-10-19
+## Current delivery status — 2026-10-20
 
 **No APK is currently offered by this project as a tested or supported downloadable delivery.** The forward workflow policy requires source/export/normal-Boot/renderer success **and** Android emulator install/launch success before it can publish a new pre-release. CI run [39271155212](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39271155212) passed every non-device gate, including the expanded M6 foundation/localization contracts, repaired clean-import/audio flow, both UI capture routes, and genuine graphics frames, then still timed out at hosted-emulator boot and correctly skipped publication. Its new retention condition also skipped artifact upload rather than creating another quota-blocked archive; legacy storage cleanup remains default-branch-dispatch-blocked.
 
@@ -19,6 +19,7 @@ The old [candidate #61](https://github.com/islamyousuf032-glitch/2D-Game/release
 | Physical-collection mechanics harness | `python3 tools/test_capture_physical_android_qa.py` | **PASS** — 3 deterministic fake-`adb` tests cover collector files/control flow and a blocked lookup route without asserting a real APK, device, or D01–D12 result |
 | M6 foundation-service contract | `python3 tools/validate_foundation_contracts.py` and `python3 tools/test_validate_foundation_contracts.py` | **PASS** — 4 tests protect settings/save schemas and migration surfaces, monotonic Desert records, guarded pause restore, session fallback, and data-driven map validity without asserting device/runtime evidence |
 | Bilingual localization catalog contract | `python3 tools/validate_localization_catalog.py` and `python3 tools/test_validate_localization_catalog.py` | **PASS** — 4 tests protect `keys,en,bn` catalog structure, bilingual non-empty content, source locale loader, and active GDScript translation keys; this is not glyph/device proof |
+| Emulator-gated release truth contract | `python3 tools/validate_release_contract.py` and `python3 tools/test_validate_release_contract.py` | **PASS** — 4 tests require same-run export/normal-Boot/emulator success for candidate publication, seven-day qualifying-artifact retention, and wording that keeps the emulator gate separate from physical-device QA; this is not launch or delivery evidence |
 | GDScript parse/type diagnostics | `npm ci && npm run test:gdscript` via pinned Godot 4.x analyzer | **PASS** — 23 scripts, 0 errors, 0 warnings |
 | C++ warning-clean compile | `g++ -std=c++20 -Wall -Wextra -Werror -pedantic ...` | **PASS** |
 | C++ survival pacing unit tests | `./scripts/run_native_tests.sh` | **PASS** — 3 waves, 27 spawns and completion state |

@@ -429,7 +429,7 @@ jobs:
           git pull --rebase origin "${GITHUB_REF_NAME}"
           git push origin "HEAD:${GITHUB_REF_NAME}"
 
-      - name: Publish a device-validated debug APK candidate
+      - name: Publish an emulator-launch-gated debug APK candidate
         # An APK is a player-downloadable update only after every software gate
         # and the actual Android install/launch row have passed. Export alone is
         # never evidence that an installed app can update and boot safely.
@@ -441,13 +441,13 @@ jobs:
           gh release create "apk-candidate-${GITHUB_RUN_NUMBER}" build/OperationRedline-debug.apk \
             --repo "${GITHUB_REPOSITORY}" \
             --target "${GITHUB_SHA}" \
-            --title "Operation Redline device-validated debug APK candidate #${GITHUB_RUN_NUMBER}" \
+            --title "Operation Redline emulator-launch-gated debug APK candidate #${GITHUB_RUN_NUMBER}" \
             --prerelease \
             --notes "Automated source/native checks, Godot import, APK archive/signature verification, normal-Boot flow checks, renderer captures, and Android emulator install/launch all passed. The package ID and persistent debug signing stream are retained for in-place updates."
 
       - name: Upload tested build evidence
         # Renderer frames are committed after validation; keep artifact storage for
-        # actionable import/runtime failures or an actually device-validated APK.
+        # actionable import/runtime failures or an emulator-launch-gated APK candidate.
         # A known emulator-only timeout must not accumulate another APK archive.
         if: ${{ always() && (steps.android_export.outcome != 'success' || steps.gameplay_smoke.outcome != 'success' || steps.android_emulator.outcome == 'success') }}
         uses: actions/upload-artifact@v5

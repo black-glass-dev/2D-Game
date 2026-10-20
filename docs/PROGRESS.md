@@ -1,6 +1,6 @@
 # Operation Redline — Production Progress
 
-Last updated: 2026-10-19 (Asia/Dhaka)
+Last updated: 2026-10-20 (Asia/Dhaka)
 
 | Milestone | Status | Evidence / next gate |
 | --- | --- | --- |
@@ -12,11 +12,13 @@ Last updated: 2026-10-19 (Asia/Dhaka)
 | M5 — Highrise art and optimization | Not started | CC0/procedural assets, audio, lighting, performance budgets. |
 | M6 — QA and release | In progress — source/CI foundations | Foundation and bilingual-catalog regression contracts are active; current CI passes all non-device gates. Two-map acceptance, physical QA, storage availability, and a launch-gated signed candidate remain. |
 
-## Roadmap completion snapshot — 2026-10-19
+## Roadmap completion snapshot — 2026-10-20
 
-**Estimated planned-scope completion: 65%; remaining: 35%.** This is a truthful planning measure, not a device/release quality claim. M0–M2 source scope is complete (100% each); M3 is approximately 85% with the real-device matrix open; M4 is approximately 20% because its source-safe intake/topology foundation is done but the authoritative B2 packet is absent; M5 is 0% pending Gate 2; and M6 is approximately 55% with source/CI foundations progressing while physical QA and release delivery remain blocked.
+**Estimated planned-scope completion: 66%; remaining: 34%.** This is a truthful planning measure, not a device/release quality claim. M0–M2 source scope is complete (100% each); M3 is approximately 85% with the real-device matrix open; M4 is approximately 20% because its source-safe intake/topology foundation is done but the authoritative B2 packet is absent; M5 is 0% pending Gate 2; and M6 is approximately 60% with source/CI safeguards progressing while physical QA, default-branch cleanup dispatch, Android launch, storage recovery, and release delivery remain blocked.
 
 ## Current batch
+
+**Batch 38 — release-language and gating contract:** Added a dependency-free validator plus four regression tests for the Android candidate workflow, release policy, physical-QA handoff, and retention policy. The candidate is now described accurately as **emulator-launch-gated**—never device-validated—while its same-run export, normal-Boot, and emulator success condition remains required. The suite rejects an absent emulator-success condition, misleading device-validated wording, and retention expansion beyond seven days. It does not claim a successful emulator/device launch, artifact cleanup, or APK delivery.
 
 **Batch 37 — physical-collection mechanics harness:** Added three dependency-free fake-`adb` tests for `docs/capture_physical_android_qa.sh`. They cover help text, complete factual collection (APK hash, device/install/package/launch/logcat/crash-scan files), serial forwarding, and the blocked package-lookup branch. The harness intentionally does not emulate controls, audio, language rendering, gameplay, thermal behavior, or D01–D12 PASS evidence; physical Android remains required.
 

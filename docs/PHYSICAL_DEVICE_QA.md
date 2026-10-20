@@ -4,7 +4,7 @@
 
 ## Preconditions
 
-1. A future CI run must have created a candidate through the device-validated release gate in [`RELEASE_GATING.md`](RELEASE_GATING.md), or the tester must provide an equivalently signed local APK.
+1. A future CI run must have created an emulator-launch-gated candidate through the release gate in [`RELEASE_GATING.md`](RELEASE_GATING.md), or the tester must provide an equivalently signed local APK.
 2. Record the exact source commit, APK SHA-256, package version code/name, device model, Android version/build, screen resolution/refresh rate, and tester/timezone in `physical_qa_evidence.json` made from [`physical_qa_evidence.template.json`](physical_qa_evidence.template.json).
 3. Preserve the install console output from `adb install -r <apk>`; `-r` is the in-place update check and must not be replaced by an uninstall/reinstall for that row.
 4. Capture landscape screenshots/video and `adb logcat -d -t 1200` after the test. Redact no game-state evidence; do not include personal notifications or account information.

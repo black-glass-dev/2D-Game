@@ -229,9 +229,20 @@ The loop is a global `AudioService` player and does not change Desert score, HP,
 | Named Android device gate | Workflow source inspection | PASS — emulator step has stable `id: android_emulator` | `.github/workflows/android-apk.yml` |
 | Candidate-release condition | `python3 tools/validate_project.py` | PASS — validator rejects a workflow that lacks `steps.android_emulator.outcome == 'success'` | 2026-10-17 local terminal log |
 | Signing/update compatibility | Workflow review | PASS — existing package ID and persistent `operation-redline-debug.keystore` restore/cache path are unchanged | `.github/workflows/android-apk.yml`; `docs/RELEASE_GATING.md` |
-| First failed-emulator publication skip | GitHub Actions run 39034299154 | PASS — Android emulator timed out; `Publish a device-validated debug APK candidate` was skipped and no `apk-candidate-88` release was created | [Run 39034299154](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39034299154); post-run `gh release list` still ended at `apk-candidate-87` |
+| First failed-emulator publication skip | GitHub Actions run 39034299154 | PASS — Android emulator timed out; `Publish an emulator-launch-gated debug APK candidate` was skipped and no `apk-candidate-88` release was created | [Run 39034299154](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39034299154); post-run `gh release list` still ended at `apk-candidate-87` |
 
 Historical pre-releases are not physical-device-tested deliveries; this batch preserves them as audit records rather than deleting or relabelling them. The forward release gate now has CI evidence that it prevents a new downloadable candidate while the final Android install/launch step is failing.
+
+## M6 batch 38 — emulator-gated release truth contract (source gate)
+
+| Check | Command / route | Result | Evidence |
+| --- | --- | --- | --- |
+| Candidate terminology | `python3 tools/validate_release_contract.py` | PASS — candidate publication is named `emulator-launch-gated`; source rejects a misleading `device-validated` label | `.github/workflows/android-apk.yml`; `docs/RELEASE_GATING.md` |
+| Same-run candidate condition | Release-contract validator | PASS — candidate creation requires the existing export, normal-Boot, and Android-emulator outcomes to all be `success` | `.github/workflows/android-apk.yml` |
+| Regression mutations | `python3 tools/test_validate_release_contract.py` | PASS — 4 tests reject a missing emulator-success condition, misleading label, and expanded retention; the committed source validates | `tools/test_validate_release_contract.py` |
+| Physical Android / APK delivery | Real emulator/device launch and evidence | OPEN — no successful launch, physical D01–D12 review, artifact cleanup, or player delivery is implied by this source gate | `docs/PHYSICAL_DEVICE_QA.md`; `docs/RELEASE_GATING.md` |
+
+This batch corrects the label and protects the existing forward gate; it does not relabel historical candidates or turn a hosted emulator result into a physical-device result.
 
 ## M3 batch 14 — physical-device QA handoff (documentation gate)
 
