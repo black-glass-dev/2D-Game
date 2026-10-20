@@ -475,3 +475,13 @@
 **Alternative considered:** Keep uploading every timeout, delete artifacts automatically on every build, add broad `actions: write` to the Android build workflow, or silently discard historical evidence.
 
 **Why not selected:** Repeated timeout uploads recreate the quota issue. Automatic cleanup is destructive and hard to audit. The Android build does not need artifact-deletion authority. The manual workflow makes the target, cutoff, confirmation, and action log reviewable while commits/releases remain untouched.
+
+## D-049 — Test factual Android collection mechanics without synthetic device claims
+
+**Decision:** Exercise `docs/capture_physical_android_qa.sh` with a deterministic fake `adb` in the source suite. Test the factual artifact set, serial forwarding, `adb install -r` route, package-lookup gate, and non-evidence wording, but do not manufacture an evidence JSON record or D01–D12 status.
+
+**Reason:** The collector is the only prepared physical-device handoff path, and command-line regressions could otherwise be discovered only after a tester has a device/APK in hand. A controlled fake command can validate file/control-flow mechanics while keeping gameplay/device observations outside the simulation.
+
+**Alternative considered:** Skip automated coverage, simulate a complete device matrix, or treat a fake successful install as physical QA.
+
+**Why not selected:** Skipping coverage leaves a practical handoff script untested. Synthetic controls/audio/thermal data would be fabricated. The harness is restricted to collection mechanics and explicitly preserves the human real-device D01–D12 boundary.

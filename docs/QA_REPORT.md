@@ -436,6 +436,13 @@ The handoff is prepared tooling only. It is not installation, gameplay, device, 
 | Stabilized normal-Boot + renderer CI | GitHub Actions run 39250923376 at `5ee3bd1` | PASS — clean import/export, every normal-Boot verifier (including audio), pause/Bengali and quality captures, and all 12 genuine before/after graphics frames | [Run 39250923376](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39250923376); committed capture refresh `219f2eb` |
 | Hosted Android emulator/release delivery | Same run | BLOCKED — KVM/dependency setup passed, but the API-29/default/x86_64 emulator timed out during boot; candidate publication was skipped and artifact upload hit the existing storage quota | [Run 39250923376](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39250923376) |
 
+## Batch 37 — physical-collection mechanics source harness
+
+| Check | Command / route | Result | Evidence |
+| --- | --- | --- | --- |
+| Factual collector harness | `python3 tools/test_capture_physical_android_qa.py` | PASS — 3 fake-`adb` tests validate generated factual files, serial/install forwarding, non-evidence wording, and a package-lookup block | `tools/test_capture_physical_android_qa.py`; `docs/capture_physical_android_qa.sh` |
+| Physical QA interpretation | Real Android device | NOT CLAIMED — fake `adb` provides no touch, audio, locale, performance, APK, or D01–D12 result | `docs/PHYSICAL_DEVICE_QA.md`; `docs/PHYSICAL_ANDROID_HANDOFF.md` |
+
 ## Batch 36 — artifact-retention source boundary
 
 | Check | Command / route | Result | Evidence |

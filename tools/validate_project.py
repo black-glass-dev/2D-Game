@@ -131,6 +131,7 @@ def main() -> None:
 
     subprocess.run([sys.executable, str(ROOT / "tools/validate_physical_qa_evidence.py")], check=True)
     subprocess.run([sys.executable, str(ROOT / "tools/test_validate_physical_qa_evidence.py")], check=True)
+    subprocess.run([sys.executable, str(ROOT / "tools/test_capture_physical_android_qa.py")], check=True)
     subprocess.run([sys.executable, str(ROOT / "tools/validate_highrise_manifest.py")], check=True)
     subprocess.run([sys.executable, str(ROOT / "tools/test_validate_highrise_manifest.py")], check=True)
     subprocess.run([sys.executable, str(ROOT / "tools/validate_delivery_guardrails.py")], check=True)
