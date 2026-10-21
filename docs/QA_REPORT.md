@@ -279,6 +279,17 @@ This source gate preserves the destructive operation's boundaries; it grants nei
 
 This batch turns storage availability into a pre-publication condition. It does not delete artifacts, recover quota, produce an APK, or reclassify emulator evidence as physical-device evidence.
 
+## M6 batch 42 — default-branch cleanup dispatch (operational gate)
+
+| Check | Command / route | Result | Evidence |
+| --- | --- | --- | --- |
+| Default-branch workflow availability | PR #2 merge plus `gh workflow view ... --ref main --yaml` | PASS — PR #2 merged; the checked workflow exists on `main` with the exact manual confirmation/name/cutoff/deletion boundary | [PR #2](https://github.com/islamyousuf032-glitch/2D-Game/pull/2); default workflow SHA-256 `9871c096f54eebabebbc23548d24be8c9df21702a2fa791cbe132caecf5d6849` |
+| Authorized bounded dispatch | `gh workflow run cleanup-legacy-artifacts.yml --ref main` with exact cutoff/confirmation | BLOCKED — current integration returned `HTTP 403: Resource not accessible by integration` while creating the dispatch event | No workflow run was created |
+| Independent post-attempt audit | `python3 tools/audit_legacy_artifacts.py ... --expect-pre-cutoff-count 53` | PASS — unchanged 75 active exact-name artifacts, 53 pre-cutoff candidates, and 3,337,865,269 candidate bytes | 2026-10-20 read-only terminal result |
+| Artifact deletion / storage recovery | Completed authorized dispatch then `--verify-cleanup` | BLOCKED — no artifact was deleted and GitHub storage has not been recalculated | `docs/ARTIFACT_RETENTION.md` |
+
+This batch completes the default-branch prerequisite and records the next narrow permission blocker. It does not broaden deletion scope, fabricate a cleanup result, or alter Android/physical-device release gates.
+
 ## M3 batch 14 — physical-device QA handoff (documentation gate)
 
 | Check | Command / route | Result | Evidence |
