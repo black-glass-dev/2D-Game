@@ -1,0 +1,472 @@
+name: Build and verify Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - arena/e2b9c124-2d-game
+    paths:
+      - ".github/workflows/android-apk.yml"
+      - "assets/**"
+      - "native/**"
+      - "scenes/**"
+      - "scripts/**"
+      - "tools/**"
+      - "project.godot"
+      - "export_presets.cfg"
+      - "package.json"
+      - "package-lock.json"
+
+permissions:
+  contents: write
+
+# The capture step writes evidence back to this branch. Serialize workflow runs
+# so two valid screenshot sets can never race while rebasing their binary files.
+concurrency:
+  group: operation-redline-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-smoke-test:
+    name: Android APK and emulator smoke test
+    # Android x86_64 emulation is stable on this image with hardware acceleration.
+    runs-on: ubuntu-22.04
+    timeout-minutes: 35
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+        with:
+          # Screenshot comparison checks out the pre-overhaul gameplay revision.
+          fetch-depth: 0
+
+      - name: Set up Node for GDScript static analysis
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Run source and C++ tests
+        run: |
+          npm ci
+          npm run test:gdscript
+          python3 tools/validate_project.py
+          ./scripts/run_native_tests.sh
+
+      - name: Set up JDK 17 for Android signing
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Restore persistent debug signing key
+        id: debug_signing_key
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.android/operation-redline-debug.keystore
+          key: operation-redline-debug-keystore-v1
+
+      - name: Configure Android SDK and debug signing for Godot
+        shell: bash
+        run: |
+          set -euo pipefail
+          export ANDROID_HOME="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          export ANDROID_SDK_ROOT="$ANDROID_HOME"
+          export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
+          command -v sdkmanager
+          echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> "$GITHUB_ENV"
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
+          yes | sdkmanager --sdk_root="$ANDROID_HOME" --licenses > /dev/null || true
+          sdkmanager --sdk_root="$ANDROID_HOME" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+          mkdir -p "$HOME/.android" "$HOME/.config/godot"
+          KEYSTORE="$HOME/.android/operation-redline-debug.keystore"
+          # Keep one debug certificate across CI runs. Android only accepts an
+          # in-place update when package ID *and* signing certificate match.
+          if [[ ! -f "$KEYSTORE" ]]; then
+            keytool -genkeypair -noprompt -keystore "$KEYSTORE" \
+              -storepass android -keypass android -alias androiddebugkey \
+              -dname "CN=Operation Redline Debug,O=Operation Redline,C=BD" \
+              -keyalg RSA -keysize 2048 -validity 10000
+          fi
+          cat > "$HOME/.config/godot/editor_settings-4.tres" <<EOF
+          [gd_resource type="EditorSettings" format=3]
+
+          [resource]
+          export/android/android_sdk_path = "$ANDROID_HOME"
+          export/android/java_sdk_path = "$JAVA_HOME"
+          export/android/debug_keystore = "$HOME/.android/operation-redline-debug.keystore"
+          export/android/debug_keystore_user = "androiddebugkey"
+          export/android/debug_keystore_pass = "android"
+          EOF
+
+      - name: Save persistent debug signing key
+        if: steps.debug_signing_key.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.android/operation-redline-debug.keystore
+          key: operation-redline-debug-keystore-v1
+
+      - name: Set monotonically increasing Android version
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          preset = Path("export_presets.cfg")
+          content = preset.read_text()
+          run_number = int(os.environ["GITHUB_RUN_NUMBER"])
+          content, code_count = re.subn(r"version/code=\d+", f"version/code={run_number}", content)
+          content, name_count = re.subn(r'version/name="[^"]*"', f'version/name="0.1.0-candidate.{run_number}"', content)
+          if code_count != 1 or name_count != 1:
+              raise SystemExit("Android version fields were not found exactly once.")
+          preset.write_text(content)
+          PY
+
+      - name: Install Godot 4.7.2 and Android export templates
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="4.7.2-stable"
+          ENGINE="Godot_v${VERSION}_linux.x86_64"
+          mkdir -p "$HOME/.local/bin"
+          curl --fail --location --retry 3 --output /tmp/godot.zip \
+            "https://github.com/godotengine/godot/releases/download/${VERSION}/${ENGINE}.zip"
+          unzip -q /tmp/godot.zip -d "$HOME/.local/bin"
+          chmod +x "$HOME/.local/bin/${ENGINE}"
+          ln -sf "$HOME/.local/bin/${ENGINE}" "$HOME/.local/bin/godot"
+          curl --fail --location --retry 3 --output /tmp/templates.tpz \
+            "https://github.com/godotengine/godot/releases/download/${VERSION}/Godot_v${VERSION}_export_templates.tpz"
+          TEMPLATE_DIR="$HOME/.local/share/godot/export_templates/4.7.2.stable"
+          mkdir -p "$TEMPLATE_DIR" /tmp/godot-templates
+          unzip -q /tmp/templates.tpz -d /tmp/godot-templates
+          # A .tpz archive wraps actual templates in its top-level templates/ directory.
+          cp -a /tmp/godot-templates/templates/. "$TEMPLATE_DIR/"
+          test -f "$TEMPLATE_DIR/android_debug.apk"
+          test -f "$TEMPLATE_DIR/android_release.apk"
+          "$HOME/.local/bin/godot" --version
+
+      - name: Import project and export debug APK
+        id: android_export
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.local/bin:$PATH"
+          mkdir -p build
+          # A fresh checkout imports WAV resources only after the first editor
+          # scan. Run a second clean editor pass so AudioService preloads are
+          # compiled against generated import metadata before export/headless QA.
+          godot --headless --path . --editor --quit 2>&1 | tee build/godot-import-first-pass.log
+          godot --headless --path . --editor --quit 2>&1 | tee build/godot-import.log
+          if grep -Eq "Parse Error|Failed to create an autoload" build/godot-import.log; then
+            echo "Godot import did not stabilize on the second pass."
+            exit 1
+          fi
+          godot --headless --path . --export-debug "Android Debug" build/OperationRedline-debug.apk 2>&1 | tee build/godot-export.log
+          test -s build/OperationRedline-debug.apk
+          unzip -t build/OperationRedline-debug.apk
+          jarsigner -verify -certs -verbose build/OperationRedline-debug.apk
+
+      - name: Launch Boot and gameplay flow headlessly
+        id: gameplay_smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.local/bin:$PATH"
+          godot --headless --path . --quit-after 180 2>&1 | tee build/godot-runtime.log
+          timeout 30s godot --headless --path . -- --verify-boot-flow 2>&1 | tee build/godot-boot-flow.log
+          grep -q "BOOT_FLOW_PASS" build/godot-boot-flow.log
+          timeout 30s godot --headless --path . -- --verify-settings-menu 2>&1 | tee build/godot-settings-menu.log
+          grep -q "SETTINGS_MENU_PASS" build/godot-settings-menu.log
+          timeout 30s godot --headless --path . -- --verify-map-select 2>&1 | tee build/godot-map-select.log
+          grep -q "MAP_SELECT_PASS" build/godot-map-select.log
+          timeout 30s godot --headless --path . -- --verify-pause-flow 2>&1 | tee build/godot-pause-flow.log
+          grep -q "PAUSE_FLOW_PASS" build/godot-pause-flow.log
+          timeout 30s godot --headless --path . -- --verify-result-flow 2>&1 | tee build/godot-result-flow.log
+          grep -q "RESULT_FLOW_PASS" build/godot-result-flow.log
+          timeout 30s godot --headless --path . -- --verify-audio-flow 2>&1 | tee build/godot-audio-flow.log
+          grep -q "AUDIO_FLOW_PASS" build/godot-audio-flow.log
+          timeout 30s godot --headless --path . -- --verify-input-accessibility-flow 2>&1 | tee build/godot-input-accessibility.log
+          grep -q "INPUT_ACCESSIBILITY_PASS" build/godot-input-accessibility.log
+          timeout 30s godot --headless --path . -- --verify-back-flow 2>&1 | tee build/godot-back-flow.log
+          grep -q "BACK_FLOW_PASS" build/godot-back-flow.log
+          timeout 30s godot --headless --path . -- --verify-control-layout-flow 2>&1 | tee build/godot-control-layout.log
+          grep -q "CONTROL_LAYOUT_PASS" build/godot-control-layout.log
+          timeout 30s godot --headless --path . -- --verify-rebind-flow 2>&1 | tee build/godot-rebind-flow.log
+          grep -q "REBIND_FLOW_PASS" build/godot-rebind-flow.log
+          timeout 30s godot --headless --path . -- --verify-loading-flow 2>&1 | tee build/godot-loading-flow.log
+          grep -q "LOADING_FLOW_PASS" build/godot-loading-flow.log
+          timeout 30s godot --headless --path . -- --verify-session-adapter-flow 2>&1 | tee build/godot-session-adapter-flow.log
+          grep -q "SESSION_ADAPTER_PASS" build/godot-session-adapter-flow.log
+          timeout 30s godot --headless --path . -- --verify-menu-background-flow 2>&1 | tee build/godot-menu-background-flow.log
+          grep -q "MENU_BACKGROUND_PASS" build/godot-menu-background-flow.log
+
+      - name: Capture pause and Bengali settings through normal Boot flow
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.local/bin:$PATH"
+          mkdir -p build/screenshots/pause
+          # First-frame shader/material setup under CI's llvmpipe renderer can
+          # outlast ordinary headless initialization. Keep a bounded but honest
+          # budget for the real Boot → Main UI capture.
+          timeout 180s xvfb-run --auto-servernum godot \
+            --path . --rendering-driver opengl3 -- \
+            --verify-pause-flow --capture-pause-bengali \
+            --pause-screenshot-dir "$GITHUB_WORKSPACE/build/screenshots/pause" \
+            2>&1 | tee build/godot-pause-capture.log
+          grep -q "PAUSE_FLOW_PASS" build/godot-pause-capture.log
+          grep -q "PAUSE_VISUAL_CAPTURE" build/godot-pause-capture.log
+          test "$(find build/screenshots/pause -name '*.png' | wc -l)" -eq 2
+          python3 - <<'PY'
+          from pathlib import Path
+          import struct
+          for path in sorted(Path("build/screenshots/pause").glob("*.png")):
+              header = path.read_bytes()[:24]
+              if header[:8] != b"\x89PNG\r\n\x1a\n":
+                  raise SystemExit(f"not a PNG: {path}")
+              width, height = struct.unpack(">II", header[16:24])
+              if width < 1280 or height < 720 or path.stat().st_size < 4096:
+                  raise SystemExit(f"invalid pause capture: {path} ({width}x{height}, {path.stat().st_size} bytes)")
+          PY
+
+      - name: Capture quality-aware menu backgrounds through normal Boot
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.local/bin:$PATH"
+          mkdir -p build/screenshots/menu
+          # This is a real Boot scene under Xvfb, not a fabricated image or a
+          # custom scene harness. It exercises both explicit quality selections.
+          timeout 100s xvfb-run --auto-servernum godot \
+            --path . --rendering-driver opengl3 -- \
+            --capture-menu-backgrounds \
+            --menu-capture-path "$GITHUB_WORKSPACE/build/screenshots/menu" \
+            2>&1 | tee build/godot-menu-background-capture.log
+          grep -q "MENU_BACKGROUND_CAPTURE_PASS" build/godot-menu-background-capture.log
+          test "$(find build/screenshots/menu -name '*.png' | wc -l)" -eq 2
+          python3 - <<'PY'
+          from pathlib import Path
+          import struct
+          expected = {"menu_background_high.png", "menu_background_low.png"}
+          captures = sorted(Path("build/screenshots/menu").glob("*.png"))
+          if {path.name for path in captures} != expected:
+              raise SystemExit(f"unexpected menu captures: {[path.name for path in captures]}")
+          if captures[0].read_bytes() == captures[1].read_bytes():
+              raise SystemExit("HIGH and LOW menu captures are byte-identical")
+          for path in captures:
+              header = path.read_bytes()[:24]
+              if header[:8] != b"\x89PNG\r\n\x1a\n":
+                  raise SystemExit(f"not a PNG: {path}")
+              width, height = struct.unpack(">II", header[16:24])
+              if width < 1280 or height < 720 or path.stat().st_size < 4096:
+                  raise SystemExit(f"invalid menu capture: {path} ({width}x{height}, {path.stat().st_size} bytes)")
+          PY
+
+      - name: Capture genuine before and after graphics frames
+        id: graphics_capture
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.local/bin:$PATH"
+          mkdir -p build/screenshots/before build/screenshots/after
+          # Candidate #21 is the last pre-overhaul gameplay revision. A detached
+          # worktree keeps the comparison view authentic and prevents any asset
+          # from the new build leaking into the before capture.
+          git worktree add --detach /tmp/operation-redline-before bb65d01
+          godot --headless --path /tmp/operation-redline-before --editor --quit
+          command -v xvfb-run
+          timeout 100s xvfb-run --auto-servernum godot \
+            --path /tmp/operation-redline-before --rendering-driver opengl3 \
+            --script "$GITHUB_WORKSPACE/tools/capture_graphics.gd" -- \
+            --output "$GITHUB_WORKSPACE/build/screenshots/before" 2>&1 | tee build/godot-before-capture.log
+          # The fully dressed 1280×720 OpenGL evidence pass can take several
+          # minutes on CI's llvmpipe software renderer. It is not a device FPS
+          # budget; allow it to finish every genuine comparison frame.
+          # CC0 skinned-character evidence is intentionally rendered at the full
+          # 1280×720 acceptance size. llvmpipe on CI is far slower than a phone
+          # GPU, so keep the honest full-frame pass and give it a bounded 12 min.
+          timeout 720s xvfb-run --auto-servernum godot \
+            --path "$GITHUB_WORKSPACE" --rendering-driver opengl3 \
+            --script "$GITHUB_WORKSPACE/tools/capture_graphics.gd" -- \
+            --output "$GITHUB_WORKSPACE/build/screenshots/after" 2>&1 | tee build/godot-after-capture.log
+          git worktree remove --force /tmp/operation-redline-before
+          find build/screenshots -type f -printf '%p %s bytes\n' | sort
+          test "$(find build/screenshots/before -name '*.png' | wc -l)" -eq 12
+          test "$(find build/screenshots/after -name '*.png' | wc -l)" -eq 12
+          python3 - <<'PY'
+          from pathlib import Path
+          import struct
+          for path in Path("build/screenshots").rglob("*.png"):
+              header = path.read_bytes()[:24]
+              if header[:8] != b"\x89PNG\r\n\x1a\n":
+                  raise SystemExit(f"not a PNG: {path}")
+              width, height = struct.unpack(">II", header[16:24])
+              required = (1280, 720) if "after" in path.parts else (800, 450)
+              if width < required[0] or height < required[1] or path.stat().st_size < 4096:
+                  raise SystemExit(f"invalid capture: {path} ({width}x{height}, {path.stat().st_size} bytes)")
+          PY
+
+      - name: Commit verified graphics comparison frames
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f screenshots/before/*.png screenshots/after/*.png screenshots/menu/*.png
+          find screenshots -name '*.import' -delete
+          cp build/screenshots/before/*.png screenshots/before/
+          cp build/screenshots/after/*.png screenshots/after/
+          cp build/screenshots/menu/menu_background_high.png screenshots/menu/
+          cp build/screenshots/menu/menu_background_low.png screenshots/menu/
+          # The APK version step intentionally edits this tracked export preset.
+          # Do not let that ephemeral CI-only version block a screenshot rebase.
+          git restore export_presets.cfg
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add screenshots
+          git diff --cached --quiet || git commit -m "docs: add genuine graphics comparison frames"
+          # A human documentation commit may land while a 3D capture is running.
+          # Rebase the generated-frame commit before publishing rather than losing
+          # genuine evidence to a benign non-fast-forward race.
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+
+      - name: Commit Godot diagnostics if export fails
+        if: failure()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ci-logs
+          cp build/godot-*.log ci-logs/ 2>/dev/null || true
+          if ! compgen -G "ci-logs/godot-*.log" > /dev/null; then
+            echo "Godot did not create a diagnostic log." > ci-logs/no-godot-log.txt
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ci-logs
+          git diff --cached --quiet || git commit -m "ci: capture Android export diagnostics"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+
+      - name: Enable KVM acceleration for Android emulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Prefer the emulator-runner documented udev policy. Some hosted
+          # images expose /dev/kvm but reject a live udev trigger; in that
+          # runner-specific case retain the previously verified direct node
+          # permission fallback rather than skipping the emulator probe.
+          if echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules; then
+            sudo udevadm control --reload-rules || echo "KVM udev reload unavailable; using node-permission fallback."
+            sudo udevadm trigger --name-match=kvm || echo "KVM udev trigger unavailable; using node-permission fallback."
+          else
+            echo "KVM udev rule could not be written; using node-permission fallback."
+          fi
+          test -e /dev/kvm
+          sudo chmod 666 /dev/kvm
+          test -r /dev/kvm
+          test -w /dev/kvm
+          ls -l /dev/kvm
+
+      - name: Install Android emulator runtime dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes libpulse0
+          ldconfig -p | grep -q 'libpulse\.so\.0'
+
+      - name: Install and launch APK in Android emulator
+        id: android_emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          # The prior API-30 AOSP ATD configuration repeatedly timed out after
+          # KVM became available. Use the action's documented API-29/default
+          # x86_64 baseline before treating the hosted runner as irreparable.
+          # API 29 is compatible with this min-SDK Android export and validates
+          # the same package/signature/install/launch contract.
+          api-level: 29
+          target: default
+          arch: x86_64
+          # Keep the documented API-29/default launch baseline. The final QEMU
+          # serial sink is diagnostics-only: it preserves guest boot output when
+          # the runner reaches its 600-second bound before our APK probe starts.
+          emulator-boot-timeout: 600
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -qemu -serial file:$GITHUB_WORKSPACE/build/android-emulator-serial.log
+          disable-linux-hw-accel: false
+          disable-animations: true
+          # This runs after AVD creation and before boot, so a failed action can
+          # distinguish setup/launch failure from probe failure.
+          pre-emulator-launch-script: sh "$GITHUB_WORKSPACE/scripts/android_emulator_prelaunch_probe.sh"
+          # The action parses YAML block lines into independent `sh -c` commands.
+          # Invoke one tracked POSIX script by workspace path so its control flow
+          # and evidence paths do not depend on the action's current directory.
+          script: sh "$GITHUB_WORKSPACE/scripts/android_emulator_probe.sh"
+
+      - name: Commit Android emulator diagnostics if probe fails
+        if: ${{ always() && steps.android_emulator.outcome == 'failure' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ci-logs
+          found_diagnostic=false
+          for log_name in android-emulator-prelaunch.log android-emulator-serial.log android-emulator-probe.log; do
+            if [ -f "build/${log_name}" ]; then
+              cp "build/${log_name}" "ci-logs/${log_name}"
+              found_diagnostic=true
+            fi
+          done
+          if [ "$found_diagnostic" = false ]; then
+            printf 'Android emulator action failed before its prelaunch or probe log was created. Run: %s\n' "${GITHUB_RUN_ID}" > ci-logs/android-emulator-probe-missing.txt
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ci-logs
+          git diff --cached --quiet || git commit -m "ci: capture Android emulator probe diagnostics"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+
+      - name: Upload tested build evidence
+        id: tested_build_evidence
+        # Renderer frames are committed after validation; retain the bundle for
+        # actionable import/runtime failures or an emulator-launch-gated candidate.
+        # A known emulator-only timeout must not accumulate another APK archive.
+        if: ${{ always() && (steps.android_export.outcome != 'success' || steps.gameplay_smoke.outcome != 'success' || steps.android_emulator.outcome == 'success') }}
+        uses: actions/upload-artifact@v5
+        with:
+          name: operation-redline-android-debug
+          retention-days: 7
+          if-no-files-found: warn
+          path: |
+            build/OperationRedline-debug.apk
+            build/android-emulator-install.log
+            build/android-emulator.log
+            build/android-emulator-prelaunch.log
+            build/android-emulator-serial.log
+            build/android-emulator-probe.log
+            build/godot-import-first-pass.log
+            build/godot-import.log
+            build/godot-export.log
+            build/godot-runtime.log
+            build/godot-before-capture.log
+            build/godot-after-capture.log
+            build/screenshots
+
+      - name: Publish an emulator-launch-gated debug APK candidate
+        # A player-downloadable candidate requires every source/runtime gate,
+        # Android emulator install/launch, and successful evidence storage in
+        # this same run. Export alone is never update/boot evidence.
+        if: ${{ always() && steps.android_export.outcome == 'success' && steps.gameplay_smoke.outcome == 'success' && steps.android_emulator.outcome == 'success' && steps.tested_build_evidence.outcome == 'success' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh release create "apk-candidate-${GITHUB_RUN_NUMBER}" build/OperationRedline-debug.apk \
+            --repo "${GITHUB_REPOSITORY}" \
+            --target "${GITHUB_SHA}" \
+            --title "Operation Redline emulator-launch-gated debug APK candidate #${GITHUB_RUN_NUMBER}" \
+            --prerelease \
+            --notes "Automated source/native checks, Godot import, APK archive/signature verification, normal-Boot flow checks, renderer captures, Android emulator install/launch, and tested-build evidence storage all passed. The package ID and persistent debug signing stream are retained for in-place updates."

@@ -1,0 +1,142 @@
+keys,en,bn
+app.title,OPERATION REDLINE,অপারেশন রেডলাইন
+app.subtitle,TACTICAL SURVIVAL,কৌশলগত সারভাইভাল
+menu.press_to_continue,Press ENTER or tap to continue,ENTER চাপুন বা ট্যাপ করুন
+menu.navigation_hint,ENTER / A: select  •  ESC / B: back,ENTER / A: নির্বাচন  •  ESC / B: ফিরুন
+menu.back_hint,ESC / B / Android Back: return,ESC / B / Android Back: ফিরে যান
+menu.play,PLAY,খেলুন
+menu.continue,CONTINUE,চালিয়ে যান
+menu.settings,SETTINGS,সেটিংস
+menu.credits,CREDITS,ক্রেডিটস
+menu.quit,QUIT,বন্ধ করুন
+menu.back,BACK,ফিরে যান
+menu.map_select,MAP SELECT,ম্যাপ নির্বাচন
+menu.select,SELECT,নির্বাচন করুন
+menu.selected,SELECTED,নির্বাচিত
+menu.start_mission,START MISSION,মিশন শুরু করুন
+menu.no_maps,No map data is available.,কোনো ম্যাপ ডেটা পাওয়া যায়নি।
+menu.coming_soon,COMING SOON,শীঘ্রই আসছে
+menu.locked,LOCKED,লকড
+loading.title,LOADING,লোড হচ্ছে
+loading.progress,Loading map resources…,ম্যাপ রিসোর্স লোড হচ্ছে…
+loading.preparing,PREPARING DEPLOYMENT,মোতায়েন প্রস্তুত হচ্ছে
+loading.streaming,STREAMING MAP RESOURCES,ম্যাপ রিসোর্স লোড হচ্ছে
+loading.ready,MAP READY,ম্যাপ প্রস্তুত
+loading.finalizing,FINALIZING DEPLOYMENT,মোতায়েন চূড়ান্ত হচ্ছে
+loading.failed,LOAD FAILED,লোড ব্যর্থ হয়েছে
+loading.telemetry,%s  •  %d%%  •  %.1f s,%s  •  %d%%  •  %.1f সেকেন্ড
+pause.title,PAUSED,বিরতি
+pause.subtitle,Operation clock stopped. Secure your settings or choose your next route.,অপারেশনের সময় থামানো আছে। সেটিংস ঠিক করুন বা পরের পথ বেছে নিন।
+caption.rifle_fire,Rifle firing,রাইফেল থেকে গুলি
+caption.pistol_fire,Pistol firing,পিস্তল থেকে গুলি
+caption.reloading,Reloading,পুনরায় লোড হচ্ছে
+caption.landing,Landing,অবতরণ
+pause.resume,RESUME,আবার শুরু
+pause.restart_operation,RESTART OPERATION,অপারেশন আবার শুরু
+pause.restart_wave,RESTART WAVE,ওয়েভ আবার শুরু
+pause.map_select,MAP SELECT,ম্যাপ নির্বাচন
+pause.quit_to_desktop,QUIT TO DESKTOP,ডেস্কটপে ফিরুন
+result.mission_complete,MISSION COMPLETE,মিশন সম্পন্ন
+result.mission_failed,MISSION FAILED,মিশন ব্যর্থ
+result.cargo_secured,The cargo is secured.,কার্গো নিরাপদ করা হয়েছে।
+result.redeploying,Redeploy sequence started.,পুনরায় মোতায়েনের প্রক্রিয়া শুরু হয়েছে।
+result.final_score,FINAL SCORE  %05d,চূড়ান্ত স্কোর  %05d
+result.wave,WAVE REACHED  %d,পৌঁছানো ওয়েভ  %d
+result.accuracy,ACCURACY  %d%%,নির্ভুলতা  %d%%
+result.best_score,BEST SCORE  %05d,সর্বোচ্চ স্কোর  %05d
+result.new_best,NEW BEST,নতুন সেরা রেকর্ড
+result.restart_operation,RESTART OPERATION,অপারেশন আবার শুরু
+settings.language,LANGUAGE,ভাষা
+settings.auto,AUTO,স্বয়ংক্রিয়
+settings.graphics,GRAPHICS,গ্রাফিক্স
+settings.audio,AUDIO,অডিও
+settings.controls,CONTROLS,কন্ট্রোল
+settings.accessibility,ACCESSIBILITY,অ্যাক্সেসিবিলিটি
+settings.other,OTHER,অন্যান্য
+settings.graphics_hint,Choose an explicit tier or tune visual preferences for the next deployment.,পরের মোতায়েনের জন্য নির্দিষ্ট মান বেছে নিন বা দৃশ্যমানতা ঠিক করুন।
+settings.audio_hint,Volume changes apply immediately.,ভলিউম পরিবর্তন সঙ্গে সঙ্গে কার্যকর হয়।
+settings.controls_hint,Core combat settings persist into the Desert hand-off.,মূল যুদ্ধ সেটিংস Desert map-এও সংরক্ষিত থাকে।
+settings.accessibility_hint,Reduce visual strain and choose readable feedback.,দৃশ্যমান চাপ কমান ও সহজে পড়া যায় এমন প্রতিক্রিয়া বেছে নিন।
+settings.other_hint,Language and auxiliary preferences are stored on this device.,ভাষা ও সহায়ক পছন্দ এই ডিভাইসে সংরক্ষিত থাকে।
+settings.quality_tier,QUALITY TIER,কোয়ালিটি স্তর
+settings.render_scale,RENDER SCALE,রেন্ডার স্কেল
+settings.shadows,SHADOWS,ছায়া
+settings.anti_aliasing,ANTI-ALIASING,অ্যান্টি-অ্যালিয়াসিং
+settings.fov,FIELD OF VIEW,দৃষ্টিক্ষেত্র
+settings.brightness,BRIGHTNESS,উজ্জ্বলতা
+settings.fps_limit,FPS LIMIT,FPS সীমা
+settings.show_fps,SHOW FPS,FPS দেখান
+settings.off,OFF,বন্ধ
+settings.unlimited,UNLIMITED,সীমাহীন
+settings.master_volume,MASTER VOLUME,মাস্টার ভলিউম
+settings.music_volume,MUSIC VOLUME,মিউজিক ভলিউম
+settings.sfx_volume,SFX VOLUME,SFX ভলিউম
+settings.ui_volume,UI VOLUME,UI ভলিউম
+settings.mute_unfocused,MUTE WHEN UNFOCUSED,ফোকাস না থাকলে মিউট
+settings.look_sensitivity,LOOK SENSITIVITY,লুক সেনসিটিভিটি
+settings.aim_assist,AIM ASSIST,এম অ্যাসিস্ট
+settings.aim_assist_strength,AIM ASSIST STRENGTH,এম অ্যাসিস্ট শক্তি
+settings.fire_mode,FIRE MODE,ফায়ার মোড
+settings.single,SINGLE,সিঙ্গেল
+settings.auto_fire,AUTO,অটো
+settings.joystick_scale,JOYSTICK SCALE,জয়স্টিক স্কেল
+settings.touch_opacity,TOUCH OPACITY,টাচ স্বচ্ছতা
+settings.button_scale,BUTTON SCALE,বাটন স্কেল
+settings.gamepad_deadzone,GAMEPAD DEADZONE,গেমপ্যাড ডেডজোন
+settings.left_handed,LEFT-HANDED LAYOUT,বাঁ-হাতি লেআউট
+settings.hud_layout_note,Move and resize the HUD from the in-game HUD button. Layout preferences update live without replacing your saved control positions.,ইন-গেম HUD বোতাম থেকে HUD সরান ও আকার বদলান। লেআউট পছন্দ আপনার সংরক্ষিত কন্ট্রোল অবস্থান বদলায় না।
+settings.key_bindings,INPUT BINDINGS,ইনপুট বাইন্ডিং
+settings.keyboard_bindings,KEYBOARD BINDINGS,কিবোর্ড বাইন্ডিং
+settings.gamepad_bindings,GAMEPAD BINDINGS,গেমপ্যাড বাইন্ডিং
+settings.rebind_note,Select a keyboard binding. Then press one key. A key already assigned to another gameplay action is rejected.,একটি কিবোর্ড বাইন্ডিং নির্বাচন করুন। তারপর একটি কী চাপুন। অন্য gameplay action-এ থাকা কী গ্রহণ করা হবে না।
+settings.gamepad_rebind_note,Select a gameplay button binding. Then press one gamepad button. Left-stick movement remains fixed.,একটি gameplay button binding নির্বাচন করুন। তারপর একটি গেমপ্যাড বোতাম চাপুন। লেফট-স্টিক মুভমেন্ট স্থির থাকবে।
+settings.press_key,PRESS A KEY,একটি কী চাপুন
+settings.press_gamepad,PRESS A GAMEPAD BUTTON,একটি গেমপ্যাড বোতাম চাপুন
+settings.press_gamepad_for,Press a gamepad button for %s,%s-এর জন্য একটি গেমপ্যাড বোতাম চাপুন
+settings.press_key_for,Press a key for %s,%s-এর জন্য একটি কী চাপুন
+settings.binding_updated,%s is now %s,%s এখন %s
+settings.binding_conflict,That input is already assigned to %s,ইনপুটটি ইতিমধ্যে %s-এ নির্ধারিত
+settings.binding_invalid,That input cannot be used for this action.,এই action-এর জন্য ইনপুটটি ব্যবহার করা যাবে না।
+settings.binding_cancelled,Key binding cancelled.,কী বাইন্ডিং বাতিল করা হয়েছে।
+settings.reset_bindings,RESET INPUT BINDINGS,ইনপুট বাইন্ডিং রিসেট
+settings.bindings_reset,Keyboard and gamepad bindings restored to defaults.,কিবোর্ড ও গেমপ্যাড বাইন্ডিং ডিফল্টে ফিরেছে।
+bindings.move_forward,MOVE FORWARD,সামনে চলুন
+bindings.move_back,MOVE BACK,পেছনে চলুন
+bindings.move_left,MOVE LEFT,বাঁয়ে চলুন
+bindings.move_right,MOVE RIGHT,ডানে চলুন
+bindings.fire,FIRE,ফায়ার
+bindings.aim,AIM,এম
+bindings.jump,JUMP,লাফ
+bindings.crouch,CROUCH,বসুন
+bindings.swap,SWAP WEAPON,অস্ত্র বদলান
+bindings.reload,RELOAD,রিলোড
+bindings.pause,PAUSE,বিরতি
+settings.subtitles,SUBTITLES,সাবটাইটেল
+settings.damage_numbers,DAMAGE NUMBERS,ড্যামেজ সংখ্যা
+settings.reduce_shake,REDUCE SCREEN SHAKE,স্ক্রিন শেক কমান
+settings.colorblind,COLORBLIND MODE,কালারব্লাইন্ড মোড
+settings.haptics,HAPTICS,হ্যাপটিক্স
+settings.persistence_note,Changes are saved automatically to this device.,পরিবর্তন স্বয়ংক্রিয়ভাবে এই ডিভাইসে সংরক্ষিত হয়।
+settings.full_panel_coming,More settings will be available before mission deployment.,মিশন শুরু করার আগে আরও সেটিংস যোগ করা হবে।
+settings.reset_defaults,RESET DEFAULTS,ডিফল্টে রিসেট
+settings.reset_title,RESET SETTINGS?,সেটিংস রিসেট করবেন?
+settings.reset_warning,This restores all settings to their default values.,এতে সব সেটিংস ডিফল্ট মানে ফিরে যাবে।
+settings.confirm_reset,RESET,রিসেট করুন
+game.survival,SURVIVAL,সারভাইভাল
+game.endless,ENDLESS,এন্ডলেস
+game.easy,EASY,সহজ
+game.normal,NORMAL,সাধারণ
+game.hard,HARD,কঠিন
+game.nightmare,NIGHTMARE,নাইটমেয়ার
+map.waves,WAVES,ওয়েভ
+map.deployment,DEPLOYMENT,মোতায়েন
+map.legend,TACTICAL NOTES,কৌশলগত নোট
+map.difficulty,DIFFICULTY,কঠিনতা
+map.mode,MODE,মোড
+map.best_score,BEST SCORE,সর্বোচ্চ স্কোর
+map.best_wave,BEST WAVE,সর্বোচ্চ ওয়েভ
+map.no_record,NO OPERATION RECORD,অপারেশনের কোনো রেকর্ড নেই
+map.ready,READY TO DEPLOY,মোতায়েনের জন্য প্রস্তুত
+map.unavailable_detail,This operation cannot launch until its planned systems and review gate are complete.,পরিকল্পিত সিস্টেম ও review gate সম্পূর্ণ না হওয়া পর্যন্ত এই অপারেশন চালু করা যাবে না।
+map.desert_outpost,Desert Outpost,ডেজার্ট আউটপোস্ট
+map.rooftop_highrise,Rooftop Highrise,রুফটপ হাইরাইজ

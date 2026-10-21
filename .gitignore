@@ -1,0 +1,37 @@
+# Godot generated files
+.godot/
+.import/
+*.translation
+*.import
+
+# Local editor / OS files
+.vscode/
+.idea/
+.DS_Store
+
+# Node-based static-analysis dependency install
+node_modules/
+
+# Native extension build outputs
+native/bin/
+native/.sconsign.dblite
+native/.sconsign.dblite
+native/.sconsign*
+
+# Android SDK, generated Gradle projects and APKs
+android/.gradle/
+android/build/
+android/.cxx/
+android/local.properties
+build/
+*.apk
+*.aab
+*.keystore
+*.jks
+
+# Tool downloads kept outside source control
+.tools/
+
+# Python validation bytecode
+__pycache__/
+*.py[cod]
