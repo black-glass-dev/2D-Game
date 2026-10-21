@@ -40,6 +40,7 @@
 - [x] Create a device-identity/evidence-bound physical Android QA matrix and in-place-update recording template.
 - [x] Add a schema-versioned validator/test suite that rejects template misuse and incomplete or falsely classified physical-device evidence.
 - [x] Prepare a factual physical Android capture/handoff path for APK hash, `adb install -r`, device identity, package/launch/foreground evidence, bounded logcat, and reviewer-owned D01–D12 completion.
+- [x] Prepare a browser-downloadable historical debug-APK handoff with immutable release metadata, SHA-256, installation cautions, and the exact D01–D12 evidence return path; retain the current-source/device-test boundary.
 - [ ] Validate the complete touch, mouse, keyboard, gamepad, Android Back, focus-mute/restore, quality-tier, language, and audible mix matrix on real devices where available.
 - [x] Add one original background-music loop after provenance, mix, and mobile-memory review; keep physical-device listening/mix validation open as a separate requirement.
 - [x] Record a normal-Boot CI audio-flow result for the new Music-bus loop; retain physical-device listening validation as a separate requirement.
@@ -64,10 +65,10 @@
 
 - [x] Expand dependency-free source-contract tests for settings/save schemas and migration paths, monotonic operation records, state-authoritative pause restoration, and data-driven map validity/launch boundaries; run 39259336341 passed the expanded non-device CI suite.
 - [x] Enforce the bilingual `keys,en,bn` localization catalog and every current GDScript translation-key route; reject duplicate, blank Bengali/English, missing-key, or locale-loader regressions in source.
-- [x] Constrain Android evidence retention to seven days and provide a confirmation-gated workflow that can remove only audited pre-cutoff duplicate debug artifacts; run 39271155212 confirmed emulator-only timeout upload is skipped. The current CLI integration cannot execute deletion (`HTTP 403`) and the cleanup workflow awaits default-branch availability for dispatch.
+- [x] Constrain Android evidence retention to seven days and provide a confirmation-gated workflow that can remove only audited pre-cutoff duplicate debug artifacts; run 39271155212 confirmed emulator-only timeout upload is skipped. The workflow is on `main`, but the current CLI integration cannot create the exact manual dispatch (`HTTP 403`), so no deletion is claimed.
 - [x] Exercise the physical Android factual collector against a deterministic fake `adb`, including install/package/launch evidence files and a truthful blocked package-lookup path; retain real D01–D12 review as a separate device-only task.
 - [x] Enforce truthful emulator-launch-gated candidate wording, same-run source/Boot/emulator release conditions, bounded qualifying-artifact retention, and the separate physical-QA boundary with dependency-free regression tests.
-- [x] Prepare a read-only, paginated GitHub artifact audit and post-cleanup zero-candidate verifier; it cannot delete artifacts and awaits default-branch cleanup dispatch/results.
+- [x] Prepare a read-only, paginated GitHub artifact audit and post-cleanup zero-candidate verifier; it cannot delete artifacts. The workflow is now on `main`, while the current CLI integration lacks authority to create the exact approved dispatch.
 - [x] Add mutation-tested source protection that keeps the legacy cleanup workflow manual-only, exact-confirmation-gated, exact-name/cutoff-bounded, and separately authorized for deletion.
 - [x] Require qualifying evidence storage to succeed before an emulator-launch-gated candidate can publish; retain source-level regressions for gate presence and ordering.
 - [ ] Complete the manual desktop/mobile input matrix and physical Android D01–D12 review with a real device and evidence record.

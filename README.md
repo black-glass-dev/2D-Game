@@ -85,6 +85,8 @@ A reproducible GitHub Actions lane is included at [`.github/workflows/android-ap
 
 See [`docs/TEST_REPORT.md`](docs/TEST_REPORT.md), [`docs/RELEASE_GATING.md`](docs/RELEASE_GATING.md), [`docs/PHYSICAL_DEVICE_QA.md`](docs/PHYSICAL_DEVICE_QA.md), and [`docs/PHYSICAL_ANDROID_HANDOFF.md`](docs/PHYSICAL_ANDROID_HANDOFF.md) for the exact evidence boundary. An APK must not be labelled **tested** until the Godot Android toolchain generates it, install/launch validation is recorded, and the required device matrix evidence exists.
 
+A phone tester who needs the newest retained **historical** debug package can use [`docs/MOBILE_TEST_APK_HANDOFF.md`](docs/MOBILE_TEST_APK_HANDOFF.md). It supplies an exact GitHub browser-download link and SHA-256 for candidate 87, but it is not the current-source APK or a tested/supported delivery.
+
 ## Asset provenance
 
 The game combines project-authored 128×128 pixel-art textures/runtime kits with small, period-appropriate CC0 subsets: **Kenney** conventional pistols/carbines, industrial outpost walls/roofs, barriers, fuel drums and desert dressing; and **KayKit** rigged low-poly human bases for the hostile smugglers. The exact source paths, pinned source revisions and CC0 terms are retained in [`assets/third_party/kenney_cc0/README.md`](assets/third_party/kenney_cc0/README.md) and [`assets/third_party/kaykit_cc0/README.md`](assets/third_party/kaykit_cc0/README.md); see [`CREDITS.md`](CREDITS.md) for concise credit. No commercial-game or science-fiction asset kit is used.

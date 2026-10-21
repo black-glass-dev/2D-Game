@@ -11,6 +11,10 @@ The attached-device collector is `docs/capture_physical_android_qa.sh`. It is
 intentionally a factual collector: it never assigns D01–D12 results and never
 writes `PHYSICAL_DEVICE_TESTED`.
 
+For a phone tester who needs the newest retained historical debug package, see
+[`MOBILE_TEST_APK_HANDOFF.md`](MOBILE_TEST_APK_HANDOFF.md). That package is a
+review-only historical input, not a current-source or tested-release claim.
+
 ## Preconditions
 
 1. Use the exact debug APK and source commit under review.

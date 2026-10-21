@@ -252,7 +252,7 @@ This batch corrects the label and protects the existing forward gate; it does no
 | Post-cleanup assertion | Audit test suite | PASS — `--verify-cleanup` passes only at zero active pre-cutoff candidates and reports any remainder as a failure | `tools/audit_legacy_artifacts.py` |
 | Delete boundary | Source inspection plus test | PASS — live mode invokes only read-only `gh api --paginate --jq '.artifacts[]'`; no delete endpoint or artifact-deletion permission exists in the tool | `tools/test_audit_legacy_artifacts.py` |
 | Live inventory | 2026-10-20 read-only GitHub API audit | PASS — 75 active exact-name artifacts; 53 candidates before `2026-10-14T00:00:00Z`; 3,337,865,269 candidate bytes | `python3 tools/audit_legacy_artifacts.py --repo islamyousuf032-glitch/2D-Game --cutoff 2026-10-14T00:00:00Z --expect-pre-cutoff-count 53` |
-| Actual deletion / storage recovery | Default-branch manual workflow plus independent post-run audit | BLOCKED — no artifact was deleted; the workflow still awaits default-branch availability and exact confirmation/cutoff dispatch | `docs/ARTIFACT_RETENTION.md` |
+| Actual deletion / storage recovery | Default-branch manual workflow plus independent post-run audit | BLOCKED — workflow is now on `main`, but the exact approved dispatch returned HTTP 403 and no artifact was deleted | `docs/ARTIFACT_RETENTION.md` |
 
 This batch makes the required independent verification repeatable without broadening deletion authority. It does not execute cleanup, alter release assets, prove storage quota recovery, or substitute for Android launch evidence.
 
@@ -263,7 +263,7 @@ This batch makes the required independent verification repeatable without broade
 | Current workflow contract | `python3 tools/validate_cleanup_workflow.py` | PASS — requires manual dispatch, exact confirmation/cutoff inputs, narrow `actions: write`, exact active-name filter, strict pre-cutoff comparison, summary, and the existing deletion API route | `.github/workflows/cleanup-legacy-artifacts.yml` |
 | Mutation regression suite | `python3 tools/test_validate_cleanup_workflow.py` | PASS — 5 tests reject automatic push, altered confirmation comparison, broadened name filter, and non-strict cutoff; committed workflow validates | `tools/test_validate_cleanup_workflow.py` |
 | Project-gate integration | `python3 tools/validate_project.py` | PASS — dedicated validator/regressions replace the prior inline fragment and run with the source bundle | `tools/validate_project.py` |
-| Actual dispatch/deletion | Default-branch manual workflow | BLOCKED — no dispatch or deletion occurred; default-branch availability, exact reviewer confirmation/cutoff, completion, and read-only post-run verification remain required | `docs/ARTIFACT_RETENTION.md` |
+| Actual dispatch/deletion | Default-branch manual workflow | BLOCKED — default-branch availability and exact confirmation/cutoff were satisfied, but the current CLI integration returned HTTP 403 before a run could be created | `docs/ARTIFACT_RETENTION.md` |
 
 This source gate preserves the destructive operation's boundaries; it grants neither a new deletion path nor any storage/release/device result.
 
@@ -278,6 +278,27 @@ This source gate preserves the destructive operation's boundaries; it grants nei
 | Candidate/emulator/device delivery | Future successful CI run and release review | BLOCKED — no Android emulator launch, successful evidence upload, pre-release, physical D01–D12 review, or player delivery exists | `docs/RELEASE_GATING.md` |
 
 This batch turns storage availability into a pre-publication condition. It does not delete artifacts, recover quota, produce an APK, or reclassify emulator evidence as physical-device evidence.
+
+## M6 batch 42 — default-branch cleanup dispatch (operational gate)
+
+| Check | Command / route | Result | Evidence |
+| --- | --- | --- |
+| Default-branch workflow availability | PR #2 merge plus GitHub API/default-source inspection | PASS — PR #2 merged; the checked workflow exists on `main` with the exact manual confirmation/name/cutoff/deletion boundary | [PR #2](https://github.com/islamyousuf032-glitch/2D-Game/pull/2); default workflow SHA-256 `9871c096f54eebabebbc23548d24be8c9df21702a2fa791cbe132caecf5d6849` |
+| Authorized bounded dispatch | `gh workflow run cleanup-legacy-artifacts.yml --ref main` with exact cutoff/confirmation | BLOCKED — current integration returned `HTTP 403: Resource not accessible by integration` while creating the dispatch event | No workflow run was created |
+| Independent post-attempt audit | `python3 tools/audit_legacy_artifacts.py ... --expect-pre-cutoff-count 53` | PASS — unchanged 75 active exact-name artifacts, 53 pre-cutoff candidates, and 3,337,865,269 candidate bytes | 2026-10-20 read-only terminal result |
+| Artifact deletion / storage recovery | Completed authorized dispatch then `--verify-cleanup` | BLOCKED — no artifact was deleted and GitHub storage has not been recalculated | `docs/ARTIFACT_RETENTION.md` |
+
+This batch completes the default-branch prerequisite and records the next narrow permission blocker. It does not broaden deletion scope, fabricate a cleanup result, or alter Android/physical-device release gates.
+
+## M3 batch 43 — historical mobile test APK handoff (review input)
+
+| Check | Command / route | Result | Evidence |
+| --- | --- | --- |
+| Exact retained APK identity | GitHub release/API metadata | READY — candidate 87 has source SHA, direct browser URL, asset size, and GitHub SHA-256 recorded | `docs/MOBILE_TEST_APK_HANDOFF.md` |
+| Sandbox binary retrieval | `gh release download apk-candidate-87` | BLOCKED — GitHub redirected the asset to a host outside the sandbox network allowlist; no local APK copy was accepted or altered | The mobile-browser direct URL remains available in the handoff |
+| Tester installation and D01–D12 review | Real Android device and named reviewer | OPEN — package is historical review input only; no install, device observation, or PASS evidence has occurred | `docs/PHYSICAL_ANDROID_HANDOFF.md`; `docs/PHYSICAL_DEVICE_QA.md` |
+
+The handoff lowers the tester's download/identity burden without misrepresenting candidate 87 as current-source, emulator-validated, physical-device-tested, or supported delivery.
 
 ## M3 batch 14 — physical-device QA handoff (documentation gate)
 
