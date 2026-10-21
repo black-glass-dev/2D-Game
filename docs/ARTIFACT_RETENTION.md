@@ -92,7 +92,18 @@ and committed evidence. Legacy cleanup is deliberately manual through the
 bounded confirmation workflow above; it is never performed automatically during
 a build.
 
-CI run [39271155212](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39271155212) then confirmed the forward policy: all non-device gates passed, the hosted emulator alone timed out, and `Upload tested build evidence` was skipped rather than quota-failing. GitHub permits manual workflow dispatch only when the workflow is present on the default branch, so the bounded legacy cleanup cannot execute from this working branch yet.
+CI run [39271155212](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/39271155212) then confirmed the forward policy: all non-device gates passed, the hosted emulator alone timed out, and `Upload tested build evidence` was skipped rather than quota-failing. PR [#2](https://github.com/islamyousuf032-glitch/2D-Game/pull/2) subsequently merged the bounded cleanup workflow to the default branch. Its exact default-branch source, confirmation, name filter, and strict cutoff were rechecked before dispatch.
+
+A manual default-branch dispatch was then attempted with the documented exact
+`2026-10-14T00:00:00Z` cutoff and `DELETE_LEGACY_ARTIFACTS` confirmation. The
+current GitHub CLI integration returned `HTTP 403: Resource not accessible by
+integration` while creating the dispatch event. No cleanup workflow run was
+created, no artifact was deleted, and an immediate independent read-only audit
+still found the original 75 active artifacts / 53 pre-cutoff candidates /
+3,337,865,269 candidate bytes. A repository user or integration with authority
+to dispatch Actions workflows must perform the same bounded default-branch
+manual dispatch; only then may `--verify-cleanup` be used for the post-run
+zero-candidate check.
 
 GitHub states that artifact usage can take several hours to recalculate. This
 storage recovery does not prove an emulator launch, physical-device test, APK
