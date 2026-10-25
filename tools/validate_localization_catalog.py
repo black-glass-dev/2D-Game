@@ -12,6 +12,8 @@ import re
 import sys
 from pathlib import Path
 
+import generate_embedded_localization_catalog as embedded_catalog_generator
+
 ROOT = Path(__file__).resolve().parents[1]
 CATALOG_PATH = "data/localization/redline.csv"
 KEY_PATTERN = re.compile(r"[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+")
@@ -93,15 +95,20 @@ def validate(root: Path = ROOT) -> None:
     catalog = load_catalog(root)
     localization_service = read_required(root, "scripts/services/localization_service.gd")
     required_service_contract = (
-        'const CATALOG_PATH := "res://data/localization/redline.csv"',
+        "RedlineLocalizationCatalog.build_translations()",
         "OS.get_locale_language().to_lower()",
         "TranslationServer.set_locale(active_locale)",
         "TranslationServer.add_translation",
-        "translation.add_message(key, row[index].strip_edges())",
     )
     for snippet in required_service_contract:
         if snippet not in localization_service:
             fail(f"localization_service.gd is missing required catalog contract: {snippet}")
+    if "FileAccess.open" in localization_service or "CATALOG_PATH" in localization_service:
+        fail("localization_service.gd must use the packaged generated catalog rather than a dynamically opened CSV")
+    try:
+        embedded_catalog_generator.check(root)
+    except (OSError, ValueError) as exc:
+        fail(f"generated packaged catalog contract failed: {exc}")
 
     used_keys = source_translation_keys(root)
     missing = sorted(used_keys.difference(catalog))

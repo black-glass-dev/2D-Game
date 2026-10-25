@@ -1,0 +1,179 @@
+name: Build human-review Android APK
+
+on:
+  # A one-time, user-requested review build may be triggered by a commit carrying
+  # the marker below. Subsequent builds require an explicit manual confirmation.
+  push:
+    branches:
+      - arena/cc748250-2d-game
+    paths:
+      - ".github/workflows/human-review-apk.yml"
+      - "assets/**"
+      - "data/**"
+      - "native/**"
+      - "scenes/**"
+      - "scripts/**"
+      - "tools/**"
+      - "project.godot"
+      - "export_presets.cfg"
+      - "package.json"
+      - "package-lock.json"
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: "Type PUBLISH_HUMAN_REVIEW_APK to publish an explicitly unvalidated tester build"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: operation-redline-human-review-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-human-review-apk:
+    name: Build explicitly unvalidated human-review APK
+    if: >-
+      (github.event_name == 'push' && contains(github.event.head_commit.message, '[publish-human-qa-apk]')) ||
+      (github.event_name == 'workflow_dispatch' && inputs.confirmation == 'PUBLISH_HUMAN_REVIEW_APK')
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+
+      - name: Set up Node for GDScript analysis
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Run source and native checks
+        run: |
+          set -euo pipefail
+          npm ci
+          npm run test:gdscript
+          python3 tools/validate_project.py
+          ./scripts/run_native_tests.sh
+
+      - name: Set up JDK 17 for Android signing
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Restore persistent debug signing key
+        id: debug_signing_key
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.android/operation-redline-debug.keystore
+          key: operation-redline-debug-keystore-v1
+
+      - name: Configure Android SDK and debug signing for Godot
+        shell: bash
+        run: |
+          set -euo pipefail
+          export ANDROID_HOME="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          export ANDROID_SDK_ROOT="$ANDROID_HOME"
+          export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
+          command -v sdkmanager
+          echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> "$GITHUB_ENV"
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          yes | sdkmanager --sdk_root="$ANDROID_HOME" --licenses > /dev/null || true
+          sdkmanager --sdk_root="$ANDROID_HOME" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+          mkdir -p "$HOME/.android" "$HOME/.config/godot"
+          KEYSTORE="$HOME/.android/operation-redline-debug.keystore"
+          if [[ ! -f "$KEYSTORE" ]]; then
+            keytool -genkeypair -noprompt -keystore "$KEYSTORE" \
+              -storepass android -keypass android -alias androiddebugkey \
+              -dname "CN=Operation Redline Debug,O=Operation Redline,C=BD" \
+              -keyalg RSA -keysize 2048 -validity 10000
+          fi
+          cat > "$HOME/.config/godot/editor_settings-4.tres" <<EOF
+          [gd_resource type="EditorSettings" format=3]
+
+          [resource]
+          export/android/android_sdk_path = "$ANDROID_HOME"
+          export/android/java_sdk_path = "$JAVA_HOME"
+          export/android/debug_keystore = "$HOME/.android/operation-redline-debug.keystore"
+          export/android/debug_keystore_user = "androiddebugkey"
+          export/android/debug_keystore_pass = "android"
+          EOF
+
+      - name: Save persistent debug signing key
+        if: steps.debug_signing_key.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.android/operation-redline-debug.keystore
+          key: operation-redline-debug-keystore-v1
+
+      - name: Install Godot 4.7.2 and Android export templates
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="4.7.2-stable"
+          ENGINE="Godot_v${VERSION}_linux.x86_64"
+          mkdir -p "$HOME/.local/bin"
+          curl --fail --location --retry 3 --output /tmp/godot.zip \
+            "https://github.com/godotengine/godot/releases/download/${VERSION}/${ENGINE}.zip"
+          unzip -q /tmp/godot.zip -d "$HOME/.local/bin"
+          chmod +x "$HOME/.local/bin/${ENGINE}"
+          ln -sf "$HOME/.local/bin/${ENGINE}" "$HOME/.local/bin/godot"
+          curl --fail --location --retry 3 --output /tmp/templates.tpz \
+            "https://github.com/godotengine/godot/releases/download/${VERSION}/Godot_v${VERSION}_export_templates.tpz"
+          TEMPLATE_DIR="$HOME/.local/share/godot/export_templates/4.7.2.stable"
+          mkdir -p "$TEMPLATE_DIR" /tmp/godot-templates
+          unzip -q /tmp/templates.tpz -d /tmp/godot-templates
+          cp -a /tmp/godot-templates/templates/. "$TEMPLATE_DIR/"
+          test -f "$TEMPLATE_DIR/android_debug.apk"
+          godot --version
+
+      - name: Export and execute packaged menu-content check
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.local/bin:$PATH"
+          mkdir -p build
+          godot --headless --path . --editor --quit 2>&1 | tee build/godot-import-first-pass.log
+          godot --headless --path . --editor --quit 2>&1 | tee build/godot-import.log
+          if grep -Eq "Parse Error|Failed to create an autoload" build/godot-import.log; then
+            echo "Godot import did not stabilize on the second pass."
+            exit 1
+          fi
+          godot --headless --path . --export-debug "Android Debug" build/OperationRedline-debug.apk 2>&1 | tee build/godot-export.log
+          test -s build/OperationRedline-debug.apk
+          unzip -t build/OperationRedline-debug.apk
+          jarsigner -verify -certs -verbose build/OperationRedline-debug.apk
+          godot --headless --path . --export-pack "Android Debug" build/OperationRedline-content-check.pck 2>&1 | tee build/godot-export-pack.log
+          export_content_runtime=/tmp/operation-redline-human-review-export-content
+          rm -rf "$export_content_runtime"
+          mkdir -p "$export_content_runtime"
+          (
+            cd "$export_content_runtime"
+            timeout 30s godot --headless --main-pack "$GITHUB_WORKSPACE/build/OperationRedline-content-check.pck" -- --verify-export-content
+          ) 2>&1 | tee build/godot-export-content.log
+          grep -q "EXPORT_CONTENT_PASS" build/godot-export-content.log
+          sha256sum build/OperationRedline-debug.apk | tee build/OperationRedline-debug.apk.sha256
+
+      - name: Publish explicitly unvalidated human-review APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="human-review-${GITHUB_SHA:0:12}"
+          cat > build/release-notes.md <<EOF
+          This is an **explicitly unvalidated human-review build** for the named source commit.
+
+          It passed source/native checks, Godot import, APK archive/signature verification, and an exported-PCK menu-content check proving that localized menu text and a playable \
+          \`MP_DS_01\` Desert Outpost map are present in that pack.
+
+          It has **not** passed the hosted Android emulator launch gate and is **not** a release candidate, supported delivery, or physical-device PASS. Install only to perform and return factual D01–D12 review evidence.
+          EOF
+          gh release create "$tag" build/OperationRedline-debug.apk build/OperationRedline-debug.apk.sha256 \
+            --target "$GITHUB_SHA" \
+            --title "Operation Redline human-review build ${GITHUB_SHA:0:12}" \
+            --notes-file build/release-notes.md \
+            --prerelease

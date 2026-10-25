@@ -11,9 +11,11 @@ The attached-device collector is `docs/capture_physical_android_qa.sh`. It is
 intentionally a factual collector: it never assigns D01–D12 results and never
 writes `PHYSICAL_DEVICE_TESTED`.
 
-For a phone tester who needs the newest retained historical debug package, see
-[`MOBILE_TEST_APK_HANDOFF.md`](MOBILE_TEST_APK_HANDOFF.md). That package is a
-review-only historical input, not a current-source or tested-release claim.
+[`MOBILE_TEST_APK_HANDOFF.md`](MOBILE_TEST_APK_HANDOFF.md) records a real-device
+blocker in historical candidate 87 (raw translation keys and no map card) and
+withdraws it from testing. Wait for the separately labelled repaired
+human-review build; it remains an explicitly unvalidated test input, not a
+current tested-release claim.
 
 ## Preconditions
 

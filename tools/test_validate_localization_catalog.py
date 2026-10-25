@@ -57,6 +57,18 @@ class LocalizationCatalogTests(unittest.TestCase):
             with self.assertRaisesRegex(catalog_validator.LocalizationCatalogError, "requires non-empty en and bn text"):
                 catalog_validator.validate(workspace)
 
+    def test_rejects_catalog_change_without_regenerated_packaged_anchor(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            workspace = Path(temporary_directory)
+            shutil.copytree(ROOT, workspace, dirs_exist_ok=True, ignore=shutil.ignore_patterns(".git", "node_modules"))
+            catalog = workspace / "data/localization/redline.csv"
+            catalog.write_text(
+                catalog.read_text(encoding="utf-8").replace("TACTICAL SURVIVAL", "TACTICAL DEFENSE", 1),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(catalog_validator.LocalizationCatalogError, "generated packaged catalog contract failed"):
+                catalog_validator.validate(workspace)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

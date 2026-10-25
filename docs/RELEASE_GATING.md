@@ -20,7 +20,11 @@ For a real attached device, `docs/capture_physical_android_qa.sh` collects the e
 
 ## Historical candidate status
 
-Earlier workflow revisions could publish pre-release candidates after export/headless success even when the Android emulator timed out. Those historical releases are retained as auditable records and are not retroactively relabelled or removed in this batch. They are **not** physical-device-tested deliveries and must not be offered as such. The new gate applies to every future candidate release.
+Earlier workflow revisions could publish pre-release candidates after export/headless success even when the Android emulator timed out. Those historical releases are retained as auditable records and are not retroactively relabelled or removed in this batch. They are **not** physical-device-tested deliveries and must not be offered as such. Candidate 87 is additionally withdrawn from testing because a real Android screenshot showed raw translation keys and no selectable map. The new gate applies to every future candidate release.
+
+## Exceptional human-review build
+
+The repaired-source workflow `.github/workflows/human-review-apk.yml` may publish one **explicitly unvalidated human-review APK** only after a named push marker or exact manual confirmation. It requires source/native checks, Godot import, APK ZIP/signature validation, and execution of `--verify-export-content` from an exported PCK outside the source tree. That PCK check exists because candidate 87's loose-source checks did not prove its packaged translation/map content. This review build is not an `apk-candidate-*` release, not an emulator launch result, not a supported delivery, and not a passing device result; it exists solely to let a named real tester report the defect fix. The ordinary `Publish an emulator-launch-gated debug APK candidate` gate is unchanged.
 
 ## Evidence boundary
 

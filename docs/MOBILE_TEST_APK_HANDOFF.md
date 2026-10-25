@@ -1,65 +1,67 @@
-# Mobile Test APK Handoff — Historical Candidate 87
+# Mobile Test APK Handoff — Candidate 87 Withdrawn
 
-## What this package is
+## Do not use candidate 87 for further play testing
 
-The newest retained downloadable package available for a **real Android tester**
-is the historical GitHub pre-release **`apk-candidate-87`**. It is being handed
-off only so a tester can install it on their own phone and collect factual
-feedback. It is **not** the current-branch APK, a current release candidate, an
-emulator pass, a physical-device pass, or a supported player delivery.
+The historical GitHub pre-release **`apk-candidate-87`** is **withdrawn as a
+mobile-test input**. A real Android tester supplied a screenshot on 2026-10-25
+showing raw localization keys (`app.title`, `menu.map_select`, `menu.no_maps`)
+and an empty map-selection list. That is a factual blocked player experience:
+there is no playable map from that screen.
 
-The sandbox cannot retrieve GitHub release binaries because GitHub redirects
-release-asset downloads to a host outside the sandbox's permitted network
-allowlist. The direct GitHub URL below is intended for the tester's normal mobile
-browser, where that redirect is handled by GitHub.
+The screenshot does not contain the device identity, Android build, APK hash, or
+a completed D01–D12 record, so it is not a physical-device PASS/FAIL matrix. It
+is nevertheless sufficient evidence that this package must not be presented as a
+playable handoff. **Do not install, redistribute, or continue testing candidate
+87 as if it contained a usable game.**
 
-## Exact release identity
+## Retained identity for audit only
 
 | Field | Value |
 | --- | --- |
 | Release | [Operation Redline debug APK candidate #87](https://github.com/islamyousuf032-glitch/2D-Game/releases/tag/apk-candidate-87) |
-| Direct APK download | [OperationRedline-debug.apk](https://github.com/islamyousuf032-glitch/2D-Game/releases/download/apk-candidate-87/OperationRedline-debug.apk) |
+| Historical direct asset | [OperationRedline-debug.apk](https://github.com/islamyousuf032-glitch/2D-Game/releases/download/apk-candidate-87/OperationRedline-debug.apk) |
 | Source commit | `eb43e0bb097492f217cc5da4922e7077aa258069` |
 | Release timestamp | `2026-10-17T12:45:57Z` |
-| Filename | `OperationRedline-debug.apk` |
-| Expected size | `68,613,858` bytes |
+| Asset size | `68,613,858` bytes |
 | GitHub asset SHA-256 | `77014c03daae21b395dd349c73188fab4c4681d050f543f2734bb96358395431` |
-| Package ID expected by the project | `com.operationredline.outpost` |
+| Expected package ID | `com.operationredline.outpost` |
 
-The SHA-256 and size above are GitHub release-asset metadata. If the downloaded
-file differs, **do not install or test it**; download it again from the release
-page.
+These values identify the rejected historical asset only. They are not a
+recommendation to download it.
 
-## Install on the tester's Android phone
+## Repair and replacement path
 
-1. Open the **Direct APK download** link above in the phone's browser and finish
-downloading the file.
-2. Verify the displayed filename and, if the file manager supports checksums,
-verify the SHA-256 above.
-3. Android may require permission for the browser/file manager to install an
-unknown app. Grant that permission only for this reviewed debug-package install,
-then revoke it afterwards if desired.
-4. Install the APK. Do **not** claim it updated an earlier install in place
-unless the exact install output or Android UI observation supports that result.
-5. Start the app and retain screenshots/video/logs for the real-device reviewer.
+The defect is consistent with Android export content that was only found through
+runtime directory/file access: loose-source checks could see the CSV and map
+resources while the package shown to the tester could not. The repair now:
 
-The package is a debug pre-release. It is not a store build and must not be
-redistributed, described as current, or described as tested/supported delivery.
+1. generates a GDScript translation catalog from the reviewable CSV so every
+   English/Bengali message is an exported resource;
+2. generates preload anchors for every `data/maps/*.tres` resource while keeping
+   runtime map-folder discovery; and
+3. runs `--verify-export-content` from an exported PCK in an otherwise empty
+   directory before a human-review APK may be published.
 
-## What to test and return
+A one-time **explicitly unvalidated human-review APK** is requested from the
+repaired source through `.github/workflows/human-review-apk.yml`. It will be
+published only after source/native checks, Godot import, APK archive/signature
+verification, and the exported-PCK translation/playable-Desert check pass. It
+will still not be an emulator pass, release candidate, supported delivery, or
+physical-device PASS.
+
+## When the repaired human-review build is available
 
 Use [`PHYSICAL_ANDROID_HANDOFF.md`](PHYSICAL_ANDROID_HANDOFF.md) and
-[`PHYSICAL_DEVICE_QA.md`](PHYSICAL_DEVICE_QA.md) as the source of truth.
-Provide the reviewer with:
+[`PHYSICAL_DEVICE_QA.md`](PHYSICAL_DEVICE_QA.md). Return the following with the
+new build's exact release URL and SHA-256:
 
 - tester/reviewer name and timezone;
-- device model, Android version/build, screen resolution and refresh rate;
-- downloaded APK SHA-256 and install method/output;
-- screenshots/video for Boot, touch controls, Bengali/English settings, quality
-  selection, results, and any failure;
-- concrete observations for D01–D12, including play duration and thermal/FPS
-  notes; and
-- if a USB-debugging computer is available, the factual collector output from:
+- device model, Android version/build, screen resolution, and refresh rate;
+- exact APK hash and install/update output;
+- screenshots/video of localized Boot and Map Select showing **Desert Outpost**;
+- concrete D01–D12 observations, including play duration and thermal/FPS notes;
+  and
+- factual collector output where USB debugging is available:
 
 ```sh
 ./docs/capture_physical_android_qa.sh \
@@ -68,17 +70,7 @@ Provide the reviewer with:
   --output /absolute/path/operation-redline-physical-qa-YYYYMMDD
 ```
 
-The collector and a filled evidence record may validate facts, but they do not
-turn missing observations into `PASS`. A record can be classified
-`PHYSICAL_DEVICE_TESTED` only when every D01–D12 row has a real reviewer
-observation and concrete evidence path.
-
-## Current boundaries
-
-- Candidate 87 predates the current source branch, so feedback applies to its
-  recorded source commit unless and until a current-source APK is exported.
-- The current Android emulator remains launch-blocked; its timeout is not a
-  device test.
-- `MP_RF_02` Highrise remains locked because the authoritative B2 numeric
-  appendix and reference image are absent. A phone test does not authorize
-  guessed Highrise coordinates, geometry, traversal, or Gate 2 evidence.
+A record is `PHYSICAL_DEVICE_TESTED` only after a named reviewer supplies real
+observations and concrete evidence for all D01–D12 rows. `MP_RF_02` Highrise
+remains locked; a phone test does not authorize guessed Highrise geometry,
+traversal, or Gate 2 evidence.

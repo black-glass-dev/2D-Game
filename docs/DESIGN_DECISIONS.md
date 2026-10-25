@@ -98,13 +98,13 @@
 
 ## D-011 — Reviewed CSV remains the localization source of truth
 
-**Decision:** Parse the committed `redline.csv` at runtime and register transient Godot `Translation` resources instead of committing generated importer output or pointing project settings at a raw CSV as a Translation resource.
+**Decision:** Keep committed `redline.csv` as the reviewable source of truth, then generate the source-controlled `redline_catalog.gd` export anchor and register transient Godot `Translation` resources from it at runtime.
 
-**Reason:** The raw CSV is reviewable, bilingual, and stable in source control. The direct project-setting approach produced an engine resource-load error in CI; runtime registration fixes it without generated caches.
+**Reason:** A real Android screenshot of candidate 87 showed raw keys: dynamically opening a CSV can work in a loose tree while failing to include player-facing data in the exported package. The generated plain-text GDScript catalog is deterministic, mutation-tested against CSV, engine-version-independent, and unambiguously packed because `LocalizationService` references it.
 
-**Alternative considered:** Commit generated translation binaries.
+**Alternative considered:** Commit generated translation binaries or retain direct runtime CSV reads.
 
-**Why not selected:** Generated import artifacts are editor/version dependent and violate the source-only repository convention.
+**Why not selected:** Generated importer artifacts are editor/version dependent; direct runtime CSV reads leave an export-inclusion boundary unprotected. The generated source script keeps both reviewability and package safety.
 
 ## D-012 — Highrise appears as an honest pre-production card
 

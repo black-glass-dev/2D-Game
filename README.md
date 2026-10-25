@@ -85,7 +85,7 @@ A reproducible GitHub Actions lane is included at [`.github/workflows/android-ap
 
 See [`docs/TEST_REPORT.md`](docs/TEST_REPORT.md), [`docs/RELEASE_GATING.md`](docs/RELEASE_GATING.md), [`docs/PHYSICAL_DEVICE_QA.md`](docs/PHYSICAL_DEVICE_QA.md), and [`docs/PHYSICAL_ANDROID_HANDOFF.md`](docs/PHYSICAL_ANDROID_HANDOFF.md) for the exact evidence boundary. An APK must not be labelled **tested** until the Godot Android toolchain generates it, install/launch validation is recorded, and the required device matrix evidence exists.
 
-A phone tester who needs the newest retained **historical** debug package can use [`docs/MOBILE_TEST_APK_HANDOFF.md`](docs/MOBILE_TEST_APK_HANDOFF.md). It supplies an exact GitHub browser-download link and SHA-256 for candidate 87, but it is not the current-source APK or a tested/supported delivery.
+**Do not use historical candidate 87 as a game handoff.** A real Android screenshot showed raw translation keys and an empty map list, so [`docs/MOBILE_TEST_APK_HANDOFF.md`](docs/MOBILE_TEST_APK_HANDOFF.md) withdraws it and records its immutable audit identity. The repaired source has an exported-PCK menu-content gate and requests a separately labelled, explicitly unvalidated human-review build; that future build is still not a tested/supported delivery until the stated emulator and physical-device boundaries are satisfied.
 
 ## Asset provenance
 
