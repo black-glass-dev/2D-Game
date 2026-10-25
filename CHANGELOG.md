@@ -65,6 +65,7 @@ All notable production changes are documented here.
 
 ### Changed
 
+- Candidate 87 is withdrawn from testing after a real Android screenshot exposed raw localization keys and no available map. The repaired human-review and Android workflow requests (40203309780/40203309723) were prevented from starting by GitHub Actions account-payment/spending-limit status; no replacement APK is claimed.
 - CI run 39250923376 passed all source/import/export/normal-Boot/renderer-capture gates after the clean-import and Music-resume repairs; the hosted emulator still timed out, candidate publication stayed skipped, and artifact upload remains quota-blocked.
 - `project.godot` now boots `Boot.tscn` and registers the foundation services as autoloads; `LocalizationService` loads the reviewed CSV catalog at runtime into Godot Translation resources without committing generated import artifacts.
 - `Main.tscn` remains directly runnable; it now marks the global game state as Playing when the legacy Desert runtime takes ownership after loading.

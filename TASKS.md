@@ -42,7 +42,7 @@
 - [x] Prepare a factual physical Android capture/handoff path for APK hash, `adb install -r`, device identity, package/launch/foreground evidence, bounded logcat, and reviewer-owned D01–D12 completion.
 - [x] Record and withdraw historical candidate 87 after a real Android screenshot showed raw localization keys and an empty map list; retain its immutable release metadata only for audit.
 - [x] Anchor generated localization/maps in exported content and require an exported-PCK translation/playable-Desert check before any repaired human-review APK can publish.
-- [ ] Publish the explicitly unvalidated repaired human-review APK after its export/PCK workflow succeeds, then validate the complete touch, mouse, keyboard, gamepad, Android Back, focus-mute/restore, quality-tier, language, and audible mix matrix on a real device with evidence.
+- [ ] Restore GitHub Actions billing/spending eligibility: requested runs 40203309780 and 40203309723 did not start because GitHub reported failed account payments or a spending-limit issue; then publish the explicitly unvalidated repaired human-review APK after its export/PCK workflow succeeds and validate the complete touch, mouse, keyboard, gamepad, Android Back, focus-mute/restore, quality-tier, language, and audible mix matrix on a real device with evidence.
 - [x] Add one original background-music loop after provenance, mix, and mobile-memory review; keep physical-device listening/mix validation open as a separate requirement.
 - [x] Record a normal-Boot CI audio-flow result for the new Music-bus loop; retain physical-device listening validation as a separate requirement.
 - [x] Stabilize clean-checkout WAV import by requiring a successful second Godot editor-import pass before export or normal-Boot runtime QA.

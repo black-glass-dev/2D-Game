@@ -45,9 +45,8 @@ resources while the package shown to the tester could not. The repair now:
 A one-time **explicitly unvalidated human-review APK** is requested from the
 repaired source through `.github/workflows/human-review-apk.yml`. It will be
 published only after source/native checks, Godot import, APK archive/signature
-verification, and the exported-PCK translation/playable-Desert check pass. It
-will still not be an emulator pass, release candidate, supported delivery, or
-physical-device PASS.
+verification, and the exported-PCK translation/playable-Desert check pass. The
+first requested run ([40203309780](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/40203309780)) did not start: GitHub reported that recent account payments failed or the Actions spending limit needs increasing. Therefore no replacement APK URL exists yet. It will still not be an emulator pass, release candidate, supported delivery, or physical-device PASS when it does run.
 
 ## When the repaired human-review build is available
 
