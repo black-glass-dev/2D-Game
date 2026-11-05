@@ -47,8 +47,17 @@ confirmation `BUILD_UNITY_REVIEW_APK`. It checks the APK ZIP, produces SHA-256,
 and retains the review artifact seven days.
 
 The GitHub integration returned HTTP 403 when attempting to enumerate secret
-names, so no values were accessed or disclosed. Earlier runs—including
-[42018851346](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/42018851346)—passed source/C# syntax validation and exited before activation when their credential preflight found unavailable references. The user has now confirmed the exact `UNITY_EMAIL` and `UNITY_PASSWORD` identifiers; a fresh protected build is the next evidence gate. The GitHub API returns 404 when trying to dispatch a workflow that exists only on this unmerged branch, so the requested build uses the narrow marker-trigger described above. Unity activation or APK export is not claimed until that build succeeds.
+names, so no values were accessed or disclosed. Earlier runs passed source/C#
+syntax validation and exited before activation when their credential preflight
+found unavailable references. The user then confirmed the exact `UNITY_EMAIL`
+and `UNITY_PASSWORD` identifiers; fresh protected build
+[42020369310](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/42020369310)
+still received both as empty and stopped safely before the builder. This proves
+an Actions secret-availability/scope/configuration issue, not a need to disclose
+or change a value. The GitHub API returns 404 when trying to dispatch a workflow
+that exists only on this unmerged branch, so requested builds use the narrow
+marker-trigger described above. Unity activation or APK export is not claimed
+until a build succeeds.
 
 ## Android signing boundary
 

@@ -71,6 +71,14 @@ class UnityMigrationTests(unittest.TestCase):
             with self.assertRaisesRegex(unity_validator.UnityMigrationError, "UNITY_PASSWORD"):
                 unity_validator.validate(workspace)
 
+    def test_rejects_missing_tactical_radar_projection(self) -> None:
+        with self.copied_workspace() as directory:
+            workspace = Path(directory)
+            radar = workspace / "unity/Assets/OperationRedline/Scripts/TacticalRadar.cs"
+            radar.write_text(radar.read_text(encoding="utf-8").replace("InverseTransformDirection", "RemovedProjection", 1), encoding="utf-8")
+            with self.assertRaisesRegex(unity_validator.UnityMigrationError, "InverseTransformDirection"):
+                unity_validator.validate(workspace)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

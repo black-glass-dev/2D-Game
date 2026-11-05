@@ -52,6 +52,7 @@ namespace OperationRedline.Unity
 
         private readonly List<RaiderActor> raiders = new List<RaiderActor>();
         private readonly List<GameObject> worldObjects = new List<GameObject>();
+        private readonly List<DamagePopup> damagePopups = new List<DamagePopup>();
         private readonly Vector3[] spawnPoints =
         {
             new Vector3(-32f, 1f, -28f), new Vector3(31f, 1f, -26f),
@@ -92,6 +93,7 @@ namespace OperationRedline.Unity
         private UnityWeaponState carbine;
         private UnityWeaponState sidearm;
         private UnityWeaponState activeWeapon;
+        private TacticalRadar tacticalRadar;
         private AudioSource music;
         private AudioSource effects;
         private AudioSource uiEffects;
@@ -105,6 +107,14 @@ namespace OperationRedline.Unity
         private float soundCaptionUntil;
         private Color baseAmbient;
 
+        private struct DamagePopup
+        {
+            public Vector3 WorldPosition;
+            public string Text;
+            public Color Color;
+            public float ExpiresAt;
+        }
+
         public bool IsGameplayStopped { get { return screen != GameScreen.Gameplay; } }
 
         private void Awake()
@@ -117,6 +127,7 @@ namespace OperationRedline.Unity
             baseAmbient = RenderSettings.ambientLight;
             LoadPresentationAssets();
             CreateAudio();
+            tacticalRadar = gameObject.AddComponent<TacticalRadar>();
             ApplyPresentationSettings();
         }
 
@@ -225,6 +236,7 @@ namespace OperationRedline.Unity
             shotsFired = 0;
             shotsHit = 0;
             headshots = 0;
+            damagePopups.Clear();
             carbine = new UnityWeaponState(WeaponKind.Carbine);
             sidearm = new UnityWeaponState(WeaponKind.Sidearm);
             activeWeapon = carbine;
@@ -409,8 +421,10 @@ namespace OperationRedline.Unity
             ShowCaption(activeWeapon.Kind == WeaponKind.Carbine ? "caption.rifle_fire" : "caption.pistol_fire");
             var origin = playerController.PlayerCamera.transform.position;
             var direction = ApplyMobileAimAssist(playerController.PlayerCamera.transform.forward);
+            var destination = origin + direction * activeWeapon.Range;
             if (Physics.Raycast(origin, direction, out var hit, activeWeapon.Range))
             {
+                destination = hit.point;
                 var enemy = hit.collider.GetComponentInParent<RaiderActor>();
                 if (enemy != null)
                 {
@@ -421,8 +435,19 @@ namespace OperationRedline.Unity
                     {
                         headshots++;
                     }
+                    if (settings.DamageNumbers)
+                    {
+                        damagePopups.Add(new DamagePopup
+                        {
+                            WorldPosition = hit.point + Vector3.up * 0.38f,
+                            Text = (headshot ? activeWeapon.Damage * 2f : activeWeapon.Damage).ToString("0"),
+                            Color = headshot ? new Color(1f, 0.78f, 0.24f) : Color.white,
+                            ExpiresAt = Time.unscaledTime + 0.72f,
+                        });
+                    }
                 }
             }
+            CreateShotTracer(origin, destination);
         }
 
         private Vector3 ApplyMobileAimAssist(Vector3 direction)
@@ -456,6 +481,29 @@ namespace OperationRedline.Unity
                 }
             }
             return Vector3.Slerp(direction, bestDirection, 0.16f).normalized;
+        }
+
+        private void CreateShotTracer(Vector3 origin, Vector3 destination)
+        {
+            var direction = destination - origin;
+            var length = direction.magnitude;
+            if (length <= 0.01f)
+            {
+                return;
+            }
+            var tracer = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            tracer.name = "Shot Tracer";
+            tracer.transform.position = origin + direction * 0.5f;
+            tracer.transform.rotation = Quaternion.LookRotation(direction);
+            tracer.transform.localScale = new Vector3(0.018f, 0.018f, length);
+            var renderer = tracer.GetComponent<Renderer>();
+            renderer.material.color = new Color(1f, 0.8f, 0.28f);
+            var collider = tracer.GetComponent<Collider>();
+            if (collider != null)
+            {
+                collider.enabled = false;
+            }
+            tracer.AddComponent<UnityTransientEffect>().Initialize(settings.ReducedMotion ? 0.025f : 0.055f);
         }
 
         private void StartReload()
@@ -585,6 +633,7 @@ namespace OperationRedline.Unity
             }
             worldObjects.Clear();
             raiders.Clear();
+            damagePopups.Clear();
             playerRoot = null;
             playerController = null;
             RenderSettings.fog = false;
@@ -910,6 +959,8 @@ namespace OperationRedline.Unity
             GUI.Label(new Rect(Screen.width * 0.5f - 8f, Screen.height * 0.5f - 18f, 16f, 36f), "+", Style(28, hudColor, TextAnchor.MiddleCenter, true));
             if (settings.ShowFps) GUI.Label(new Rect(Screen.width - 115f, 66f, 100f, 24f), Mathf.RoundToInt(fpsSample) + " FPS", leftStyle);
             if (settings.Subtitles && Time.unscaledTime < soundCaptionUntil) GUI.Label(new Rect(0f, Screen.height - 72f, Screen.width, 26f), "♪  " + soundCaption, bodyStyle);
+            if (tacticalRadar != null) tacticalRadar.Draw(new Rect(Screen.width - 142f, 100f, 122f, 122f), playerRoot, raiders, settings.ColorblindMode);
+            DrawDamageNumbers();
 
             var fireWidth = 118f * settings.ButtonScale;
             var fireHeight = 104f * settings.ButtonScale;
@@ -918,6 +969,32 @@ namespace OperationRedline.Unity
             if (GUI.RepeatButton(new Rect(fireX, Screen.height - fireHeight - 20f, fireWidth, fireHeight), T("bindings.fire"), buttonStyle)) FireActiveWeapon();
             GUI.color = Color.white;
             if (Button(new Rect(Screen.width - 130f, 18f, 115f, 36f), T("pause.title"), buttonStyle)) PauseOperation();
+        }
+
+        private void DrawDamageNumbers()
+        {
+            if (!settings.DamageNumbers || playerController == null || playerController.PlayerCamera == null)
+            {
+                return;
+            }
+            for (var index = damagePopups.Count - 1; index >= 0; index--)
+            {
+                var popup = damagePopups[index];
+                if (Time.unscaledTime >= popup.ExpiresAt)
+                {
+                    damagePopups.RemoveAt(index);
+                    continue;
+                }
+                var viewport = playerController.PlayerCamera.WorldToScreenPoint(popup.WorldPosition);
+                if (viewport.z <= 0f)
+                {
+                    continue;
+                }
+                var age = 1f - (popup.ExpiresAt - Time.unscaledTime) / 0.72f;
+                var rise = settings.ReducedMotion ? 8f : 28f;
+                var rect = new Rect(viewport.x - 24f, Screen.height - viewport.y - rise * age, 48f, 24f);
+                GUI.Label(rect, popup.Text, Style(18, popup.Color, TextAnchor.MiddleCenter, true));
+            }
         }
 
         private void SliderRow(Rect content, float y, string label, float value, float minimum, float maximum, System.Action<float> setter)

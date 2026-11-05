@@ -78,12 +78,12 @@
 ## Unity migration — forward engine target
 
 - [x] Create a Unity 2022.3.62f1 Android project with an actual code-owned Bootstrap runtime, localised menu/settings/map selection, playable Desert Outpost vertical slice, 6/9/12 waves, procedural raiders, keyboard/mouse/touch controls, audio, pause/Back, and locked Highrise card.
-- [x] Expand Unity's source-level Desert parity in one pass: full reviewed English/Bengali catalog, persisted five-category settings, sprint/jump/crouch/aim, touch/gamepad deadzone support, dual weapons/ammo/reload/swap, captions/haptics/accessibility, difficulty plus Survival/Endless, and durable operation records/input bindings.
+- [x] Expand Unity's source-level Desert parity in one pass: full reviewed English/Bengali catalog, persisted five-category settings, sprint/jump/crouch/aim, touch/gamepad deadzone support, dual weapons/ammo/reload/swap, captions/haptics/accessibility, difficulty plus Survival/Endless, durable operation records/input bindings, tactical radar, damage numbers, and tracer feedback.
 - [x] Copy reviewed player-facing fonts, menu backdrop, and original audio to Unity Resources; preserve `com.operationredline.outpost`, landscape, arm64, and API-23 Android baseline in Unity ProjectSettings.
 - [x] Add a credential-safe GameCI v6 Unity Android workflow using the confirmed masked `UNITY_EMAIL`/`UNITY_PASSWORD` references, a narrow first-build marker/manual confirmation, APK ZIP/hash validation, and seven-day review artifact retention.
 - [x] Add mutation-tested Unity migration source contracts and isolated C# syntax validation; retain Godot as reference/rollback rather than deleting it before Unity build/device proof.
 - [x] Trigger source/build workflow and record safe failed preflights when secret references were previously unavailable; no secret value was read or printed.
-- [ ] Run Unity license activation/import/Android build with the now-confirmed repository `UNITY_EMAIL` and `UNITY_PASSWORD` secrets, then inspect the actual build result.
+- [ ] Restore GitHub Actions availability of the confirmed repository `UNITY_EMAIL` and `UNITY_PASSWORD` secrets, then run Unity license activation/import/Android build. Run 42020369310 proved the identifiers are still empty inside the job despite their confirmed names; no secret value is needed in source or chat.
 - [ ] Validate the Unity APK on a real device against the complete D01–D12 matrix; resolve signing/in-place-update evidence separately from application-ID preservation.
 - [ ] Finish gates that cannot be authored from this checkout: authoritative Highrise B2 coordinates/reference, physical performance/mix validation, feature-parity review (including tactical radar/visual effects), and replacement approval before archiving legacy runtime pipelines.
 

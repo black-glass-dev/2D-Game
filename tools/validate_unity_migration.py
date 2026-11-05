@@ -72,6 +72,8 @@ def validate(root: Path = ROOT) -> None:
             "MP_RF_02",
             "map.rooftop_highrise",
             "FireActiveWeapon()",
+            "CreateShotTracer",
+            "DrawDamageNumbers",
             "OnRaiderEliminated",
             "ApplyPlayerDamage",
             "KeyCode.Escape",
@@ -114,6 +116,16 @@ def validate(root: Path = ROOT) -> None:
     require(
         "unity/Assets/OperationRedline/Scripts/OutpostPlayerController.cs",
         ("CharacterController", "SprintSpeed", "ToggleCrouch", "ReadTouchInput", "GamepadDeadzone"),
+        root,
+    )
+    require(
+        "unity/Assets/OperationRedline/Scripts/TacticalRadar.cs",
+        ("TacticalRadar", "InverseTransformDirection", "colorblindMode"),
+        root,
+    )
+    require(
+        "unity/Assets/OperationRedline/Scripts/UnityTransientEffect.cs",
+        ("UnityTransientEffect", "Destroy(gameObject)"),
         root,
     )
     require(
