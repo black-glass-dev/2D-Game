@@ -183,6 +183,12 @@ def validate(root: Path = ROOT) -> None:
         "unity-review-artifact/OperationRedline-Unity-review.apk",
         "actions/upload-artifact@v4",
         "retention-days: 7",
+        "- name: Publish explicitly unvalidated Unity review handoff",
+        "tag=\"unity-human-review-${GITHUB_SHA:0:12}\"",
+        "gh release create \"$tag\"",
+        "explicitly unvalidated Unity Android review build",
+        "not a release candidate or supported delivery",
+        "--prerelease",
     ):
         if snippet not in workflow:
             fail(f".github/workflows/unity-android.yml is missing migration contract: {snippet}")

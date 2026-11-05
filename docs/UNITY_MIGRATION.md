@@ -44,7 +44,11 @@ and has a non-empty preflight that reports only whether the secret references ar
 available. The requested first branch build is allowed only by the one-time
 `[build-unity-review-apk]` commit marker; later builds require explicit manual
 confirmation `BUILD_UNITY_REVIEW_APK`. It checks the APK ZIP, produces SHA-256,
-and retains the review artifact seven days.
+and retains the workflow artifact seven days. After those checks succeed, it also
+publishes a prerelease tagged `unity-human-review-<commit>` containing the exact
+APK and SHA-256. That public handoff is explicitly unvalidated: it is for the
+named tester's mobile review, not an emulator-gated candidate, signing proof,
+or device-pass claim.
 
 The GitHub integration returned HTTP 403 when attempting to enumerate secret
 names, so no values were accessed or disclosed. Earlier runs passed source/C#

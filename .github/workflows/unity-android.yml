@@ -20,7 +20,9 @@ on:
         type: string
 
 permissions:
-  contents: read
+  # Limited to the explicitly unvalidated Unity review handoff below. This is
+  # not the emulator-gated candidate-release workflow.
+  contents: write
 
 concurrency:
   group: operation-redline-unity-${{ github.ref }}
@@ -110,3 +112,23 @@ jobs:
           path: unity-review-artifact/
           if-no-files-found: error
           retention-days: 7
+
+      - name: Publish explicitly unvalidated Unity review handoff
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="unity-human-review-${GITHUB_SHA:0:12}"
+          cat > unity-review-artifact/release-notes.md <<EOF
+          This is an **explicitly unvalidated Unity Android review build** for source commit \`${GITHUB_SHA}\`.
+
+          It passed the Unity source contract, C# syntax parse, Unity license activation/build, and APK ZIP/hash verification. It has **not** passed emulator launch, physical-device review, signing-compatibility verification, or Highrise acceptance. It is not a release candidate or supported delivery.
+
+          Install only for the named tester's factual mobile review. Return test evidence rather than treating this build as a production release.
+          EOF
+          gh release create "$tag" \
+            unity-review-artifact/OperationRedline-Unity-review.apk \
+            unity-review-artifact/OperationRedline-Unity-review.apk.sha256 \
+            --target "$GITHUB_SHA" \
+            --title "Operation Redline Unity human-review ${GITHUB_SHA:0:12}" \
+            --notes-file unity-review-artifact/release-notes.md \
+            --prerelease

@@ -95,6 +95,14 @@ class UnityMigrationTests(unittest.TestCase):
             with self.assertRaisesRegex(unity_validator.UnityMigrationError, "unity-review-artifact"):
                 unity_validator.validate(workspace)
 
+    def test_rejects_missing_explicit_unvalidated_release_handoff(self) -> None:
+        with self.copied_workspace() as directory:
+            workspace = Path(directory)
+            workflow = workspace / ".github/workflows/unity-android.yml"
+            workflow.write_text(workflow.read_text(encoding="utf-8").replace("gh release create \"$tag\"", "removed-release-handoff", 1), encoding="utf-8")
+            with self.assertRaisesRegex(unity_validator.UnityMigrationError, "gh release create"):
+                unity_validator.validate(workspace)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
