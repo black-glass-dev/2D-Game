@@ -55,10 +55,10 @@ names, so no values were accessed or disclosed. Earlier runs passed source/C#
 syntax validation and exited before activation when their credential preflight
 found unavailable references. Once the repository's Actions-secret configuration
 was corrected, successful protected run
-[42033864492](https://github.com/black-glass-dev/2D-Game/actions/runs/42033864492)
+[42043887645](https://github.com/black-glass-dev/2D-Game/actions/runs/42043887645)
 passed credential preflight, Unity license activation/build, APK ZIP validation,
 SHA-256 generation, artifact upload, and review-prerelease publication. Its
-[Unity human-review release](https://github.com/black-glass-dev/2D-Game/releases/tag/unity-human-review-d2b24d452afc)
+[Unity human-review release](https://github.com/black-glass-dev/2D-Game/releases/tag/unity-human-review-06ab677a93dc)
 contains `OperationRedline-Unity-review.apk` and its `.sha256` sidecar. The
 release is explicitly unvalidated: this CI evidence does not assert emulator
 launch, physical-device behavior, signing compatibility, visual parity, or
@@ -81,11 +81,32 @@ shader. It also adds an original, deterministic `desert_outpost_ground.png`
 sand/track/stone texture, tileable terrain material, outpost gate, signal mast,
 fuel drums, sandbag walls, and radio array so the playable view is no longer a
 flat placeholder. Source/mutation validation requires both the shader and
-texture. Run [42033864492](https://github.com/black-glass-dev/2D-Game/actions/runs/42033864492)
+texture. Run [42043887645](https://github.com/black-glass-dev/2D-Game/actions/runs/42043887645)
 completed Unity Android build, archive/hash verification, and review-release
 publication for this correction. This establishes build/package evidence only;
 the user must install the replacement APK and confirm that the actual device
 no longer renders magenta terrain.
+
+## Android mobile-control correction — 2026-11-05
+
+A second user-provided Android screenshot showed a live Desert view that appeared
+frozen and exposed an upper-right `PAUSED` label. That label had been incorrectly
+reused for the pause **button**; it did not describe a clear mobile action
+surface. In addition, action-button touches were not explicitly reserved from
+the controller's right-side look input, so a Fire or action press could compete
+with camera input. The screenshot is treated as a real usability blocker, not
+as a completed device diagnosis.
+
+The current correction labels the live control `PAUSE`, adds visible movement,
+Fire, Aim, Reload, Swap, Jump, Crouch, and Pause surfaces, reserves every action
+rectangle from camera-look capture, supports left-handed movement, and places
+initial wave routes in the player's forward view. Concrete, metal, and crate
+textures now make the primitive outpost legible. The source contract has three
+new mutation cases for the responsive-control/asset boundary. Successful
+[run 42043887645](https://github.com/black-glass-dev/2D-Game/actions/runs/42043887645)
+built and published the corrected APK. It is still build/package evidence only:
+a real Android session must confirm that movement, look, Fire, waves, pause,
+and resume stay responsive.
 
 ## Android signing boundary
 
