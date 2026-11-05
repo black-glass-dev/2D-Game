@@ -8,7 +8,7 @@ All notable production changes are documented here.
 
 - Production Recon report, M0–M6 plan, baseline audit, progress board, task board, decision log, risk register, QA report, asset import log, blocked-asset register, and initial asset-manifest schema.
 - Unity 2022.3.62f1 migration project with a Bootstrap-owned localized menu/settings/map flow, a playable procedural Desert Outpost survival vertical slice, 6/9/12 waves, raiders, shooting, desktop/mobile controls, pause/Back, results, original audio/backdrop/Noto Resources, and an honest locked Highrise card.
-- A manual, credential-safe GameCI v6 Unity Android build workflow using masked `UNITY_EMAIL`/`UNITY_PASSWORD` references, APK ZIP/SHA-256 verification, seven-day review-artifact retention, plus source/mutation validators for Unity project/Android/gameplay/secret-safety contracts.
+- A credential-safe GameCI v6 Unity Android build workflow using masked `UNITY_EMAIL`/`UNITY_PASSWORD` references, a narrow first-branch marker/manual confirmation gate, APK ZIP/SHA-256 verification, seven-day review-artifact retention, plus source/mutation validators for Unity project/Android/gameplay/secret-safety contracts.
 - Additive global service contracts for game state, threaded scene loading, versioned settings/save data, map registry, input actions, audio buses, and localization selection.
 - `RedlineMapData` plus `MP_DS_01` data resource for the existing Desert Outpost.
 - Initial English/Bengali CSV localization catalog.
@@ -67,6 +67,7 @@ All notable production changes are documented here.
 
 ### Changed
 
+- The initial Unity workflow run [42016266679](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/42016266679) started and passed its source contract, then failed safely at its credential-reference preflight. No Unity license activation, Android build, artifact, or APK is claimed; repository secret-name discovery remains unavailable, so only the two secret identifiers need correction.
 - Candidate 87 is withdrawn from testing after a real Android screenshot exposed raw localization keys and no available map. The repaired human-review and Android workflow requests (40203309780/40203309723) were prevented from starting by GitHub Actions account-payment/spending-limit status; no replacement APK is claimed.
 - CI run 39250923376 passed all source/import/export/normal-Boot/renderer-capture gates after the clean-import and Music-resume repairs; the hosted emulator still timed out, candidate publication stayed skipped, and artifact upload remains quota-blocked.
 - `project.godot` now boots `Boot.tscn` and registers the foundation services as autoloads; `LocalizationService` loads the reviewed CSV catalog at runtime into Godot Translation resources without committing generated import artifacts.

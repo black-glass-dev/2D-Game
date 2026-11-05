@@ -83,7 +83,7 @@ A reproducible GitHub Actions lane is included at [`.github/workflows/android-ap
 
 ## Unity migration
 
-The forward engine target is now the Unity project in [`unity/`](unity/), documented in [`docs/UNITY_MIGRATION.md`](docs/UNITY_MIGRATION.md). It ports a playable Desert Outpost vertical slice while retaining Godot only as a migration reference until Unity Android export and physical QA are proven. Unity licensing is designed to consume masked GitHub Actions `UNITY_EMAIL` / `UNITY_PASSWORD` references through GameCI; no secret values are stored in source or printed. GitHub Actions billing/spending status currently prevents any Unity job from starting, so no Unity APK is claimed yet.
+The forward engine target is now the Unity project in [`unity/`](unity/), documented in [`docs/UNITY_MIGRATION.md`](docs/UNITY_MIGRATION.md). It ports a playable Desert Outpost vertical slice while retaining Godot only as a migration reference until Unity Android export and physical QA are proven. Unity licensing is designed to consume masked GitHub Actions `UNITY_EMAIL` / `UNITY_PASSWORD` references through GameCI; no secret values are stored in source or printed. First run [42016266679](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/42016266679) passed source validation but its guarded preflight found one or both configured secret references unavailable, so the license/build step was not attempted and no Unity APK is claimed yet.
 
 ## Verification status
 

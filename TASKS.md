@@ -79,9 +79,10 @@
 
 - [x] Create a Unity 2022.3.62f1 Android project with an actual code-owned Bootstrap runtime, localised menu/settings/map selection, playable Desert Outpost vertical slice, 6/9/12 waves, procedural raiders, keyboard/mouse/touch controls, audio, pause/Back, and locked Highrise card.
 - [x] Copy reviewed player-facing fonts, menu backdrop, and original audio to Unity Resources; preserve `com.operationredline.outpost`, landscape, arm64, and API-23 Android baseline in Unity ProjectSettings.
-- [x] Add a credential-safe GameCI v6 Unity Android workflow using masked `UNITY_EMAIL`/`UNITY_PASSWORD` references, manual confirmation, APK ZIP/hash validation, and seven-day review artifact retention.
+- [x] Add a credential-safe GameCI v6 Unity Android workflow using masked `UNITY_EMAIL`/`UNITY_PASSWORD` references, a narrow first-build marker/manual confirmation, APK ZIP/hash validation, and seven-day review artifact retention.
 - [x] Add mutation-tested Unity migration source contracts; retain Godot as reference/rollback rather than deleting it before Unity build/device proof.
-- [ ] Restore Actions billing/spending eligibility, confirm the repository's Unity secret *names* match the workflow references, and run Unity license activation/import/Android build.
+- [x] Trigger the first Unity source/build workflow; source validation passed in run 42016266679 and the non-sensitive credential preflight safely stopped the build before activation when the configured references were absent.
+- [ ] Confirm the repository's Unity email/password secret *names* match the workflow references, then rerun Unity license activation/import/Android build.
 - [ ] Validate the Unity APK on a real device against the complete D01–D12 matrix; resolve signing/in-place-update evidence separately from application-ID preservation.
 - [ ] Port remaining Godot feature-parity systems and complete/approve the Unity replacement before archiving legacy runtime pipelines.
 
