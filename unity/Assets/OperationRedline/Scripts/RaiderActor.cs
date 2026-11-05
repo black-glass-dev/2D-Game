@@ -52,15 +52,15 @@ namespace OperationRedline.Unity
             var distance = direction.magnitude;
             if (distance > 1.65f)
             {
-                transform.position += direction.normalized * speed * Time.deltaTime;
+                transform.position += direction.normalized * speed * Time.unscaledDeltaTime;
                 if (direction.sqrMagnitude > 0.001f)
                 {
-                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), 10f * Time.deltaTime);
+                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), 10f * Time.unscaledDeltaTime);
                 }
                 return;
             }
 
-            attackCooldown -= Time.deltaTime;
+            attackCooldown -= Time.unscaledDeltaTime;
             if (attackCooldown <= 0f)
             {
                 owner.ApplyPlayerDamage(damage);

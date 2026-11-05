@@ -77,6 +77,9 @@ def validate(root: Path = ROOT) -> None:
             "DrawHudEditor",
             "DrawMobileTouchControls",
             "UpdateMobileActionInput",
+            "HandleMobileActionTap",
+            "Input.touchCount == 0",
+            "Time.unscaledDeltaTime",
             "ResolveMobileActionLayout",
             "bindings.pause",
             "mobileDesertShader",
@@ -126,7 +129,7 @@ def validate(root: Path = ROOT) -> None:
     )
     require(
         "unity/Assets/OperationRedline/Scripts/OutpostPlayerController.cs",
-        ("CharacterController", "SprintSpeed", "ToggleCrouch", "ReadTouchInput", "GamepadDeadzone", "SetMobileUiExclusions", "RequestTouchJump", "IsOverMobileUi"),
+        ("CharacterController", "SprintSpeed", "ToggleCrouch", "ReadTouchInput", "ReadPrimaryPointerFallback", "Input.touchCount == 0", "GamepadDeadzone", "SetMobileUiExclusions", "RequestTouchJump", "IsOverMobileUi"),
         root,
     )
     require(

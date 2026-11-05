@@ -33,6 +33,9 @@ namespace OperationRedline.Unity
         private Vector2 moveTouchOrigin;
         private Vector2 touchMove;
         private Rect[] mobileUiExclusions = new Rect[0];
+        private bool fallbackPointerMove;
+        private bool fallbackPointerLook;
+        private Vector2 fallbackPointerLast;
         private bool touchJumpQueued;
         private bool landedThisFrame;
 
@@ -40,7 +43,7 @@ namespace OperationRedline.Unity
         public bool IsAiming { get { return aiming; } }
         public bool IsCrouching { get { return crouching; } }
         public bool LandedThisFrame { get { return landedThisFrame; } }
-        public bool HasMoveTouch { get { return moveTouch >= 0; } }
+        public bool HasMoveTouch { get { return moveTouch >= 0 || fallbackPointerMove; } }
         public Vector2 MoveTouchOrigin { get { return moveTouchOrigin; } }
         public Vector2 TouchMove { get { return touchMove; } }
 
@@ -150,14 +153,14 @@ namespace OperationRedline.Unity
             {
                 verticalVelocity = JumpVelocity;
             }
-            verticalVelocity -= Gravity * Time.deltaTime;
+            verticalVelocity -= Gravity * Time.unscaledDeltaTime;
 
             var sprint = (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift) || Input.GetKey(KeyCode.JoystickButton8))
                          && !crouching && !aiming && new Vector2(horizontal, forward).sqrMagnitude > 0.04f;
             var speed = crouching ? CrouchSpeed : sprint ? SprintSpeed : aiming ? 3.15f : WalkSpeed;
             var move = (transform.right * horizontal + transform.forward * forward).normalized * speed;
             var oldVertical = verticalVelocity;
-            controller.Move((move + Vector3.up * verticalVelocity) * Time.deltaTime);
+            controller.Move((move + Vector3.up * verticalVelocity) * Time.unscaledDeltaTime);
             if (!wasGrounded && controller.isGrounded && oldVertical < -5f)
             {
                 landedThisFrame = true;
@@ -175,6 +178,13 @@ namespace OperationRedline.Unity
         private void ReadTouchInput()
         {
             touchMove = Vector2.zero;
+            if (Application.isMobilePlatform && Input.touchCount == 0)
+            {
+                ReadPrimaryPointerFallback();
+                return;
+            }
+            fallbackPointerMove = false;
+            fallbackPointerLook = false;
             foreach (var touch in Input.touches)
             {
                 if (touch.phase == TouchPhase.Began)
@@ -212,6 +222,53 @@ namespace OperationRedline.Unity
                     if (touch.fingerId == moveTouch) moveTouch = -1;
                     if (touch.fingerId == lookTouch) lookTouch = -1;
                 }
+            }
+        }
+
+        private void ReadPrimaryPointerFallback()
+        {
+            var pointer = (Vector2)Input.mousePosition;
+            if (Input.GetMouseButtonDown(0))
+            {
+                if (IsOverMobileUi(pointer))
+                {
+                    fallbackPointerMove = false;
+                    fallbackPointerLook = false;
+                    return;
+                }
+                var movementHalf = settings.LeftHanded
+                    ? pointer.x >= Screen.width * 0.5f
+                    : pointer.x < Screen.width * 0.5f;
+                if (movementHalf)
+                {
+                    fallbackPointerMove = true;
+                    fallbackPointerLook = false;
+                    moveTouchOrigin = pointer;
+                }
+                else
+                {
+                    fallbackPointerMove = false;
+                    fallbackPointerLook = true;
+                    fallbackPointerLast = pointer;
+                }
+            }
+            if (!Input.GetMouseButton(0))
+            {
+                fallbackPointerMove = false;
+                fallbackPointerLook = false;
+                return;
+            }
+            if (fallbackPointerMove)
+            {
+                var radius = 78f * settings.JoystickScale;
+                touchMove = Vector2.ClampMagnitude((pointer - moveTouchOrigin) / Mathf.Max(28f, radius), 1f);
+            }
+            if (fallbackPointerLook)
+            {
+                var delta = pointer - fallbackPointerLast;
+                yaw += delta.x * 0.075f * settings.LookSensitivity;
+                pitch = Mathf.Clamp(pitch - delta.y * 0.06f * settings.LookSensitivity, -78f, 78f);
+                fallbackPointerLast = pointer;
             }
         }
 

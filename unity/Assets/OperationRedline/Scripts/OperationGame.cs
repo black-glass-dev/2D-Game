@@ -58,9 +58,9 @@ namespace OperationRedline.Unity
         // new mobile session immediately communicates that the operation is live.
         private readonly Vector3[] spawnPoints =
         {
-            new Vector3(-10f, 1f, 27f), new Vector3(10f, 1f, 28f),
-            new Vector3(-18f, 1f, 22f), new Vector3(18f, 1f, 23f),
-            new Vector3(-7f, 1f, 34f), new Vector3(7f, 1f, 34f),
+            new Vector3(0f, 1f, 21f), new Vector3(-9f, 1f, 25f),
+            new Vector3(9f, 1f, 25f), new Vector3(-16f, 1f, 22f),
+            new Vector3(16f, 1f, 22f), new Vector3(0f, 1f, 31f),
         };
 
         private UnitySettings settings;
@@ -82,6 +82,7 @@ namespace OperationRedline.Unity
         private int score;
         private int wave;
         private int pendingSpawns;
+        private int spawnSerial;
         private float waveDelay;
         private float spawnDelay;
         private bool operationComplete;
@@ -300,7 +301,8 @@ namespace OperationRedline.Unity
             score = 0;
             wave = 0;
             pendingSpawns = 0;
-            waveDelay = 1.25f;
+            spawnSerial = 0;
+            waveDelay = 0.45f;
             spawnDelay = 0f;
             operationComplete = false;
             operationFailed = false;
@@ -375,8 +377,8 @@ namespace OperationRedline.Unity
                 ShowCaption("caption.landing");
             }
 
-            carbine.Update(Time.deltaTime);
-            sidearm.Update(Time.deltaTime);
+            carbine.Update(Time.unscaledDeltaTime);
+            sidearm.Update(Time.unscaledDeltaTime);
             if (Input.GetKeyDown(controls.GetKey(UnityControls.Action.Reload)) || Input.GetKeyDown(KeyCode.JoystickButton2))
             {
                 StartReload();
@@ -451,37 +453,64 @@ namespace OperationRedline.Unity
                 {
                     mobileAimHeld = true;
                 }
-                if (touch.phase != TouchPhase.Began)
+                if (touch.phase == TouchPhase.Began && HandleMobileActionTap(layout, guiPosition))
                 {
-                    continue;
-                }
-                if (layout.Pause.Contains(guiPosition))
-                {
-                    PauseOperation();
                     return;
                 }
-                if (layout.Reload.Contains(guiPosition)) StartReload();
-                if (layout.Swap.Contains(guiPosition)) SwitchWeapon();
-                if (layout.Jump.Contains(guiPosition)) playerController.RequestTouchJump();
-                if (layout.Crouch.Contains(guiPosition)) playerController.ToggleCrouch();
             }
+
+            // Some Android device/input-handler combinations expose a primary
+            // touch through mouse state but do not populate Input.touches.
+            // Keep the action surface responsive without turning arbitrary
+            // screen taps into shots.
+            if (Input.touchCount == 0 && Input.GetMouseButton(0))
+            {
+                var guiPosition = new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y);
+                if (layout.Fire.Contains(guiPosition))
+                {
+                    mobileFireHeld = true;
+                    mobileFirePressed = Input.GetMouseButtonDown(0);
+                }
+                if (layout.Aim.Contains(guiPosition))
+                {
+                    mobileAimHeld = true;
+                }
+                if (Input.GetMouseButtonDown(0) && HandleMobileActionTap(layout, guiPosition))
+                {
+                    return;
+                }
+            }
+        }
+
+        private bool HandleMobileActionTap(MobileActionLayout layout, Vector2 guiPosition)
+        {
+            if (layout.Pause.Contains(guiPosition))
+            {
+                PauseOperation();
+                return true;
+            }
+            if (layout.Reload.Contains(guiPosition)) StartReload();
+            if (layout.Swap.Contains(guiPosition)) SwitchWeapon();
+            if (layout.Jump.Contains(guiPosition)) playerController.RequestTouchJump();
+            if (layout.Crouch.Contains(guiPosition)) playerController.ToggleCrouch();
+            return false;
         }
 
         private void UpdateHealthRegeneration()
         {
             if (regenerationWait > 0f)
             {
-                regenerationWait -= Time.deltaTime;
+                regenerationWait -= Time.unscaledDeltaTime;
                 return;
             }
-            health = Mathf.Min(100f, health + 11f * Time.deltaTime);
+            health = Mathf.Min(100f, health + 11f * Time.unscaledDeltaTime);
         }
 
         private void UpdateWaveSpawning()
         {
             if (pendingSpawns > 0)
             {
-                spawnDelay -= Time.deltaTime;
+                spawnDelay -= Time.unscaledDeltaTime;
                 if (spawnDelay <= 0f)
                 {
                     SpawnRaider();
@@ -496,7 +525,7 @@ namespace OperationRedline.Unity
                 return;
             }
 
-            waveDelay -= Time.deltaTime;
+            waveDelay -= Time.unscaledDeltaTime;
             if (waveDelay > 0f)
             {
                 return;
@@ -511,8 +540,12 @@ namespace OperationRedline.Unity
             wave++;
             var baseSize = WaveSizes[(wave - 1) % WaveSizes.Length];
             pendingSpawns = Mathf.Max(1, Mathf.RoundToInt(baseSize * DifficultyEnemyCount()));
-            spawnDelay = 0.15f;
-            waveDelay = 3.5f;
+            // Spawn the first contact immediately. On a phone, a silent empty
+            // world during the initial cadence is easily mistaken for a freeze.
+            SpawnRaider();
+            pendingSpawns--;
+            spawnDelay = 0.42f;
+            waveDelay = 2.4f;
         }
 
         private float DifficultyEnemyCount()
@@ -552,7 +585,8 @@ namespace OperationRedline.Unity
         {
             var enemy = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             enemy.name = "Raider Wave " + wave;
-            var spawn = spawnPoints[(pendingSpawns + wave + raiders.Count) % spawnPoints.Length];
+            var spawn = spawnPoints[spawnSerial % spawnPoints.Length];
+            spawnSerial++;
             enemy.transform.position = spawn;
             enemy.transform.localScale = new Vector3(1.1f, 1.3f, 1.1f);
             var renderer = enemy.GetComponent<Renderer>();
@@ -1158,7 +1192,8 @@ namespace OperationRedline.Unity
             if (activeWeapon != null)
             {
                 GUI.Label(new Rect(28f, 110f, 250f, 27f), (activeWeapon.Kind == WeaponKind.Carbine ? "CARBINE" : "SIDEARM") + "  " + activeWeapon.Ammo + " / " + activeWeapon.Reserve, leftStyle);
-                if (activeWeapon.IsReloading) GUI.Label(new Rect(28f, 137f, 250f, 24f), T("caption.reloading"), leftStyle);
+                var contactText = "CONTACTS " + raiders.Count + (pendingSpawns > 0 ? "  +" + pendingSpawns : string.Empty);
+                GUI.Label(new Rect(28f, 137f, 250f, 24f), activeWeapon.IsReloading ? T("caption.reloading") : contactText, leftStyle);
             }
             GUI.color = Color.white;
             GUI.Label(new Rect(Screen.width * 0.5f - 8f, Screen.height * 0.5f - 18f, 16f, 36f), "+", Style(28, hudColor, TextAnchor.MiddleCenter, true));

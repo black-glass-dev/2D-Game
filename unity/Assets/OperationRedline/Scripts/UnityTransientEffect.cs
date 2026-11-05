@@ -14,7 +14,7 @@ namespace OperationRedline.Unity
 
         private void Update()
         {
-            remaining -= Time.deltaTime;
+            remaining -= Time.unscaledDeltaTime;
             if (remaining <= 0f)
             {
                 Destroy(gameObject);

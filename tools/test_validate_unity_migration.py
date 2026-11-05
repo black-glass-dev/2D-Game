@@ -117,6 +117,22 @@ class UnityMigrationTests(unittest.TestCase):
             with self.assertRaisesRegex(unity_validator.UnityMigrationError, "outpost_corrugated_metal.png"):
                 unity_validator.validate(workspace)
 
+    def test_rejects_missing_primary_pointer_mobile_fallback(self) -> None:
+        with self.copied_workspace() as directory:
+            workspace = Path(directory)
+            controller = workspace / "unity/Assets/OperationRedline/Scripts/OutpostPlayerController.cs"
+            controller.write_text(controller.read_text(encoding="utf-8").replace("ReadPrimaryPointerFallback", "RemovedPointerFallback"), encoding="utf-8")
+            with self.assertRaisesRegex(unity_validator.UnityMigrationError, "ReadPrimaryPointerFallback"):
+                unity_validator.validate(workspace)
+
+    def test_rejects_unscaled_gameplay_clock_removal(self) -> None:
+        with self.copied_workspace() as directory:
+            workspace = Path(directory)
+            game = workspace / "unity/Assets/OperationRedline/Scripts/OperationGame.cs"
+            game.write_text(game.read_text(encoding="utf-8").replace("Time.unscaledDeltaTime", "Time.deltaTime"), encoding="utf-8")
+            with self.assertRaisesRegex(unity_validator.UnityMigrationError, "Time.unscaledDeltaTime"):
+                unity_validator.validate(workspace)
+
     def test_rejects_ambiguous_paused_mobile_label(self) -> None:
         with self.copied_workspace() as directory:
             workspace = Path(directory)
