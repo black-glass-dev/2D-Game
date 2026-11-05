@@ -8,7 +8,8 @@ All notable production changes are documented here.
 
 - Production Recon report, M0–M6 plan, baseline audit, progress board, task board, decision log, risk register, QA report, asset import log, blocked-asset register, and initial asset-manifest schema.
 - Unity 2022.3.62f1 migration project with a Bootstrap-owned localized menu/settings/map flow, a playable procedural Desert Outpost survival vertical slice, 6/9/12 waves, raiders, shooting, desktop/mobile controls, pause/Back, results, original audio/backdrop/Noto Resources, and an honest locked Highrise card.
-- A credential-safe GameCI v6 Unity Android build workflow using masked `UNITY_EMAIL`/`UNITY_PASSWORD` references, a narrow first-branch marker/manual confirmation gate, APK ZIP/SHA-256 verification, seven-day review-artifact retention, plus source/mutation validators for Unity project/Android/gameplay/secret-safety contracts.
+- A one-pass Unity Desert source-parity expansion: all 141 reviewed English/Bengali catalog entries, five persisted settings categories, sprint/jump/crouch/aim/mobile look/gamepad deadzone, carbine/sidearm ammo-reload-swap flow, difficulty plus Survival/Endless selection, focus-mute audio, captions/haptics/colorblind HUD, durable best records, and conflict-safe keyboard binding baseline.
+- A credential-safe GameCI v6 Unity Android build workflow using only masked Unity-specific email/password aliases, a narrow first-branch marker/manual confirmation gate, APK ZIP/SHA-256 verification, seven-day review-artifact retention, plus source/mutation validators and isolated C# syntax verification for Unity project/Android/gameplay/secret-safety contracts.
 - Additive global service contracts for game state, threaded scene loading, versioned settings/save data, map registry, input actions, audio buses, and localization selection.
 - `RedlineMapData` plus `MP_DS_01` data resource for the existing Desert Outpost.
 - Initial English/Bengali CSV localization catalog.

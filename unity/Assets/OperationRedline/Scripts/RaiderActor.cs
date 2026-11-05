@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace OperationRedline.Unity
 {
-    /// <summary>Minimal procedural hostile used by the portable Desert baseline.</summary>
+    /// <summary>Procedural hostile for the portable Unity Desert survival loop.</summary>
     public sealed class RaiderActor : MonoBehaviour
     {
         private OperationGame owner;
@@ -10,23 +10,31 @@ namespace OperationRedline.Unity
         private float health;
         private float attackCooldown;
         private float speed;
+        private float damage;
+        private bool eliminated;
 
-        public void Initialize(OperationGame game, Transform playerTarget, int wave)
+        public void Initialize(OperationGame game, Transform playerTarget, int wave, float difficultyMultiplier)
         {
             owner = game;
             target = playerTarget;
-            health = 45f + wave * 12f;
-            speed = 2.2f + wave * 0.16f;
+            health = (45f + wave * 12f) * difficultyMultiplier;
+            speed = (2.2f + wave * 0.16f) * Mathf.Lerp(0.92f, 1.12f, difficultyMultiplier - 0.7f);
+            damage = 7f * difficultyMultiplier;
         }
 
-        public void TakeDamage(float amount)
+        public void TakeDamage(float amount, bool headshot)
         {
-            health -= amount;
+            if (eliminated)
+            {
+                return;
+            }
+            health -= headshot ? amount * 2f : amount;
             if (health <= 0f)
             {
+                eliminated = true;
                 if (owner != null)
                 {
-                    owner.OnRaiderEliminated(this);
+                    owner.OnRaiderEliminated(this, headshot);
                 }
                 Destroy(gameObject);
             }
@@ -34,7 +42,7 @@ namespace OperationRedline.Unity
 
         private void Update()
         {
-            if (owner == null || target == null || owner.IsGameplayStopped)
+            if (eliminated || owner == null || target == null || owner.IsGameplayStopped)
             {
                 return;
             }
@@ -55,7 +63,7 @@ namespace OperationRedline.Unity
             attackCooldown -= Time.deltaTime;
             if (attackCooldown <= 0f)
             {
-                owner.ApplyPlayerDamage(7f);
+                owner.ApplyPlayerDamage(damage);
                 attackCooldown = 0.85f;
             }
         }

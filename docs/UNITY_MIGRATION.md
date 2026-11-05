@@ -31,12 +31,12 @@ empty folder. It is not yet build/import/device evidence.
 
 ## License automation research and safe workflow
 
-The current [GameCI `unity-builder` v6 source](https://github.com/game-ci/unity-builder/blob/v6.0.0/src/index.ts) states that Unity credentials are read from the process environment as `UNITY_EMAIL`, `UNITY_PASSWORD`, `UNITY_SERIAL`, `UNITY_LICENSE`, or `UNITY_LICENSING_SERVER`, rather than command arguments. The companion [GameCI `unity-activate` action](https://github.com/game-ci/unity-activate/blob/v2.0.0/src/index.ts) has the same environment-only contract. `unity-android.yml` therefore passes only these two expected GitHub Actions secret references to `game-ci/unity-builder@v6`:
+The current [GameCI `unity-builder` v6 source](https://github.com/game-ci/unity-builder/blob/v6.0.0/src/index.ts) states that Unity credentials are read from the process environment as `UNITY_EMAIL`, `UNITY_PASSWORD`, `UNITY_SERIAL`, `UNITY_LICENSE`, or `UNITY_LICENSING_SERVER`, rather than command arguments. The companion [GameCI `unity-activate` action](https://github.com/game-ci/unity-activate/blob/v2.0.0/src/index.ts) has the same environment-only contract. Since secret-name enumeration is forbidden to this integration, `unity-android.yml` safely tries only these Unity-specific email/password aliases, resolving the first configured value directly into GameCI's environment:
 
 ```yaml
 env:
-  UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-  UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+  UNITY_EMAIL: ${{ secrets.UNITY_EMAIL || secrets.UNITY_ACCOUNT_EMAIL || secrets.UNITY_LICENSE_EMAIL }}
+  UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD || secrets.UNITY_ACCOUNT_PASSWORD || secrets.UNITY_LICENSE_PASSWORD }}
 ```
 
 The workflow never prints credentials, never places them in command arguments,
@@ -48,13 +48,14 @@ and retains the review artifact seven days.
 
 The current GitHub integration returned HTTP 403 when attempting to enumerate
 secret names, so the repository's exact secret identifiers could not be read and
-no values were accessed. If the existing secret names differ from
-`UNITY_EMAIL`/`UNITY_PASSWORD`, change only the two references above (or provide
-the secret **names**, never the values). The GitHub API also returns 404 when
-trying to dispatch a workflow that exists only on this unmerged branch, so the
-first requested build uses the narrow marker-trigger described above. GitHub
-Actions billing/spending must permit the job to start before Unity activation or
-APK export can be claimed.
+no values were accessed. The guarded fallback aliases above allow a first retry
+without guessing generic/non-Unity secret names. If those six Unity-specific
+names are also not the repository's names, update only the two references (or
+provide the secret **names**, never the values). The GitHub API also returns 404
+when trying to dispatch a workflow that exists only on this unmerged branch, so
+the first requested build uses the narrow marker-trigger described above.
+GitHub Actions must permit the job to start before Unity activation or APK export
+can be claimed.
 
 ## Android signing boundary
 
@@ -68,16 +69,23 @@ mechanism.
 
 ## What remains before a complete Unity migration
 
-1. Restore GitHub Actions billing/spending eligibility and use the manual Unity
-   workflow to prove license activation, Unity import/compile, Android export,
-   APK hash, and artifact retrieval.
+1. Trigger the protected Unity workflow with a recognized Unity email/password
+   secret alias and prove license activation, Unity import/compile, Android
+   export, APK hash, and artifact retrieval.
 2. Install that APK on a real Android device and prove localized Map Select,
    Desert load, touch controls, audio, gameplay, Android Back, results, and
    D01–D12 evidence.
-3. Continue feature-parity ports from the Godot reference: advanced HUD editor,
-   keyboard/gamepad rebinding, accessibility/colorblind/haptics controls,
-   result persistence, tactical radar, weapon variants/effects, settings depth,
-   graphics/performance tuning, and evidence capture.
+3. Finish external-only gates: authoritative Highrise B2 coordinates/reference,
+   same-certificate update compatibility if required, performance tuning from a
+   real device profile, and full visual/audio/tactical-radar parity review.
+
+The Unity source now includes persisted bilingual settings in Graphics, Audio,
+Controls, Accessibility and Other sections; player movement with sprint, jump,
+crouch, aiming, mobile look/joystick controls and gamepad-axis deadzone; two
+ammo/reload/swap weapons; difficulty and Survival/Endless selection; result
+accuracy/best-record persistence; sound captions, focus mute, haptics,
+colorblind HUD, and a conflict-safe keyboard binding baseline. These are
+source-level contracts until a Unity import/build proves them.
 4. Keep `MP_RF_02` locked until its authoritative B2 reference/coordinate inputs
    arrive; Unity does not authorize guessed Highrise geometry or traversal.
 5. Only after parity and device validation, retire/archival-plan the Godot build

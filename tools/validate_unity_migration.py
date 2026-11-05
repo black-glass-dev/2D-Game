@@ -69,28 +69,71 @@ def validate(root: Path = ROOT) -> None:
         (
             "WaveSizes = { 6, 9, 12 }",
             "MP_DS_01 Desert Outpost",
-            "map.highrise.detail",
-            "FireRifle()",
+            "MP_RF_02",
+            "map.rooftop_highrise",
+            "FireActiveWeapon()",
             "OnRaiderEliminated",
             "ApplyPlayerDamage",
             "KeyCode.Escape",
             "Application.isMobilePlatform",
+            "OperationMode.Endless",
+            "Difficulty.Nightmare",
+            "settingsTab == SettingsTab.Accessibility",
         ),
         root,
     )
     require(
         "unity/Assets/OperationRedline/Scripts/UnitySettings.cs",
-        ("PlayerPrefs", "SetQuality", "SetMusicVolume", "ToggleLanguage"),
+        (
+            "CurrentSchema = 2",
+            "PlayerPrefs",
+            "SetQuality",
+            "SetMusicVolume",
+            "ToggleLanguage",
+            "SetAutoFire",
+            "SetReducedMotion",
+            "SetGamepadDeadzone",
+        ),
+        root,
+    )
+    require(
+        "unity/Assets/OperationRedline/Scripts/UnityProgress.cs",
+        ("RecordResult", "BestScore", "BestWave", "MP_DS_01"),
+        root,
+    )
+    require(
+        "unity/Assets/OperationRedline/Scripts/UnityControls.cs",
+        ("MoveForward", "SwapWeapon", "Reload", "ResetDefaults", "HasConflict"),
+        root,
+    )
+    require(
+        "unity/Assets/OperationRedline/Scripts/UnityWeaponState.cs",
+        ("WeaponKind", "Carbine", "Sidearm", "TryFire", "StartReload"),
+        root,
+    )
+    require(
+        "unity/Assets/OperationRedline/Scripts/OutpostPlayerController.cs",
+        ("CharacterController", "SprintSpeed", "ToggleCrouch", "ReadTouchInput", "GamepadDeadzone"),
         root,
     )
     require(
         "unity/Assets/OperationRedline/Scripts/LocalizedCatalog.cs",
-        ("OPERATION REDLINE", "অপারেশন রেডলাইন", "DESERT OUTPOST", "ডেজার্ট আউটপোস্ট"),
+        ("OPERATION REDLINE", "অপারেশন রেডলাইন", "Desert Outpost", "ডেজার্ট আউটপোস্ট", "settings.accessibility"),
         root,
     )
     require(
         "unity/Assets/OperationRedline/Scripts/RaiderActor.cs",
         ("TakeDamage", "owner.ApplyPlayerDamage", "owner.OnRaiderEliminated"),
+        root,
+    )
+    require(
+        "tools/validate_unity_csharp_syntax.py",
+        ("tree_sitter_c_sharp", "UNITY_CSHARP_SYNTAX_PASS", "parser_dependency_not_installed"),
+        root,
+    )
+    require(
+        "unity/tools-requirements.txt",
+        ("tree-sitter==0.25.2", "tree-sitter-c-sharp==0.23.5"),
         root,
     )
     for asset in (
@@ -111,9 +154,12 @@ def validate(root: Path = ROOT) -> None:
         "unityVersion: 2022.3.62f1",
         "targetPlatform: Android",
         "projectPath: unity",
-        "UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}",
-        "UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}",
+        "UNITY_EMAIL: ${{ secrets.UNITY_EMAIL || secrets.UNITY_ACCOUNT_EMAIL || secrets.UNITY_LICENSE_EMAIL }}",
+        "UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD || secrets.UNITY_ACCOUNT_PASSWORD || secrets.UNITY_LICENSE_PASSWORD }}",
         "Unity credential references are present; values remain masked.",
+        "Install isolated Unity source parser",
+        "unity/tools-requirements.txt",
+        "tools/validate_unity_csharp_syntax.py",
         "actions/upload-artifact@v4",
         "retention-days: 7",
     ):

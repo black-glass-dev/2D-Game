@@ -4,9 +4,11 @@ using UnityEngine;
 namespace OperationRedline.Unity
 {
     /// <summary>
-    /// Unity migration baseline for the playable Desert Outpost. It owns the
-    /// menu, map selection, first-person survival loop, local settings, sound,
-    /// and truthful locked Highrise card without depending on imported scenes.
+    /// Runtime-owned Unity migration implementation. It deliberately creates the
+    /// playable Desert operation without generated scene dependencies so a fresh
+    /// Unity import has a deterministic Bootstrap -> Menu -> map -> operation
+    /// path. Rooftop Highrise remains visibly locked pending its authoritative
+    /// design packet; no source-specific layout is invented here.
     /// </summary>
     public sealed class OperationGame : MonoBehaviour
     {
@@ -21,7 +23,33 @@ namespace OperationRedline.Unity
             Results,
         }
 
+        private enum SettingsTab
+        {
+            Graphics,
+            Audio,
+            Controls,
+            Accessibility,
+            Other,
+        }
+
+        private enum Difficulty
+        {
+            Easy,
+            Normal,
+            Hard,
+            Nightmare,
+        }
+
+        private enum OperationMode
+        {
+            Survival,
+            Endless,
+        }
+
         private static readonly int[] WaveSizes = { 6, 9, 12 };
+        private const string DesertMapId = "MP_DS_01";
+        private const string HighriseMapId = "MP_RF_02";
+
         private readonly List<RaiderActor> raiders = new List<RaiderActor>();
         private readonly List<GameObject> worldObjects = new List<GameObject>();
         private readonly Vector3[] spawnPoints =
@@ -32,41 +60,64 @@ namespace OperationRedline.Unity
         };
 
         private UnitySettings settings;
+        private UnityProgress progress;
+        private UnityControls controls;
         private GameScreen screen;
+        private GameScreen settingsReturnScreen = GameScreen.Menu;
+        private SettingsTab settingsTab;
+        private Difficulty selectedDifficulty = Difficulty.Normal;
+        private OperationMode selectedMode = OperationMode.Survival;
+        private UnityControls.Action? rebindCapture;
+        private int rebindSelection;
+
         private float splashUntil;
-        private Transform player;
-        private Transform cameraPivot;
-        private Camera playerCamera;
-        private float yaw;
-        private float pitch;
+        private Transform playerRoot;
+        private OutpostPlayerController playerController;
         private float health;
+        private float regenerationWait;
         private int score;
         private int wave;
         private int pendingSpawns;
         private float waveDelay;
         private float spawnDelay;
-        private float fireDelay;
         private bool operationComplete;
         private bool operationFailed;
+        private bool resultRecorded;
+        private int shotsFired;
+        private int shotsHit;
+        private int headshots;
+        private float fpsSample;
+        private float fpsTimer;
+
+        private UnityWeaponState carbine;
+        private UnityWeaponState sidearm;
+        private UnityWeaponState activeWeapon;
         private AudioSource music;
         private AudioSource effects;
+        private AudioSource uiEffects;
         private AudioClip rifleShot;
         private AudioClip pistolShot;
         private AudioClip reloadClick;
+        private AudioClip landingThump;
         private Texture2D menuBackdrop;
         private Font bengaliFont;
+        private string soundCaption;
+        private float soundCaptionUntil;
+        private Color baseAmbient;
 
-        public bool IsGameplayStopped => screen != GameScreen.Gameplay;
+        public bool IsGameplayStopped { get { return screen != GameScreen.Gameplay; } }
 
         private void Awake()
         {
             settings = new UnitySettings();
-            settings.SetQuality(settings.Quality);
-            Application.targetFrameRate = 60;
+            progress = new UnityProgress();
+            controls = new UnityControls();
             splashUntil = Time.unscaledTime + 1.15f;
             screen = GameScreen.Splash;
+            baseAmbient = RenderSettings.ambientLight;
             LoadPresentationAssets();
             CreateAudio();
+            ApplyPresentationSettings();
         }
 
         private void LoadPresentationAssets()
@@ -76,31 +127,53 @@ namespace OperationRedline.Unity
             rifleShot = Resources.Load<AudioClip>("Audio/rifle_shot");
             pistolShot = Resources.Load<AudioClip>("Audio/pistol_shot");
             reloadClick = Resources.Load<AudioClip>("Audio/reload_click");
+            landingThump = Resources.Load<AudioClip>("Audio/landing_thump");
         }
 
         private void CreateAudio()
         {
             music = gameObject.AddComponent<AudioSource>();
+            music.name = "Outpost Watch Music";
             music.clip = Resources.Load<AudioClip>("Audio/outpost_watch");
             music.loop = true;
-            music.volume = settings.MusicVolume;
+            music.playOnAwake = false;
             if (music.clip != null)
             {
                 music.Play();
             }
+
             effects = gameObject.AddComponent<AudioSource>();
-            effects.volume = 0.85f;
+            effects.name = "Combat SFX";
+            effects.playOnAwake = false;
+            uiEffects = gameObject.AddComponent<AudioSource>();
+            uiEffects.name = "UI SFX";
+            uiEffects.playOnAwake = false;
+        }
+
+        private void OnApplicationFocus(bool hasFocus)
+        {
+            if (settings != null && settings.MuteWhenUnfocused)
+            {
+                AudioListener.pause = !hasFocus;
+            }
         }
 
         private void Update()
         {
-            music.volume = settings.MusicVolume;
+            ApplyAudioSettings();
+            fpsTimer += Time.unscaledDeltaTime;
+            if (fpsTimer >= 0.25f)
+            {
+                fpsSample = 1f / Mathf.Max(0.001f, Time.unscaledDeltaTime);
+                fpsTimer = 0f;
+            }
+
             if (screen == GameScreen.Splash && Time.unscaledTime >= splashUntil)
             {
                 screen = GameScreen.Menu;
             }
 
-            if (Input.GetKeyDown(KeyCode.Escape))
+            if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.JoystickButton1))
             {
                 HandleBack();
             }
@@ -115,15 +188,17 @@ namespace OperationRedline.Unity
         {
             if (screen == GameScreen.Gameplay)
             {
-                screen = GameScreen.Paused;
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
+                PauseOperation();
             }
             else if (screen == GameScreen.Paused)
             {
                 ResumeOperation();
             }
-            else if (screen == GameScreen.MapSelect || screen == GameScreen.Settings || screen == GameScreen.Results)
+            else if (screen == GameScreen.Settings)
+            {
+                screen = settingsReturnScreen;
+            }
+            else if (screen == GameScreen.MapSelect || screen == GameScreen.Results)
             {
                 screen = GameScreen.Menu;
             }
@@ -138,74 +213,102 @@ namespace OperationRedline.Unity
             ClearWorld();
             BuildDesertOutpost();
             health = 100f;
+            regenerationWait = 0f;
             score = 0;
             wave = 0;
             pendingSpawns = 0;
             waveDelay = 1.25f;
             spawnDelay = 0f;
-            fireDelay = 0f;
             operationComplete = false;
             operationFailed = false;
+            resultRecorded = false;
+            shotsFired = 0;
+            shotsHit = 0;
+            headshots = 0;
+            carbine = new UnityWeaponState(WeaponKind.Carbine);
+            sidearm = new UnityWeaponState(WeaponKind.Sidearm);
+            activeWeapon = carbine;
+            progress.SetLastMap(DesertMapId);
             screen = GameScreen.Gameplay;
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
+            SetGameplayCursor(true);
+        }
+
+        private void PauseOperation()
+        {
+            if (screen != GameScreen.Gameplay)
+            {
+                return;
+            }
+            screen = GameScreen.Paused;
+            SetGameplayCursor(false);
         }
 
         private void ResumeOperation()
         {
+            if (screen != GameScreen.Paused)
+            {
+                return;
+            }
             screen = GameScreen.Gameplay;
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
+            SetGameplayCursor(true);
+        }
+
+        private void SetGameplayCursor(bool active)
+        {
+            if (Application.isMobilePlatform)
+            {
+                return;
+            }
+            Cursor.lockState = active ? CursorLockMode.Locked : CursorLockMode.None;
+            Cursor.visible = !active;
         }
 
         private void UpdateGameplay()
         {
-            if (player == null || playerCamera == null)
+            if (playerRoot == null || playerController == null || playerController.PlayerCamera == null)
             {
-                operationFailed = true;
-                screen = GameScreen.Results;
+                FinishOperation(false);
                 return;
             }
 
-            UpdatePlayerMotion();
-            UpdateWaveSpawning();
-            fireDelay -= Time.deltaTime;
-            if ((Input.GetMouseButton(0) || Input.GetKey(KeyCode.Space)) && fireDelay <= 0f)
+            var isAiming = Input.GetKey(controls.GetKey(UnityControls.Action.Aim)) || Input.GetMouseButton(1) || Input.GetKey(KeyCode.JoystickButton4);
+            playerController.SetAiming(isAiming);
+            playerController.UpdateMovement(true);
+            if (playerController.LandedThisFrame)
             {
-                FireRifle();
+                PlayEffect(landingThump, 0.6f);
+                ShowCaption("caption.landing");
             }
+
+            carbine.Update(Time.deltaTime);
+            sidearm.Update(Time.deltaTime);
+            if (Input.GetKeyDown(controls.GetKey(UnityControls.Action.Reload)) || Input.GetKeyDown(KeyCode.JoystickButton2))
+            {
+                StartReload();
+            }
+            if (Input.GetKeyDown(controls.GetKey(UnityControls.Action.SwapWeapon)) || Input.GetKeyDown(KeyCode.JoystickButton3))
+            {
+                SwitchWeapon();
+            }
+
+            var fireHeld = Input.GetKey(controls.GetKey(UnityControls.Action.Fire)) || Input.GetMouseButton(0) || Input.GetKey(KeyCode.JoystickButton5);
+            if (fireHeld && (settings.AutoFire || Input.GetKeyDown(controls.GetKey(UnityControls.Action.Fire)) || Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.JoystickButton5)))
+            {
+                FireActiveWeapon();
+            }
+
+            UpdateHealthRegeneration();
+            UpdateWaveSpawning();
         }
 
-        private void UpdatePlayerMotion()
+        private void UpdateHealthRegeneration()
         {
-            var horizontal = Input.GetAxisRaw("Horizontal");
-            var vertical = Input.GetAxisRaw("Vertical");
-            var lookX = Input.GetAxis("Mouse X") * 2.6f;
-            var lookY = Input.GetAxis("Mouse Y") * 2.1f;
-
-            foreach (var touch in Input.touches)
+            if (regenerationWait > 0f)
             {
-                if (touch.position.x < Screen.width * 0.48f)
-                {
-                    var movement = (touch.position - new Vector2(Screen.width * 0.24f, Screen.height * 0.2f)) / 120f;
-                    horizontal = Mathf.Clamp(movement.x, -1f, 1f);
-                    vertical = Mathf.Clamp(movement.y, -1f, 1f);
-                }
-                else if (touch.phase == TouchPhase.Moved)
-                {
-                    lookX += touch.deltaPosition.x * 0.07f;
-                    lookY += touch.deltaPosition.y * 0.06f;
-                }
+                regenerationWait -= Time.deltaTime;
+                return;
             }
-
-            yaw += lookX;
-            pitch = Mathf.Clamp(pitch - lookY, -62f, 62f);
-            player.rotation = Quaternion.Euler(0f, yaw, 0f);
-            cameraPivot.localRotation = Quaternion.Euler(pitch, 0f, 0f);
-
-            var move = (player.forward * vertical + player.right * horizontal).normalized;
-            player.position += move * 8f * Time.deltaTime;
-            player.position = new Vector3(Mathf.Clamp(player.position.x, -52f, 52f), 1.8f, Mathf.Clamp(player.position.z, -52f, 52f));
+            health = Mathf.Min(100f, health + 11f * Time.deltaTime);
         }
 
         private void UpdateWaveSpawning()
@@ -217,7 +320,7 @@ namespace OperationRedline.Unity
                 {
                     SpawnRaider();
                     pendingSpawns--;
-                    spawnDelay = Mathf.Max(0.45f, 0.95f - wave * 0.1f);
+                    spawnDelay = Mathf.Max(0.38f, 0.95f - wave * 0.04f) / DifficultySpawnRate();
                 }
                 return;
             }
@@ -233,19 +336,50 @@ namespace OperationRedline.Unity
                 return;
             }
 
-            if (wave >= WaveSizes.Length)
+            if (selectedMode == OperationMode.Survival && wave >= WaveSizes.Length)
             {
-                operationComplete = true;
-                screen = GameScreen.Results;
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
+                FinishOperation(true);
                 return;
             }
 
             wave++;
-            pendingSpawns = WaveSizes[wave - 1];
+            var baseSize = WaveSizes[(wave - 1) % WaveSizes.Length];
+            pendingSpawns = Mathf.Max(1, Mathf.RoundToInt(baseSize * DifficultyEnemyCount()));
             spawnDelay = 0.15f;
-            waveDelay = 4f;
+            waveDelay = 3.5f;
+        }
+
+        private float DifficultyEnemyCount()
+        {
+            switch (selectedDifficulty)
+            {
+                case Difficulty.Easy: return 0.75f;
+                case Difficulty.Hard: return 1.25f;
+                case Difficulty.Nightmare: return 1.45f;
+                default: return 1f;
+            }
+        }
+
+        private float DifficultySpawnRate()
+        {
+            switch (selectedDifficulty)
+            {
+                case Difficulty.Easy: return 0.82f;
+                case Difficulty.Hard: return 1.18f;
+                case Difficulty.Nightmare: return 1.35f;
+                default: return 1f;
+            }
+        }
+
+        private float DifficultyDamageMultiplier()
+        {
+            switch (selectedDifficulty)
+            {
+                case Difficulty.Easy: return 0.78f;
+                case Difficulty.Hard: return 1.2f;
+                case Difficulty.Nightmare: return 1.4f;
+                default: return 1f;
+            }
         }
 
         private void SpawnRaider()
@@ -256,46 +390,132 @@ namespace OperationRedline.Unity
             enemy.transform.position = spawn;
             enemy.transform.localScale = new Vector3(1.1f, 1.3f, 1.1f);
             var renderer = enemy.GetComponent<Renderer>();
-            renderer.material.color = wave == 3 ? new Color(0.58f, 0.16f, 0.12f) : new Color(0.35f, 0.24f, 0.16f);
+            renderer.material.color = wave % WaveSizes.Length == 0 ? new Color(0.58f, 0.16f, 0.12f) : new Color(0.35f, 0.24f, 0.16f);
             var actor = enemy.AddComponent<RaiderActor>();
-            actor.Initialize(this, player, wave);
+            actor.Initialize(this, playerRoot, wave, DifficultyDamageMultiplier());
             raiders.Add(actor);
             worldObjects.Add(enemy);
         }
 
-        private void FireRifle()
+        private void FireActiveWeapon()
         {
-            fireDelay = 0.17f;
-            if (rifleShot != null)
+            if (activeWeapon == null || playerController == null || !activeWeapon.TryFire())
             {
-                effects.PlayOneShot(rifleShot, 0.55f);
+                return;
             }
-            if (Physics.Raycast(playerCamera.transform.position, playerCamera.transform.forward, out var hit, 90f))
+
+            shotsFired++;
+            PlayEffect(activeWeapon.Kind == WeaponKind.Carbine ? rifleShot : pistolShot, 0.58f);
+            ShowCaption(activeWeapon.Kind == WeaponKind.Carbine ? "caption.rifle_fire" : "caption.pistol_fire");
+            var origin = playerController.PlayerCamera.transform.position;
+            var direction = ApplyMobileAimAssist(playerController.PlayerCamera.transform.forward);
+            if (Physics.Raycast(origin, direction, out var hit, activeWeapon.Range))
             {
-                var enemy = hit.collider.GetComponent<RaiderActor>();
+                var enemy = hit.collider.GetComponentInParent<RaiderActor>();
                 if (enemy != null)
                 {
-                    enemy.TakeDamage(28f);
+                    var headshot = hit.point.y > enemy.transform.position.y + 1.25f;
+                    enemy.TakeDamage(activeWeapon.Damage, headshot);
+                    shotsHit++;
+                    if (headshot)
+                    {
+                        headshots++;
+                    }
                 }
             }
         }
 
-        public void OnRaiderEliminated(RaiderActor actor)
+        private Vector3 ApplyMobileAimAssist(Vector3 direction)
+        {
+            if (!Application.isMobilePlatform || !settings.AimAssist || playerController == null)
+            {
+                return direction;
+            }
+            var origin = playerController.PlayerCamera.transform.position;
+            var bestDirection = direction;
+            var bestAlignment = 0.992f;
+            foreach (var raider in raiders)
+            {
+                if (raider == null)
+                {
+                    continue;
+                }
+                var targetPoint = raider.transform.position + Vector3.up * 1.2f;
+                var toTarget = targetPoint - origin;
+                var distance = toTarget.magnitude;
+                if (distance < 1f || distance > activeWeapon.Range)
+                {
+                    continue;
+                }
+                var candidate = toTarget / distance;
+                var alignment = Vector3.Dot(direction, candidate);
+                if (alignment > bestAlignment)
+                {
+                    bestAlignment = alignment;
+                    bestDirection = candidate;
+                }
+            }
+            return Vector3.Slerp(direction, bestDirection, 0.16f).normalized;
+        }
+
+        private void StartReload()
+        {
+            if (activeWeapon != null && activeWeapon.StartReload())
+            {
+                PlayEffect(reloadClick, 0.55f);
+                ShowCaption("caption.reloading");
+            }
+        }
+
+        private void SwitchWeapon()
+        {
+            if (carbine == null || sidearm == null || activeWeapon == null || activeWeapon.IsReloading)
+            {
+                return;
+            }
+            activeWeapon = activeWeapon.Kind == WeaponKind.Carbine ? sidearm : carbine;
+            PlayUiEffect();
+        }
+
+        public void OnRaiderEliminated(RaiderActor actor, bool headshot)
         {
             raiders.Remove(actor);
-            score += 100;
+            score += headshot ? 150 : 100;
         }
 
         public void ApplyPlayerDamage(float amount)
         {
+            if (screen != GameScreen.Gameplay)
+            {
+                return;
+            }
             health = Mathf.Max(0f, health - amount);
+            regenerationWait = 4f;
+            if (settings.Haptics && Application.isMobilePlatform)
+            {
+                Handheld.Vibrate();
+            }
             if (health <= 0f)
             {
-                operationFailed = true;
-                screen = GameScreen.Results;
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
+                FinishOperation(false);
             }
+        }
+
+        private void FinishOperation(bool complete)
+        {
+            if (screen == GameScreen.Results)
+            {
+                return;
+            }
+            operationComplete = complete;
+            operationFailed = !complete;
+            if (!resultRecorded)
+            {
+                progress.RecordResult(DesertMapId, score, wave);
+                resultRecorded = true;
+            }
+            screen = GameScreen.Results;
+            SetGameplayCursor(false);
         }
 
         private void BuildDesertOutpost()
@@ -307,10 +527,11 @@ namespace OperationRedline.Unity
             light.type = LightType.Directional;
             light.intensity = 1.15f;
             light.color = new Color(1f, 0.77f, 0.5f);
+            light.shadows = LightShadows.Soft;
             light.transform.rotation = Quaternion.Euler(42f, -34f, 0f);
             worldObjects.Add(light.gameObject);
 
-            RenderSettings.ambientLight = new Color(0.37f, 0.36f, 0.31f);
+            RenderSettings.ambientLight = new Color(0.37f, 0.36f, 0.31f) * settings.Brightness;
             RenderSettings.fog = true;
             RenderSettings.fogColor = new Color(0.63f, 0.48f, 0.32f);
             RenderSettings.fogDensity = 0.006f;
@@ -331,18 +552,16 @@ namespace OperationRedline.Unity
                 CreateBlock("Supply Cover " + index, position, new Vector3(3.6f, 2f, 2.2f), new Color(0.36f, 0.25f, 0.13f));
             }
 
-            var playerRoot = new GameObject("Player");
-            playerRoot.transform.position = new Vector3(0f, 1.8f, 13f);
-            player = playerRoot.transform;
-            worldObjects.Add(playerRoot);
-            cameraPivot = new GameObject("Camera Pivot").transform;
-            cameraPivot.SetParent(player, false);
-            playerCamera = new GameObject("Player Camera").AddComponent<Camera>();
-            playerCamera.tag = "MainCamera";
-            playerCamera.transform.SetParent(cameraPivot, false);
-            playerCamera.transform.localPosition = Vector3.zero;
-            playerCamera.fieldOfView = 72f;
-            worldObjects.Add(playerCamera.gameObject);
+            var root = new GameObject("Player");
+            root.transform.position = new Vector3(0f, 1.05f, 13f);
+            playerRoot = root.transform;
+            var character = root.AddComponent<CharacterController>();
+            character.height = 1.8f;
+            character.radius = 0.38f;
+            character.center = new Vector3(0f, 0.9f, 0f);
+            playerController = root.AddComponent<OutpostPlayerController>();
+            playerController.Initialize(settings, controls);
+            worldObjects.Add(root);
         }
 
         private void CreateBlock(string blockName, Vector3 position, Vector3 scale, Color color)
@@ -366,20 +585,78 @@ namespace OperationRedline.Unity
             }
             worldObjects.Clear();
             raiders.Clear();
-            player = null;
-            playerCamera = null;
-            cameraPivot = null;
+            playerRoot = null;
+            playerController = null;
             RenderSettings.fog = false;
+            RenderSettings.ambientLight = baseAmbient;
+        }
+
+        private void ApplyPresentationSettings()
+        {
+            ApplyAudioSettings();
+            if (playerController != null)
+            {
+                playerController.ApplySettings();
+            }
+            if (screen == GameScreen.Gameplay)
+            {
+                RenderSettings.ambientLight = new Color(0.37f, 0.36f, 0.31f) * settings.Brightness;
+            }
+        }
+
+        private void ApplyAudioSettings()
+        {
+            AudioListener.volume = settings == null ? 1f : settings.MasterVolume;
+            if (music != null)
+            {
+                music.volume = settings.MusicVolume;
+                if (music.clip != null && settings.MusicVolume > 0f && !music.isPlaying && !AudioListener.pause)
+                {
+                    music.Play();
+                }
+                if (settings.MusicVolume <= 0f && music.isPlaying)
+                {
+                    music.Stop();
+                }
+            }
+            if (effects != null) effects.volume = settings.SfxVolume;
+            if (uiEffects != null) uiEffects.volume = settings.UiVolume;
+        }
+
+        private void PlayEffect(AudioClip clip, float volume)
+        {
+            if (clip != null && effects != null && settings.SfxVolume > 0f)
+            {
+                effects.PlayOneShot(clip, volume);
+            }
+        }
+
+        private void PlayUiEffect()
+        {
+            if (reloadClick != null && uiEffects != null && settings.UiVolume > 0f)
+            {
+                uiEffects.PlayOneShot(reloadClick, 0.32f);
+            }
+        }
+
+        private void ShowCaption(string key)
+        {
+            if (!settings.Subtitles)
+            {
+                return;
+            }
+            soundCaption = LocalizedCatalog.Get(key, settings.Language);
+            soundCaptionUntil = Time.unscaledTime + 1.1f;
         }
 
         private void OnGUI()
         {
+            ProcessRebindCapture();
             var titleStyle = Style(42, new Color(0.56f, 0.97f, 1f), TextAnchor.MiddleCenter, true);
             var subtitleStyle = Style(18, new Color(1f, 0.58f, 0.25f), TextAnchor.MiddleCenter, false);
             var bodyStyle = Style(18, Color.white, TextAnchor.MiddleCenter, false);
             var leftStyle = Style(17, Color.white, TextAnchor.UpperLeft, false);
-            var buttonStyle = Style(20, Color.white, TextAnchor.MiddleCenter, true);
-            var language = settings.Language;
+            var buttonStyle = Style(19, Color.white, TextAnchor.MiddleCenter, true);
 
             if (screen != GameScreen.Gameplay)
             {
@@ -388,9 +665,9 @@ namespace OperationRedline.Unity
 
             if (screen == GameScreen.Splash)
             {
-                GUI.Label(new Rect(0, Screen.height * 0.31f, Screen.width, 65), LocalizedCatalog.Get("app.title", language), titleStyle);
-                GUI.Label(new Rect(0, Screen.height * 0.41f, Screen.width, 32), LocalizedCatalog.Get("app.subtitle", language), subtitleStyle);
-                GUI.Label(new Rect(0, Screen.height * 0.59f, Screen.width, 30), "Tap / ENTER", bodyStyle);
+                GUI.Label(new Rect(0, Screen.height * 0.31f, Screen.width, 65), T("app.title"), titleStyle);
+                GUI.Label(new Rect(0, Screen.height * 0.41f, Screen.width, 32), T("app.subtitle"), subtitleStyle);
+                GUI.Label(new Rect(0, Screen.height * 0.59f, Screen.width, 30), T("menu.press_to_continue"), bodyStyle);
                 if (Event.current.type == EventType.MouseDown || Input.anyKeyDown)
                 {
                     screen = GameScreen.Menu;
@@ -400,97 +677,325 @@ namespace OperationRedline.Unity
 
             if (screen == GameScreen.Menu)
             {
-                DrawPanel(new Rect(Screen.width * 0.5f - 235f, Screen.height * 0.5f - 180f, 470f, 380f));
-                GUI.Label(new Rect(0, Screen.height * 0.16f, Screen.width, 58), LocalizedCatalog.Get("app.title", language), titleStyle);
-                GUI.Label(new Rect(0, Screen.height * 0.25f, Screen.width, 32), LocalizedCatalog.Get("app.subtitle", language), subtitleStyle);
-                if (Button(new Rect(Screen.width * 0.5f - 170f, Screen.height * 0.43f, 340f, 58f), LocalizedCatalog.Get("menu.play", language), buttonStyle)) screen = GameScreen.MapSelect;
-                if (Button(new Rect(Screen.width * 0.5f - 170f, Screen.height * 0.51f, 340f, 58f), LocalizedCatalog.Get("menu.continue", language), buttonStyle)) BeginOperation();
-                if (Button(new Rect(Screen.width * 0.5f - 170f, Screen.height * 0.59f, 340f, 58f), LocalizedCatalog.Get("menu.settings", language), buttonStyle)) screen = GameScreen.Settings;
-                if (Button(new Rect(Screen.width * 0.5f - 170f, Screen.height * 0.67f, 340f, 58f), LocalizedCatalog.Get("menu.quit", language), buttonStyle)) Application.Quit();
+                DrawMenu(titleStyle, subtitleStyle, buttonStyle);
                 return;
             }
 
             if (screen == GameScreen.MapSelect)
             {
-                DrawPanel(new Rect(35f, 85f, Screen.width - 70f, Screen.height - 150f));
-                GUI.Label(new Rect(0, 28f, Screen.width, 45f), LocalizedCatalog.Get("menu.map_select", language), titleStyle);
-                DrawMapCard(new Rect(Screen.width * 0.16f, 145f, Screen.width * 0.3f, 305f), "map.desert", "map.desert.detail", true, buttonStyle, bodyStyle);
-                DrawMapCard(new Rect(Screen.width * 0.54f, 145f, Screen.width * 0.3f, 305f), "map.highrise", "map.highrise.detail", false, buttonStyle, bodyStyle);
-                if (Button(new Rect(42f, Screen.height - 60f, 180f, 42f), LocalizedCatalog.Get("menu.back", language), buttonStyle)) screen = GameScreen.Menu;
+                DrawMapSelect(titleStyle, bodyStyle, buttonStyle);
                 return;
             }
 
             if (screen == GameScreen.Settings)
             {
-                DrawPanel(new Rect(Screen.width * 0.5f - 280f, 90f, 560f, Screen.height - 170f));
-                GUI.Label(new Rect(0, 35f, Screen.width, 48f), LocalizedCatalog.Get("settings.title", language), titleStyle);
-                GUI.Label(new Rect(Screen.width * 0.5f - 220f, 145f, 200f, 36f), LocalizedCatalog.Get("settings.language", language), leftStyle);
-                if (Button(new Rect(Screen.width * 0.5f + 10f, 140f, 210f, 45f), language == SupportedLanguage.English ? "English" : "বাংলা", buttonStyle)) settings.ToggleLanguage();
-                GUI.Label(new Rect(Screen.width * 0.5f - 220f, 215f, 200f, 36f), LocalizedCatalog.Get("settings.quality", settings.Language), leftStyle);
-                for (var index = 0; index < 3; index++)
-                {
-                    var qualityKey = index == 0 ? "quality.low" : index == 1 ? "quality.medium" : "quality.high";
-                    if (Button(new Rect(Screen.width * 0.5f - 220f + index * 148f, 265f, 138f, 44f), LocalizedCatalog.Get(qualityKey, settings.Language), buttonStyle)) settings.SetQuality(index);
-                }
-                GUI.Label(new Rect(Screen.width * 0.5f - 220f, 345f, 200f, 36f), LocalizedCatalog.Get("settings.audio", settings.Language), leftStyle);
-                settings.SetMusicVolume(GUI.HorizontalSlider(new Rect(Screen.width * 0.5f - 30f, 355f, 250f, 24f), settings.MusicVolume, 0f, 1f));
-                if (Button(new Rect(Screen.width * 0.5f - 100f, Screen.height - 115f, 200f, 46f), LocalizedCatalog.Get("menu.back", settings.Language), buttonStyle)) screen = GameScreen.Menu;
+                DrawSettings(titleStyle, bodyStyle, leftStyle, buttonStyle);
                 return;
             }
 
             if (screen == GameScreen.Gameplay)
             {
-                DrawGameplayHud(leftStyle, buttonStyle);
+                DrawGameplayHud(leftStyle, bodyStyle, buttonStyle);
                 return;
             }
 
             if (screen == GameScreen.Paused)
             {
-                DrawPanel(new Rect(Screen.width * 0.5f - 220f, Screen.height * 0.5f - 150f, 440f, 315f));
-                GUI.Label(new Rect(0, Screen.height * 0.33f, Screen.width, 50f), LocalizedCatalog.Get("game.pause", language), titleStyle);
-                if (Button(new Rect(Screen.width * 0.5f - 150f, Screen.height * 0.47f, 300f, 52f), LocalizedCatalog.Get("game.resume", language), buttonStyle)) ResumeOperation();
-                if (Button(new Rect(Screen.width * 0.5f - 150f, Screen.height * 0.55f, 300f, 52f), LocalizedCatalog.Get("game.maps", language), buttonStyle)) { ClearWorld(); screen = GameScreen.MapSelect; }
-                if (Button(new Rect(Screen.width * 0.5f - 150f, Screen.height * 0.63f, 300f, 52f), LocalizedCatalog.Get("menu.settings", language), buttonStyle)) screen = GameScreen.Settings;
+                DrawPause(titleStyle, buttonStyle);
                 return;
             }
 
             if (screen == GameScreen.Results)
             {
-                DrawPanel(new Rect(Screen.width * 0.5f - 250f, Screen.height * 0.5f - 160f, 500f, 335f));
-                var result = operationComplete ? LocalizedCatalog.Get("game.complete", language) : LocalizedCatalog.Get("game.failed", language);
-                GUI.Label(new Rect(0, Screen.height * 0.31f, Screen.width, 56f), result, titleStyle);
-                GUI.Label(new Rect(0, Screen.height * 0.42f, Screen.width, 40f), LocalizedCatalog.Get("game.score", language) + "  " + score, bodyStyle);
-                GUI.Label(new Rect(0, Screen.height * 0.48f, Screen.width, 36f), LocalizedCatalog.Get("game.wave", language) + "  " + wave + " / 3", bodyStyle);
-                if (Button(new Rect(Screen.width * 0.5f - 150f, Screen.height * 0.58f, 300f, 52f), LocalizedCatalog.Get("game.restart", language), buttonStyle)) BeginOperation();
-                if (Button(new Rect(Screen.width * 0.5f - 150f, Screen.height * 0.66f, 300f, 52f), LocalizedCatalog.Get("game.maps", language), buttonStyle)) { ClearWorld(); screen = GameScreen.MapSelect; }
+                DrawResults(titleStyle, bodyStyle, buttonStyle);
             }
         }
 
-        private void DrawMapCard(Rect rect, string titleKey, string detailKey, bool playable, GUIStyle buttonStyle, GUIStyle bodyStyle)
+        private void DrawMenu(GUIStyle titleStyle, GUIStyle subtitleStyle, GUIStyle buttonStyle)
+        {
+            DrawPanel(new Rect(Screen.width * 0.5f - 235f, Screen.height * 0.5f - 180f, 470f, 380f));
+            GUI.Label(new Rect(0, Screen.height * 0.16f, Screen.width, 58), T("app.title"), titleStyle);
+            GUI.Label(new Rect(0, Screen.height * 0.25f, Screen.width, 32), T("app.subtitle"), subtitleStyle);
+            if (Button(new Rect(Screen.width * 0.5f - 170f, Screen.height * 0.43f, 340f, 58f), T("menu.play"), buttonStyle)) screen = GameScreen.MapSelect;
+            if (Button(new Rect(Screen.width * 0.5f - 170f, Screen.height * 0.51f, 340f, 58f), T("menu.continue"), buttonStyle)) BeginOperation();
+            if (Button(new Rect(Screen.width * 0.5f - 170f, Screen.height * 0.59f, 340f, 58f), T("menu.settings"), buttonStyle))
+            {
+                settingsReturnScreen = GameScreen.Menu;
+                screen = GameScreen.Settings;
+            }
+            if (Button(new Rect(Screen.width * 0.5f - 170f, Screen.height * 0.67f, 340f, 58f), T("menu.quit"), buttonStyle)) Application.Quit();
+        }
+
+        private void DrawMapSelect(GUIStyle titleStyle, GUIStyle bodyStyle, GUIStyle buttonStyle)
+        {
+            DrawPanel(new Rect(35f, 85f, Screen.width - 70f, Screen.height - 150f));
+            GUI.Label(new Rect(0, 28f, Screen.width, 45f), T("menu.map_select"), titleStyle);
+            DrawDesertCard(new Rect(Screen.width * 0.12f, 130f, Screen.width * 0.34f, 390f), bodyStyle, buttonStyle);
+            DrawHighriseCard(new Rect(Screen.width * 0.54f, 130f, Screen.width * 0.34f, 390f), bodyStyle);
+            if (Button(new Rect(42f, Screen.height - 60f, 180f, 42f), T("menu.back"), buttonStyle)) screen = GameScreen.Menu;
+        }
+
+        private void DrawDesertCard(Rect rect, GUIStyle bodyStyle, GUIStyle buttonStyle)
         {
             DrawPanel(rect);
-            GUI.Label(new Rect(rect.x + 18f, rect.y + 18f, rect.width - 36f, 48f), LocalizedCatalog.Get(titleKey, settings.Language), Style(24, new Color(1f, 0.7f, 0.39f), TextAnchor.MiddleCenter, true));
-            GUI.Label(new Rect(rect.x + 20f, rect.y + 82f, rect.width - 40f, 112f), LocalizedCatalog.Get(detailKey, settings.Language), bodyStyle);
-            if (playable)
+            GUI.Label(new Rect(rect.x + 18f, rect.y + 18f, rect.width - 36f, 48f), T("map.desert_outpost"), Style(24, new Color(1f, 0.7f, 0.39f), TextAnchor.MiddleCenter, true));
+            GUI.Label(new Rect(rect.x + 20f, rect.y + 76f, rect.width - 40f, 75f), "MP_DS_01\n" + T("map.waves") + "  6 / 9 / 12", bodyStyle);
+            GUI.Label(new Rect(rect.x + 20f, rect.y + 150f, rect.width - 40f, 30f), T("map.difficulty") + ": " + DifficultyLabel(), bodyStyle);
+            if (Button(new Rect(rect.x + 25f, rect.y + 184f, rect.width - 50f, 40f), DifficultyLabel(), buttonStyle)) CycleDifficulty();
+            GUI.Label(new Rect(rect.x + 20f, rect.y + 230f, rect.width - 40f, 30f), T("map.mode") + ": " + ModeLabel(), bodyStyle);
+            if (Button(new Rect(rect.x + 25f, rect.y + 264f, rect.width - 50f, 40f), ModeLabel(), buttonStyle)) CycleMode();
+            var record = progress.GetRecord(DesertMapId);
+            var recordText = record.BestScore > 0 || record.BestWave > 0
+                ? T("map.best_score") + ": " + record.BestScore + "\n" + T("map.best_wave") + ": " + record.BestWave
+                : T("map.no_record");
+            GUI.Label(new Rect(rect.x + 20f, rect.y + 307f, rect.width - 40f, 46f), recordText, bodyStyle);
+            if (Button(new Rect(rect.x + 25f, rect.y + rect.height - 58f, rect.width - 50f, 42f), T("menu.start_mission"), buttonStyle)) BeginOperation();
+        }
+
+        private void DrawHighriseCard(Rect rect, GUIStyle bodyStyle)
+        {
+            DrawPanel(rect);
+            GUI.Label(new Rect(rect.x + 18f, rect.y + 18f, rect.width - 36f, 48f), T("map.rooftop_highrise"), Style(24, new Color(0.78f, 0.57f, 0.42f), TextAnchor.MiddleCenter, true));
+            GUI.Label(new Rect(rect.x + 20f, rect.y + 88f, rect.width - 40f, 150f), "MP_RF_02\n\n" + T("map.unavailable_detail"), bodyStyle);
+            GUI.Label(new Rect(rect.x + 18f, rect.y + rect.height - 72f, rect.width - 36f, 45f), T("menu.coming_soon") + "  •  " + T("menu.locked"), Style(18, new Color(0.78f, 0.57f, 0.42f), TextAnchor.MiddleCenter, true));
+        }
+
+        private void DrawSettings(GUIStyle titleStyle, GUIStyle bodyStyle, GUIStyle leftStyle, GUIStyle buttonStyle)
+        {
+            var panel = new Rect(Screen.width * 0.5f - 350f, 60f, 700f, Screen.height - 125f);
+            DrawPanel(panel);
+            GUI.Label(new Rect(0, 17f, Screen.width, 36f), T("menu.settings"), titleStyle);
+            var tabs = new[] { SettingsTab.Graphics, SettingsTab.Audio, SettingsTab.Controls, SettingsTab.Accessibility, SettingsTab.Other };
+            for (var index = 0; index < tabs.Length; index++)
             {
-                if (Button(new Rect(rect.x + 25f, rect.y + rect.height - 70f, rect.width - 50f, 48f), LocalizedCatalog.Get("menu.start", settings.Language), buttonStyle)) BeginOperation();
+                var tab = tabs[index];
+                var rect = new Rect(panel.x + 12f + index * 136f, panel.y + 56f, 128f, 36f);
+                if (Button(rect, SettingsTabLabel(tab), buttonStyle)) settingsTab = tab;
             }
-            else
+
+            var content = new Rect(panel.x + 35f, panel.y + 112f, panel.width - 70f, panel.height - 182f);
+            if (settingsTab == SettingsTab.Graphics) DrawGraphicsSettings(content, leftStyle, buttonStyle);
+            if (settingsTab == SettingsTab.Audio) DrawAudioSettings(content, leftStyle, buttonStyle);
+            if (settingsTab == SettingsTab.Controls) DrawControlSettings(content, leftStyle, bodyStyle, buttonStyle);
+            if (settingsTab == SettingsTab.Accessibility) DrawAccessibilitySettings(content, leftStyle, buttonStyle);
+            if (settingsTab == SettingsTab.Other) DrawOtherSettings(content, leftStyle, buttonStyle);
+
+            GUI.Label(new Rect(panel.x + 25f, panel.y + panel.height - 66f, panel.width - 50f, 24f), T("settings.persistence_note"), bodyStyle);
+            if (Button(new Rect(panel.x + 40f, panel.y + panel.height - 38f, 180f, 30f), T("settings.reset_defaults"), buttonStyle))
             {
-                GUI.Label(new Rect(rect.x + 18f, rect.y + rect.height - 67f, rect.width - 36f, 45f), LocalizedCatalog.Get("menu.locked", settings.Language), Style(19, new Color(0.78f, 0.57f, 0.42f), TextAnchor.MiddleCenter, true));
+                settings.ResetToDefaults();
+                ApplyPresentationSettings();
+            }
+            if (Button(new Rect(panel.x + panel.width - 220f, panel.y + panel.height - 38f, 180f, 30f), T("menu.back"), buttonStyle)) screen = settingsReturnScreen;
+        }
+
+        private void DrawGraphicsSettings(Rect content, GUIStyle leftStyle, GUIStyle buttonStyle)
+        {
+            GUI.Label(new Rect(content.x, content.y, content.width, 28f), T("settings.graphics_hint"), leftStyle);
+            GUI.Label(new Rect(content.x, content.y + 46f, 230f, 30f), T("settings.quality_tier"), leftStyle);
+            for (var index = 0; index < 3; index++)
+            {
+                if (Button(new Rect(content.x + 230f + index * 95f, content.y + 42f, 85f, 34f), (index + 1).ToString(), buttonStyle))
+                {
+                    settings.SetQuality(index);
+                    ApplyPresentationSettings();
+                }
+            }
+            SliderRow(content, 95f, T("settings.fov"), settings.FieldOfView, 60f, 90f, settings.SetFieldOfView);
+            SliderRow(content, 145f, T("settings.brightness"), settings.Brightness, 0.65f, 1.35f, settings.SetBrightness);
+            if (Button(new Rect(content.x, content.y + 202f, 220f, 36f), settings.ShowFps ? T("settings.show_fps") + ": ON" : T("settings.show_fps") + ": " + T("settings.off"), buttonStyle)) settings.SetShowFps(!settings.ShowFps);
+        }
+
+        private void DrawAudioSettings(Rect content, GUIStyle leftStyle, GUIStyle buttonStyle)
+        {
+            GUI.Label(new Rect(content.x, content.y, content.width, 28f), T("settings.audio_hint"), leftStyle);
+            SliderRow(content, 48f, T("settings.master_volume"), settings.MasterVolume, 0f, 1f, settings.SetMasterVolume);
+            SliderRow(content, 98f, T("settings.music_volume"), settings.MusicVolume, 0f, 1f, settings.SetMusicVolume);
+            SliderRow(content, 148f, T("settings.sfx_volume"), settings.SfxVolume, 0f, 1f, settings.SetSfxVolume);
+            SliderRow(content, 198f, T("settings.ui_volume"), settings.UiVolume, 0f, 1f, settings.SetUiVolume);
+            if (Button(new Rect(content.x, content.y + 254f, 330f, 36f), T("settings.mute_unfocused") + ": " + OnOff(settings.MuteWhenUnfocused), buttonStyle)) settings.SetMuteWhenUnfocused(!settings.MuteWhenUnfocused);
+        }
+
+        private void DrawControlSettings(Rect content, GUIStyle leftStyle, GUIStyle bodyStyle, GUIStyle buttonStyle)
+        {
+            GUI.Label(new Rect(content.x, content.y, content.width, 28f), T("settings.controls_hint"), leftStyle);
+            SliderRow(content, 42f, T("settings.look_sensitivity"), settings.LookSensitivity, 0.55f, 1.65f, settings.SetLookSensitivity);
+            if (Button(new Rect(content.x, content.y + 97f, 250f, 34f), T("settings.aim_assist") + ": " + OnOff(settings.AimAssist), buttonStyle)) settings.SetAimAssist(!settings.AimAssist);
+            if (Button(new Rect(content.x + 270f, content.y + 97f, 250f, 34f), T("settings.fire_mode") + ": " + (settings.AutoFire ? T("settings.auto_fire") : T("settings.single")), buttonStyle)) settings.SetAutoFire(!settings.AutoFire);
+            SliderRow(content, 137f, T("settings.joystick_scale"), settings.JoystickScale, 0.75f, 1.35f, settings.SetJoystickScale);
+            SliderRow(content, 177f, T("settings.button_scale"), settings.ButtonScale, 0.75f, 1.35f, settings.SetButtonScale);
+            SliderRow(content, 217f, T("settings.touch_opacity"), settings.TouchOpacity, 0.35f, 1f, settings.SetTouchOpacity);
+            SliderRow(content, 257f, T("settings.gamepad_deadzone"), settings.GamepadDeadzone, 0.05f, 0.85f, settings.SetGamepadDeadzone);
+            if (Button(new Rect(content.x, content.y + 302f, 280f, 30f), T("settings.left_handed") + ": " + OnOff(settings.LeftHanded), buttonStyle)) settings.SetLeftHanded(!settings.LeftHanded);
+            GUI.Label(new Rect(content.x, content.y + 338f, content.width, 22f), T("settings.key_bindings"), leftStyle);
+            var rebindActions = new[] { UnityControls.Action.Fire, UnityControls.Action.Aim, UnityControls.Action.Jump, UnityControls.Action.Crouch, UnityControls.Action.SwapWeapon, UnityControls.Action.Reload };
+            rebindSelection = Mathf.Clamp(rebindSelection, 0, rebindActions.Length - 1);
+            var selectedAction = rebindActions[rebindSelection];
+            if (Button(new Rect(content.x, content.y + 365f, 350f, 28f), T(UnityControls.Label(selectedAction)) + ": " + controls.GetKey(selectedAction), buttonStyle)) rebindCapture = selectedAction;
+            if (Button(new Rect(content.x + 365f, content.y + 365f, 80f, 28f), "<", buttonStyle)) rebindSelection = (rebindSelection + rebindActions.Length - 1) % rebindActions.Length;
+            if (Button(new Rect(content.x + 455f, content.y + 365f, 80f, 28f), ">", buttonStyle)) rebindSelection = (rebindSelection + 1) % rebindActions.Length;
+            if (rebindCapture.HasValue)
+            {
+                GUI.Label(new Rect(content.x, content.y + 397f, 290f, 20f), T("settings.press_key"), bodyStyle);
+            }
+            if (Button(new Rect(content.x + 350f, content.y + 397f, 200f, 24f), T("settings.reset_bindings"), buttonStyle)) controls.ResetDefaults();
+        }
+
+        private void DrawAccessibilitySettings(Rect content, GUIStyle leftStyle, GUIStyle buttonStyle)
+        {
+            GUI.Label(new Rect(content.x, content.y, content.width, 28f), T("settings.accessibility_hint"), leftStyle);
+            if (Button(new Rect(content.x, content.y + 45f, 260f, 36f), T("settings.subtitles") + ": " + OnOff(settings.Subtitles), buttonStyle)) settings.SetSubtitles(!settings.Subtitles);
+            if (Button(new Rect(content.x + 280f, content.y + 45f, 260f, 36f), T("settings.damage_numbers") + ": " + OnOff(settings.DamageNumbers), buttonStyle)) settings.SetDamageNumbers(!settings.DamageNumbers);
+            if (Button(new Rect(content.x, content.y + 98f, 260f, 36f), T("settings.reduce_shake") + ": " + OnOff(settings.ReducedMotion), buttonStyle)) settings.SetReducedMotion(!settings.ReducedMotion);
+            if (Button(new Rect(content.x + 280f, content.y + 98f, 260f, 36f), T("settings.colorblind") + ": " + OnOff(settings.ColorblindMode), buttonStyle)) settings.SetColorblindMode(!settings.ColorblindMode);
+            if (Button(new Rect(content.x, content.y + 151f, 260f, 36f), T("settings.haptics") + ": " + OnOff(settings.Haptics), buttonStyle)) settings.SetHaptics(!settings.Haptics);
+        }
+
+        private void DrawOtherSettings(Rect content, GUIStyle leftStyle, GUIStyle buttonStyle)
+        {
+            GUI.Label(new Rect(content.x, content.y, content.width, 28f), T("settings.other_hint"), leftStyle);
+            if (Button(new Rect(content.x, content.y + 45f, 260f, 38f), T("settings.language") + ": " + (settings.Language == SupportedLanguage.English ? "English" : "বাংলা"), buttonStyle)) settings.ToggleLanguage();
+            if (Button(new Rect(content.x + 280f, content.y + 45f, 260f, 38f), T("settings.fps_limit") + ": " + (settings.FpsLimit <= 0 ? T("settings.unlimited") : settings.FpsLimit.ToString()), buttonStyle))
+            {
+                settings.SetFpsLimit(settings.FpsLimit == 30 ? 60 : settings.FpsLimit == 60 ? 120 : 30);
             }
         }
 
-        private void DrawGameplayHud(GUIStyle leftStyle, GUIStyle buttonStyle)
+        private void DrawPause(GUIStyle titleStyle, GUIStyle buttonStyle)
         {
-            GUI.Box(new Rect(14f, 14f, 250f, 115f), string.Empty);
-            GUI.Label(new Rect(28f, 26f, 230f, 27f), LocalizedCatalog.Get("game.wave", settings.Language) + "  " + Mathf.Max(wave, 1) + " / 3", leftStyle);
-            GUI.Label(new Rect(28f, 55f, 230f, 27f), LocalizedCatalog.Get("game.score", settings.Language) + "  " + score, leftStyle);
-            GUI.Label(new Rect(28f, 84f, 230f, 27f), LocalizedCatalog.Get("game.health", settings.Language) + "  " + Mathf.CeilToInt(health), leftStyle);
-            GUI.Label(new Rect(Screen.width * 0.5f - 8f, Screen.height * 0.5f - 18f, 16f, 36f), "+", Style(28, Color.white, TextAnchor.MiddleCenter, true));
-            GUI.Label(new Rect(0f, Screen.height - 38f, Screen.width, 28f), Application.isMobilePlatform ? LocalizedCatalog.Get("hint.mobile", settings.Language) : LocalizedCatalog.Get("hint.desktop", settings.Language), Style(13, Color.white, TextAnchor.MiddleCenter, false));
-            if (GUI.RepeatButton(new Rect(Screen.width - 140f, Screen.height - 150f, 120f, 120f), LocalizedCatalog.Get("game.fire", settings.Language), buttonStyle) && fireDelay <= 0f) FireRifle();
-            if (Button(new Rect(Screen.width - 120f, 18f, 105f, 40f), LocalizedCatalog.Get("game.pause", settings.Language), buttonStyle)) HandleBack();
+            DrawPanel(new Rect(Screen.width * 0.5f - 220f, Screen.height * 0.5f - 165f, 440f, 350f));
+            GUI.Label(new Rect(0, Screen.height * 0.30f, Screen.width, 50f), T("pause.title"), titleStyle);
+            if (Button(new Rect(Screen.width * 0.5f - 150f, Screen.height * 0.44f, 300f, 46f), T("pause.resume"), buttonStyle)) ResumeOperation();
+            if (Button(new Rect(Screen.width * 0.5f - 150f, Screen.height * 0.51f, 300f, 46f), T("pause.restart_operation"), buttonStyle)) BeginOperation();
+            if (Button(new Rect(Screen.width * 0.5f - 150f, Screen.height * 0.58f, 300f, 46f), T("pause.map_select"), buttonStyle)) { ClearWorld(); screen = GameScreen.MapSelect; }
+            if (Button(new Rect(Screen.width * 0.5f - 150f, Screen.height * 0.65f, 300f, 46f), T("menu.settings"), buttonStyle))
+            {
+                settingsReturnScreen = GameScreen.Paused;
+                screen = GameScreen.Settings;
+            }
+        }
+
+        private void DrawResults(GUIStyle titleStyle, GUIStyle bodyStyle, GUIStyle buttonStyle)
+        {
+            DrawPanel(new Rect(Screen.width * 0.5f - 250f, Screen.height * 0.5f - 175f, 500f, 360f));
+            var result = operationComplete ? T("result.mission_complete") : T("result.mission_failed");
+            GUI.Label(new Rect(0, Screen.height * 0.28f, Screen.width, 56f), result, titleStyle);
+            var accuracy = shotsFired == 0 ? 0 : Mathf.RoundToInt(100f * shotsHit / shotsFired);
+            var record = progress.GetRecord(DesertMapId);
+            GUI.Label(new Rect(0, Screen.height * 0.40f, Screen.width, 105f),
+                T("result.final_score").Replace("%05d", score.ToString("D5")) + "\n" +
+                T("result.wave").Replace("%d", wave.ToString()) + "\n" +
+                T("result.accuracy").Replace("%d", accuracy.ToString()) + "\n" +
+                T("result.best_score").Replace("%05d", record.BestScore.ToString("D5")), bodyStyle);
+            if (Button(new Rect(Screen.width * 0.5f - 150f, Screen.height * 0.60f, 300f, 46f), T("result.restart_operation"), buttonStyle)) BeginOperation();
+            if (Button(new Rect(Screen.width * 0.5f - 150f, Screen.height * 0.67f, 300f, 46f), T("pause.map_select"), buttonStyle)) { ClearWorld(); screen = GameScreen.MapSelect; }
+        }
+
+        private void DrawGameplayHud(GUIStyle leftStyle, GUIStyle bodyStyle, GUIStyle buttonStyle)
+        {
+            var hudColor = settings.ColorblindMode ? new Color(1f, 0.92f, 0.35f) : Color.white;
+            GUI.color = new Color(0.02f, 0.08f, 0.1f, 0.88f);
+            GUI.DrawTexture(new Rect(14f, 14f, 270f, 158f), Texture2D.whiteTexture);
+            GUI.color = hudColor;
+            var limit = selectedMode == OperationMode.Endless ? "∞" : WaveSizes.Length.ToString();
+            GUI.Label(new Rect(28f, 26f, 250f, 27f), T("result.wave").Replace("%d", Mathf.Max(wave, 1).ToString()) + " / " + limit, leftStyle);
+            GUI.Label(new Rect(28f, 54f, 250f, 27f), "SCORE  " + score.ToString("D5"), leftStyle);
+            GUI.Label(new Rect(28f, 82f, 250f, 27f), "HP  " + Mathf.CeilToInt(health), leftStyle);
+            if (activeWeapon != null)
+            {
+                GUI.Label(new Rect(28f, 110f, 250f, 27f), (activeWeapon.Kind == WeaponKind.Carbine ? "CARBINE" : "SIDEARM") + "  " + activeWeapon.Ammo + " / " + activeWeapon.Reserve, leftStyle);
+                if (activeWeapon.IsReloading) GUI.Label(new Rect(28f, 137f, 250f, 24f), T("caption.reloading"), leftStyle);
+            }
+            GUI.color = Color.white;
+            GUI.Label(new Rect(Screen.width * 0.5f - 8f, Screen.height * 0.5f - 18f, 16f, 36f), "+", Style(28, hudColor, TextAnchor.MiddleCenter, true));
+            if (settings.ShowFps) GUI.Label(new Rect(Screen.width - 115f, 66f, 100f, 24f), Mathf.RoundToInt(fpsSample) + " FPS", leftStyle);
+            if (settings.Subtitles && Time.unscaledTime < soundCaptionUntil) GUI.Label(new Rect(0f, Screen.height - 72f, Screen.width, 26f), "♪  " + soundCaption, bodyStyle);
+
+            var fireWidth = 118f * settings.ButtonScale;
+            var fireHeight = 104f * settings.ButtonScale;
+            var fireX = settings.LeftHanded ? 22f : Screen.width - fireWidth - 22f;
+            GUI.color = new Color(1f, 1f, 1f, settings.TouchOpacity);
+            if (GUI.RepeatButton(new Rect(fireX, Screen.height - fireHeight - 20f, fireWidth, fireHeight), T("bindings.fire"), buttonStyle)) FireActiveWeapon();
+            GUI.color = Color.white;
+            if (Button(new Rect(Screen.width - 130f, 18f, 115f, 36f), T("pause.title"), buttonStyle)) PauseOperation();
+        }
+
+        private void SliderRow(Rect content, float y, string label, float value, float minimum, float maximum, System.Action<float> setter)
+        {
+            GUI.Label(new Rect(content.x, content.y + y, 230f, 30f), label, Style(16, Color.white, TextAnchor.UpperLeft, false));
+            var changed = GUI.HorizontalSlider(new Rect(content.x + 240f, content.y + y + 8f, 250f, 22f), value, minimum, maximum);
+            if (Mathf.Abs(changed - value) > 0.001f)
+            {
+                setter(changed);
+                ApplyPresentationSettings();
+            }
+            GUI.Label(new Rect(content.x + 505f, content.y + y, 60f, 30f), changed.ToString("0.00"), Style(15, Color.white, TextAnchor.UpperLeft, false));
+        }
+
+        private void ProcessRebindCapture()
+        {
+            if (!rebindCapture.HasValue || Event.current.type != EventType.KeyDown)
+            {
+                return;
+            }
+            var captured = Event.current.keyCode;
+            var action = rebindCapture.Value;
+            if (!UnityControls.IsReserved(captured) && !controls.HasConflict(action, captured))
+            {
+                controls.SetKey(action, captured);
+            }
+            rebindCapture = null;
+            Event.current.Use();
+        }
+
+        private void CycleDifficulty()
+        {
+            selectedDifficulty = (Difficulty)(((int)selectedDifficulty + 1) % 4);
+            PlayUiEffect();
+        }
+
+        private void CycleMode()
+        {
+            selectedMode = selectedMode == OperationMode.Survival ? OperationMode.Endless : OperationMode.Survival;
+            PlayUiEffect();
+        }
+
+        private string DifficultyLabel()
+        {
+            switch (selectedDifficulty)
+            {
+                case Difficulty.Easy: return T("game.easy");
+                case Difficulty.Hard: return T("game.hard");
+                case Difficulty.Nightmare: return T("game.nightmare");
+                default: return T("game.normal");
+            }
+        }
+
+        private string ModeLabel()
+        {
+            return selectedMode == OperationMode.Endless ? T("game.endless") : T("game.survival");
+        }
+
+        private string SettingsTabLabel(SettingsTab tab)
+        {
+            switch (tab)
+            {
+                case SettingsTab.Graphics: return T("settings.graphics");
+                case SettingsTab.Audio: return T("settings.audio");
+                case SettingsTab.Controls: return T("settings.controls");
+                case SettingsTab.Accessibility: return T("settings.accessibility");
+                default: return T("settings.other");
+            }
+        }
+
+        private string OnOff(bool value)
+        {
+            return value ? "ON" : T("settings.off");
+        }
+
+        private string T(string key)
+        {
+            return LocalizedCatalog.Get(key, settings.Language);
         }
 
         private void DrawMenuBackdrop()
@@ -522,6 +1027,10 @@ namespace OperationRedline.Unity
             GUI.color = new Color(0.12f, 0.29f, 0.34f, 0.96f);
             var clicked = GUI.Button(rect, label, style);
             GUI.color = Color.white;
+            if (clicked)
+            {
+                PlayUiEffect();
+            }
             return clicked;
         }
 
@@ -544,6 +1053,7 @@ namespace OperationRedline.Unity
 
         private void OnDestroy()
         {
+            AudioListener.pause = false;
             ClearWorld();
         }
     }

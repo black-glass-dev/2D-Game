@@ -35,8 +35,12 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v5
-      - name: Validate Unity project contract
-        run: python3 tools/validate_unity_migration.py
+      - name: Install isolated Unity source parser
+        run: python3 -m pip install --disable-pip-version-check -r unity/tools-requirements.txt
+      - name: Validate Unity project contract and C# syntax
+        run: |
+          python3 tools/validate_unity_migration.py
+          python3 tools/validate_unity_csharp_syntax.py
 
   build-unity-android:
     name: License and build Unity Android review APK
@@ -49,8 +53,10 @@ jobs:
     env:
       # GameCI v6 reads these only from process environment, never from argv.
       # GitHub masks secret values. Do not echo either value in later steps.
-      UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-      UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+      # Accept only Unity-specific aliases. The expression resolves to the first
+      # configured value and never writes any credential into the command line.
+      UNITY_EMAIL: ${{ secrets.UNITY_EMAIL || secrets.UNITY_ACCOUNT_EMAIL || secrets.UNITY_LICENSE_EMAIL }}
+      UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD || secrets.UNITY_ACCOUNT_PASSWORD || secrets.UNITY_LICENSE_PASSWORD }}
       GITHUB_TOKEN: ${{ github.token }}
 
     steps:

@@ -129,6 +129,7 @@ def main() -> None:
     subprocess.run([sys.executable, str(ROOT / "tools/validate_exported_content.py")], check=True)
     subprocess.run([sys.executable, str(ROOT / "tools/test_validate_exported_content.py")], check=True)
     subprocess.run([sys.executable, str(ROOT / "tools/validate_unity_migration.py")], check=True)
+    subprocess.run([sys.executable, str(ROOT / "tools/validate_unity_csharp_syntax.py")], check=True)
     subprocess.run([sys.executable, str(ROOT / "tools/test_validate_unity_migration.py")], check=True)
     subprocess.run([sys.executable, str(ROOT / "tools/validate_release_contract.py")], check=True)
     subprocess.run([sys.executable, str(ROOT / "tools/test_validate_release_contract.py")], check=True)
