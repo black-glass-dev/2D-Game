@@ -32,12 +32,17 @@ namespace OperationRedline.Unity
         private int lookTouch = -1;
         private Vector2 moveTouchOrigin;
         private Vector2 touchMove;
+        private Rect[] mobileUiExclusions = new Rect[0];
+        private bool touchJumpQueued;
         private bool landedThisFrame;
 
         public Camera PlayerCamera { get { return playerCamera; } }
         public bool IsAiming { get { return aiming; } }
         public bool IsCrouching { get { return crouching; } }
         public bool LandedThisFrame { get { return landedThisFrame; } }
+        public bool HasMoveTouch { get { return moveTouch >= 0; } }
+        public Vector2 MoveTouchOrigin { get { return moveTouchOrigin; } }
+        public Vector2 TouchMove { get { return touchMove; } }
 
         public void Initialize(UnitySettings activeSettings, UnityControls activeControls)
         {
@@ -73,6 +78,16 @@ namespace OperationRedline.Unity
         {
             aiming = value;
             ApplySettings();
+        }
+
+        public void SetMobileUiExclusions(Rect[] exclusions)
+        {
+            mobileUiExclusions = exclusions ?? new Rect[0];
+        }
+
+        public void RequestTouchJump()
+        {
+            touchJumpQueued = true;
         }
 
         public void ToggleCrouch()
@@ -124,7 +139,8 @@ namespace OperationRedline.Unity
                 ToggleCrouch();
             }
 
-            var jumpPressed = Input.GetKeyDown(controls.GetKey(UnityControls.Action.Jump)) || Input.GetKeyDown(KeyCode.JoystickButton0);
+            var jumpPressed = touchJumpQueued || Input.GetKeyDown(controls.GetKey(UnityControls.Action.Jump)) || Input.GetKeyDown(KeyCode.JoystickButton0);
+            touchJumpQueued = false;
             var wasGrounded = controller.isGrounded;
             if (wasGrounded && verticalVelocity < 0f)
             {
@@ -163,7 +179,14 @@ namespace OperationRedline.Unity
             {
                 if (touch.phase == TouchPhase.Began)
                 {
-                    if (touch.position.x < Screen.width * 0.5f && moveTouch < 0)
+                    if (IsOverMobileUi(touch.position))
+                    {
+                        continue;
+                    }
+                    var movementHalf = settings.LeftHanded
+                        ? touch.position.x >= Screen.width * 0.5f
+                        : touch.position.x < Screen.width * 0.5f;
+                    if (movementHalf && moveTouch < 0)
                     {
                         moveTouch = touch.fingerId;
                         moveTouchOrigin = touch.position;
@@ -190,6 +213,19 @@ namespace OperationRedline.Unity
                     if (touch.fingerId == lookTouch) lookTouch = -1;
                 }
             }
+        }
+
+        private bool IsOverMobileUi(Vector2 touchPosition)
+        {
+            var guiPosition = new Vector2(touchPosition.x, Screen.height - touchPosition.y);
+            foreach (var excludedRect in mobileUiExclusions)
+            {
+                if (excludedRect.Contains(guiPosition))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

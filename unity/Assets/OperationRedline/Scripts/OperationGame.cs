@@ -54,11 +54,13 @@ namespace OperationRedline.Unity
         private readonly List<GameObject> worldObjects = new List<GameObject>();
         private readonly List<Material> worldMaterials = new List<Material>();
         private readonly List<DamagePopup> damagePopups = new List<DamagePopup>();
+        // First-wave routes deliberately cross the player's forward view so a
+        // new mobile session immediately communicates that the operation is live.
         private readonly Vector3[] spawnPoints =
         {
-            new Vector3(-32f, 1f, -28f), new Vector3(31f, 1f, -26f),
-            new Vector3(-30f, 1f, 27f), new Vector3(30f, 1f, 29f),
-            new Vector3(0f, 1f, -37f), new Vector3(36f, 1f, 0f),
+            new Vector3(-10f, 1f, 27f), new Vector3(10f, 1f, 28f),
+            new Vector3(-18f, 1f, 22f), new Vector3(18f, 1f, 23f),
+            new Vector3(-7f, 1f, 34f), new Vector3(7f, 1f, 34f),
         };
 
         private UnitySettings settings;
@@ -108,11 +110,30 @@ namespace OperationRedline.Unity
         private AudioClip landingThump;
         private Texture2D menuBackdrop;
         private Texture2D desertGroundTexture;
+        private Texture2D concreteTexture;
+        private Texture2D metalTexture;
+        private Texture2D crateTexture;
         private Shader mobileDesertShader;
         private Font bengaliFont;
         private string soundCaption;
         private float soundCaptionUntil;
         private Color baseAmbient;
+        private bool mobileFireHeld;
+        private bool mobileFirePressed;
+        private bool mobileAimHeld;
+        private Texture2D mobileControlDisc;
+
+        private struct MobileActionLayout
+        {
+            public Rect Fire;
+            public Rect Aim;
+            public Rect Reload;
+            public Rect Swap;
+            public Rect Jump;
+            public Rect Crouch;
+            public Rect Pause;
+            public Rect Radar;
+        }
 
         private struct DamagePopup
         {
@@ -143,20 +164,53 @@ namespace OperationRedline.Unity
         {
             menuBackdrop = Resources.Load<Texture2D>("UI/menu_desert_outpost");
             desertGroundTexture = Resources.Load<Texture2D>("Textures/desert_outpost_ground");
+            concreteTexture = Resources.Load<Texture2D>("Textures/outpost_concrete");
+            metalTexture = Resources.Load<Texture2D>("Textures/outpost_corrugated_metal");
+            crateTexture = Resources.Load<Texture2D>("Textures/outpost_weathered_crate");
             mobileDesertShader = Resources.Load<Shader>("Shaders/OperationRedlineMobile");
             if (mobileDesertShader == null)
             {
                 Debug.LogError("Operation Redline mobile world shader is missing; the Desert Outpost cannot safely fall back to a stripped default material.");
             }
-            if (desertGroundTexture != null)
-            {
-                desertGroundTexture.wrapMode = TextureWrapMode.Repeat;
-            }
+            SetTextureRepeat(desertGroundTexture);
+            SetTextureRepeat(concreteTexture);
+            SetTextureRepeat(metalTexture);
+            SetTextureRepeat(crateTexture);
             bengaliFont = Resources.Load<Font>("Fonts/NotoSansBengali-Regular");
+            mobileControlDisc = CreateMobileControlDisc();
             rifleShot = Resources.Load<AudioClip>("Audio/rifle_shot");
             pistolShot = Resources.Load<AudioClip>("Audio/pistol_shot");
             reloadClick = Resources.Load<AudioClip>("Audio/reload_click");
             landingThump = Resources.Load<AudioClip>("Audio/landing_thump");
+        }
+
+        private static void SetTextureRepeat(Texture2D texture)
+        {
+            if (texture != null)
+            {
+                texture.wrapMode = TextureWrapMode.Repeat;
+            }
+        }
+
+        private Texture2D CreateMobileControlDisc()
+        {
+            const int size = 64;
+            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            var pixels = new Color32[size * size];
+            var center = (size - 1) * 0.5f;
+            var outerRadius = center - 1f;
+            for (var y = 0; y < size; y++)
+            {
+                for (var x = 0; x < size; x++)
+                {
+                    var distance = Vector2.Distance(new Vector2(x, y), new Vector2(center, center));
+                    var alpha = distance <= outerRadius ? (byte)(distance > outerRadius - 2f ? 115 : 185) : (byte)0;
+                    pixels[y * size + x] = new Color32(166, 229, 240, alpha);
+                }
+            }
+            texture.SetPixels32(pixels);
+            texture.Apply(false, true);
+            return texture;
         }
 
         private void CreateAudio()
@@ -254,6 +308,9 @@ namespace OperationRedline.Unity
             shotsFired = 0;
             shotsHit = 0;
             headshots = 0;
+            mobileFireHeld = false;
+            mobileFirePressed = false;
+            mobileAimHeld = false;
             damagePopups.Clear();
             carbine = new UnityWeaponState(WeaponKind.Carbine);
             sidearm = new UnityWeaponState(WeaponKind.Sidearm);
@@ -301,7 +358,15 @@ namespace OperationRedline.Unity
                 return;
             }
 
-            var isAiming = Input.GetKey(controls.GetKey(UnityControls.Action.Aim)) || Input.GetMouseButton(1) || Input.GetKey(KeyCode.JoystickButton4);
+            var mobileLayout = ResolveMobileActionLayout();
+            UpdateMobileActionInput(mobileLayout);
+            if (screen != GameScreen.Gameplay)
+            {
+                return;
+            }
+
+            var desktopPointer = !Application.isMobilePlatform;
+            var isAiming = mobileAimHeld || Input.GetKey(controls.GetKey(UnityControls.Action.Aim)) || (desktopPointer && Input.GetMouseButton(1)) || Input.GetKey(KeyCode.JoystickButton4);
             playerController.SetAiming(isAiming);
             playerController.UpdateMovement(true);
             if (playerController.LandedThisFrame)
@@ -321,14 +386,85 @@ namespace OperationRedline.Unity
                 SwitchWeapon();
             }
 
-            var fireHeld = Input.GetKey(controls.GetKey(UnityControls.Action.Fire)) || Input.GetMouseButton(0) || Input.GetKey(KeyCode.JoystickButton5);
-            if (fireHeld && (settings.AutoFire || Input.GetKeyDown(controls.GetKey(UnityControls.Action.Fire)) || Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.JoystickButton5)))
+            var fireHeld = mobileFireHeld || Input.GetKey(controls.GetKey(UnityControls.Action.Fire)) || (desktopPointer && Input.GetMouseButton(0)) || Input.GetKey(KeyCode.JoystickButton5);
+            if (fireHeld && (settings.AutoFire || mobileFirePressed || Input.GetKeyDown(controls.GetKey(UnityControls.Action.Fire)) || (desktopPointer && Input.GetMouseButtonDown(0)) || Input.GetKeyDown(KeyCode.JoystickButton5)))
             {
                 FireActiveWeapon();
             }
+            mobileFirePressed = false;
 
             UpdateHealthRegeneration();
             UpdateWaveSpawning();
+        }
+
+        private MobileActionLayout ResolveMobileActionLayout()
+        {
+            var screenSize = new Vector2(Screen.width, Screen.height);
+            var fireSize = new Vector2(118f * settings.ButtonScale, 104f * settings.ButtonScale);
+            var fire = hudLayout.Resolve(UnityHudLayout.Element.Fire, fireSize, screenSize, settings.LeftHanded);
+            var pause = hudLayout.Resolve(UnityHudLayout.Element.Pause, new Vector2(115f, 36f), screenSize, settings.LeftHanded);
+            var radar = hudLayout.Resolve(UnityHudLayout.Element.Radar, new Vector2(122f, 122f), screenSize, settings.LeftHanded);
+            var supportWidth = 82f;
+            var direction = settings.LeftHanded ? 1f : -1f;
+            var supportX = Mathf.Clamp(fire.center.x + direction * (fire.width * 0.5f + supportWidth * 0.5f + 9f), 8f, Screen.width - supportWidth - 8f);
+            var lowerY = Mathf.Clamp(fire.y + fire.height - 52f, 8f, Screen.height - 52f);
+            return new MobileActionLayout
+            {
+                Fire = fire,
+                Aim = new Rect(supportX - supportWidth * 0.5f, lowerY, supportWidth, 52f),
+                Reload = new Rect(supportX - supportWidth * 0.5f, Mathf.Max(8f, fire.y - 60f), supportWidth, 48f),
+                Swap = new Rect(supportX - supportWidth * 0.5f, Mathf.Max(8f, fire.y - 114f), supportWidth, 48f),
+                Jump = new Rect(supportX - supportWidth * 0.5f, Mathf.Max(8f, fire.y - 168f), supportWidth, 48f),
+                Crouch = new Rect(supportX - supportWidth * 0.5f, Mathf.Max(8f, fire.y - 222f), supportWidth, 48f),
+                Pause = pause,
+                Radar = radar,
+            };
+        }
+
+        private void UpdateMobileActionInput(MobileActionLayout layout)
+        {
+            mobileFireHeld = false;
+            mobileFirePressed = false;
+            mobileAimHeld = false;
+            playerController.SetMobileUiExclusions(new[]
+            {
+                layout.Fire, layout.Aim, layout.Reload, layout.Swap, layout.Jump, layout.Crouch, layout.Pause, layout.Radar,
+            });
+            if (!Application.isMobilePlatform)
+            {
+                return;
+            }
+
+            foreach (var touch in Input.touches)
+            {
+                var guiPosition = new Vector2(touch.position.x, Screen.height - touch.position.y);
+                var held = touch.phase == TouchPhase.Began || touch.phase == TouchPhase.Moved || touch.phase == TouchPhase.Stationary;
+                if (held && layout.Fire.Contains(guiPosition))
+                {
+                    mobileFireHeld = true;
+                    if (touch.phase == TouchPhase.Began)
+                    {
+                        mobileFirePressed = true;
+                    }
+                }
+                if (held && layout.Aim.Contains(guiPosition))
+                {
+                    mobileAimHeld = true;
+                }
+                if (touch.phase != TouchPhase.Began)
+                {
+                    continue;
+                }
+                if (layout.Pause.Contains(guiPosition))
+                {
+                    PauseOperation();
+                    return;
+                }
+                if (layout.Reload.Contains(guiPosition)) StartReload();
+                if (layout.Swap.Contains(guiPosition)) SwitchWeapon();
+                if (layout.Jump.Contains(guiPosition)) playerController.RequestTouchJump();
+                if (layout.Crouch.Contains(guiPosition)) playerController.ToggleCrouch();
+            }
         }
 
         private void UpdateHealthRegeneration()
@@ -608,18 +744,18 @@ namespace OperationRedline.Unity
             var ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
             ground.name = "Desert Ground — textured mobile-safe terrain";
             ground.transform.localScale = new Vector3(12f, 1f, 12f);
-            ApplyWorldMaterial(ground.GetComponent<Renderer>(), Color.white, desertGroundTexture, new Vector2(14f, 14f));
+            ApplyWorldMaterial(ground.GetComponent<Renderer>(), Color.white, desertGroundTexture, new Vector2(4f, 4f));
             worldObjects.Add(ground);
 
-            CreateBlock("Command Yard", new Vector3(0f, 2.2f, -8f), new Vector3(14f, 4.4f, 6f), new Color(0.25f, 0.28f, 0.25f));
-            CreateBlock("North Hangar", new Vector3(-20f, 2f, -24f), new Vector3(13f, 4f, 9f), new Color(0.31f, 0.32f, 0.28f));
-            CreateBlock("South Checkpoint", new Vector3(21f, 1.3f, 20f), new Vector3(11f, 2.6f, 5f), new Color(0.35f, 0.3f, 0.22f));
-            CreateBlock("Radio Tower", new Vector3(28f, 8f, -8f), new Vector3(2.2f, 16f, 2.2f), new Color(0.16f, 0.19f, 0.19f));
-            CreateBlock("Outpost Gate", new Vector3(0f, 2.6f, 37f), new Vector3(17f, 5.2f, 1.3f), new Color(0.18f, 0.25f, 0.23f));
+            CreateBlock("Command Yard", new Vector3(0f, 2.2f, -8f), new Vector3(14f, 4.4f, 6f), new Color(0.54f, 0.58f, 0.53f), concreteTexture, new Vector2(3f, 2f));
+            CreateBlock("North Hangar", new Vector3(-20f, 2f, -24f), new Vector3(13f, 4f, 9f), new Color(0.56f, 0.59f, 0.52f), metalTexture, new Vector2(3f, 2f));
+            CreateBlock("South Checkpoint", new Vector3(21f, 1.3f, 20f), new Vector3(11f, 2.6f, 5f), new Color(0.62f, 0.53f, 0.38f), concreteTexture, new Vector2(2f, 2f));
+            CreateBlock("Radio Tower", new Vector3(28f, 8f, -8f), new Vector3(2.2f, 16f, 2.2f), new Color(0.33f, 0.42f, 0.42f), metalTexture, new Vector2(2f, 4f));
+            CreateBlock("Outpost Gate", new Vector3(0f, 2.6f, 37f), new Vector3(17f, 5.2f, 1.3f), new Color(0.38f, 0.52f, 0.49f), metalTexture, new Vector2(4f, 2f));
             for (var index = 0; index < 8; index++)
             {
                 var position = new Vector3(-35f + index * 10f, 1f, 32f);
-                CreateBlock("Supply Cover " + index, position, new Vector3(3.6f, 2f, 2.2f), new Color(0.36f, 0.25f, 0.13f));
+                CreateBlock("Supply Cover " + index, position, new Vector3(3.6f, 2f, 2.2f), new Color(0.72f, 0.56f, 0.32f), crateTexture, new Vector2(1.5f, 1f));
             }
             CreateOutpostDetails();
 
@@ -635,34 +771,34 @@ namespace OperationRedline.Unity
             worldObjects.Add(root);
         }
 
-        private void CreateBlock(string blockName, Vector3 position, Vector3 scale, Color color)
+        private void CreateBlock(string blockName, Vector3 position, Vector3 scale, Color color, Texture2D texture = null, Vector2? textureTiling = null)
         {
             var block = GameObject.CreatePrimitive(PrimitiveType.Cube);
             block.name = blockName;
             block.transform.position = position;
             block.transform.localScale = scale;
-            ApplyWorldMaterial(block.GetComponent<Renderer>(), color);
+            ApplyWorldMaterial(block.GetComponent<Renderer>(), color, texture, textureTiling);
             worldObjects.Add(block);
         }
 
         private void CreateOutpostDetails()
         {
-            CreateCylinder("Signal Mast", new Vector3(-7f, 4.7f, -2f), new Vector3(0.42f, 4.7f, 0.42f), new Color(0.12f, 0.18f, 0.17f));
-            CreateCylinder("Fuel Drum A", new Vector3(10f, 0.62f, 7f), new Vector3(0.58f, 0.62f, 0.58f), new Color(0.48f, 0.16f, 0.08f));
-            CreateCylinder("Fuel Drum B", new Vector3(11.4f, 0.62f, 7.8f), new Vector3(0.58f, 0.62f, 0.58f), new Color(0.12f, 0.28f, 0.29f));
-            CreateCylinder("Fuel Drum C", new Vector3(9.1f, 0.62f, 8.1f), new Vector3(0.58f, 0.62f, 0.58f), new Color(0.48f, 0.16f, 0.08f));
-            CreateBlock("Sandbag Wall West", new Vector3(-11f, 0.7f, 7f), new Vector3(6.2f, 1.4f, 1.2f), new Color(0.5f, 0.37f, 0.21f));
-            CreateBlock("Sandbag Wall East", new Vector3(12f, 0.7f, -3f), new Vector3(1.2f, 1.4f, 6.2f), new Color(0.5f, 0.37f, 0.21f));
-            CreateBlock("Radio Array", new Vector3(27.4f, 16.7f, -8f), new Vector3(5.2f, 0.32f, 0.32f), new Color(0.72f, 0.58f, 0.25f));
+            CreateCylinder("Signal Mast", new Vector3(-7f, 4.7f, -2f), new Vector3(0.42f, 4.7f, 0.42f), new Color(0.32f, 0.46f, 0.43f), metalTexture);
+            CreateCylinder("Fuel Drum A", new Vector3(10f, 0.62f, 7f), new Vector3(0.58f, 0.62f, 0.58f), new Color(0.75f, 0.27f, 0.12f), metalTexture);
+            CreateCylinder("Fuel Drum B", new Vector3(11.4f, 0.62f, 7.8f), new Vector3(0.58f, 0.62f, 0.58f), new Color(0.16f, 0.47f, 0.49f), metalTexture);
+            CreateCylinder("Fuel Drum C", new Vector3(9.1f, 0.62f, 8.1f), new Vector3(0.58f, 0.62f, 0.58f), new Color(0.75f, 0.27f, 0.12f), metalTexture);
+            CreateBlock("Sandbag Wall West", new Vector3(-11f, 0.7f, 7f), new Vector3(6.2f, 1.4f, 1.2f), new Color(0.68f, 0.51f, 0.3f), crateTexture, new Vector2(2f, 1f));
+            CreateBlock("Sandbag Wall East", new Vector3(12f, 0.7f, -3f), new Vector3(1.2f, 1.4f, 6.2f), new Color(0.68f, 0.51f, 0.3f), crateTexture, new Vector2(2f, 1f));
+            CreateBlock("Radio Array", new Vector3(27.4f, 16.7f, -8f), new Vector3(5.2f, 0.32f, 0.32f), new Color(0.88f, 0.7f, 0.3f), metalTexture, new Vector2(2f, 1f));
         }
 
-        private void CreateCylinder(string objectName, Vector3 position, Vector3 scale, Color color)
+        private void CreateCylinder(string objectName, Vector3 position, Vector3 scale, Color color, Texture2D texture = null)
         {
             var cylinder = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             cylinder.name = objectName;
             cylinder.transform.position = position;
             cylinder.transform.localScale = scale;
-            ApplyWorldMaterial(cylinder.GetComponent<Renderer>(), color);
+            ApplyWorldMaterial(cylinder.GetComponent<Renderer>(), color, texture, texture == null ? (Vector2?)null : new Vector2(1f, 2f));
             worldObjects.Add(cylinder);
         }
 
@@ -1016,7 +1152,7 @@ namespace OperationRedline.Unity
             GUI.DrawTexture(new Rect(14f, 14f, 270f, 158f), Texture2D.whiteTexture);
             GUI.color = hudColor;
             var limit = selectedMode == OperationMode.Endless ? "∞" : WaveSizes.Length.ToString();
-            GUI.Label(new Rect(28f, 26f, 250f, 27f), T("result.wave").Replace("%d", Mathf.Max(wave, 1).ToString()) + " / " + limit, leftStyle);
+            GUI.Label(new Rect(28f, 26f, 250f, 27f), T("map.waves") + "  " + Mathf.Max(wave, 1) + " / " + limit, leftStyle);
             GUI.Label(new Rect(28f, 54f, 250f, 27f), "SCORE  " + score.ToString("D5"), leftStyle);
             GUI.Label(new Rect(28f, 82f, 250f, 27f), "HP  " + Mathf.CeilToInt(health), leftStyle);
             if (activeWeapon != null)
@@ -1030,23 +1166,71 @@ namespace OperationRedline.Unity
             if (settings.Subtitles && Time.unscaledTime < soundCaptionUntil) GUI.Label(new Rect(0f, Screen.height - 72f, Screen.width, 26f), "♪  " + soundCaption, bodyStyle);
             DrawDamageNumbers();
 
-            var screenSize = new Vector2(Screen.width, Screen.height);
-            var fireSize = new Vector2(118f * settings.ButtonScale, 104f * settings.ButtonScale);
-            var radarRect = hudLayout.Resolve(UnityHudLayout.Element.Radar, new Vector2(122f, 122f), screenSize, settings.LeftHanded);
-            var fireRect = hudLayout.Resolve(UnityHudLayout.Element.Fire, fireSize, screenSize, settings.LeftHanded);
-            var pauseRect = hudLayout.Resolve(UnityHudLayout.Element.Pause, new Vector2(115f, 36f), screenSize, settings.LeftHanded);
+            var mobileLayout = ResolveMobileActionLayout();
             if (hudEditMode)
             {
-                DrawHudEditor(radarRect, fireRect, pauseRect, bodyStyle, buttonStyle);
+                DrawHudEditor(mobileLayout.Radar, mobileLayout.Fire, mobileLayout.Pause, bodyStyle, buttonStyle);
                 return;
             }
 
-            if (tacticalRadar != null) tacticalRadar.Draw(radarRect, playerRoot, raiders, settings.ColorblindMode);
+            if (tacticalRadar != null) tacticalRadar.Draw(mobileLayout.Radar, playerRoot, raiders, settings.ColorblindMode);
+            if (Application.isMobilePlatform)
+            {
+                DrawMobileTouchControls(mobileLayout, bodyStyle, buttonStyle);
+                return;
+            }
+
             GUI.color = new Color(1f, 1f, 1f, settings.TouchOpacity);
-            if (GUI.RepeatButton(fireRect, T("bindings.fire"), buttonStyle)) FireActiveWeapon();
+            if (GUI.RepeatButton(mobileLayout.Fire, T("bindings.fire"), buttonStyle)) FireActiveWeapon();
             GUI.color = Color.white;
-            if (Button(pauseRect, T("pause.title"), buttonStyle)) PauseOperation();
+            if (Button(mobileLayout.Pause, T("bindings.pause"), buttonStyle)) PauseOperation();
             if (Button(new Rect(292f, 18f, 88f, 36f), "HUD", buttonStyle)) hudEditMode = true;
+        }
+
+        private void DrawMobileTouchControls(MobileActionLayout layout, GUIStyle bodyStyle, GUIStyle buttonStyle)
+        {
+            DrawMobileMovementPad(bodyStyle);
+            DrawMobileAction(layout.Fire, T("bindings.fire"), mobileFireHeld, buttonStyle);
+            DrawMobileAction(layout.Aim, T("bindings.aim"), mobileAimHeld, buttonStyle);
+            DrawMobileAction(layout.Reload, T("bindings.reload"), false, buttonStyle);
+            DrawMobileAction(layout.Swap, T("bindings.swap"), false, buttonStyle);
+            DrawMobileAction(layout.Jump, T("bindings.jump"), false, buttonStyle);
+            DrawMobileAction(layout.Crouch, T("bindings.crouch"), playerController != null && playerController.IsCrouching, buttonStyle);
+            DrawMobileAction(layout.Pause, T("bindings.pause"), false, buttonStyle);
+        }
+
+        private void DrawMobileMovementPad(GUIStyle bodyStyle)
+        {
+            if (mobileControlDisc == null)
+            {
+                return;
+            }
+            var radius = 54f * settings.JoystickScale;
+            var defaultCenter = new Vector2(settings.LeftHanded ? Screen.width - radius - 24f : radius + 24f, Screen.height - radius - 24f);
+            var center = defaultCenter;
+            if (playerController != null && playerController.HasMoveTouch)
+            {
+                center = new Vector2(playerController.MoveTouchOrigin.x, Screen.height - playerController.MoveTouchOrigin.y);
+            }
+            center.x = Mathf.Clamp(center.x, radius + 8f, Screen.width - radius - 8f);
+            center.y = Mathf.Clamp(center.y, radius + 8f, Screen.height - radius - 8f);
+            GUI.color = new Color(0.08f, 0.23f, 0.28f, settings.TouchOpacity * 0.78f);
+            GUI.DrawTexture(new Rect(center.x - radius, center.y - radius, radius * 2f, radius * 2f), mobileControlDisc);
+            var knob = playerController == null ? Vector2.zero : playerController.TouchMove * radius * 0.52f;
+            GUI.color = new Color(0.7f, 0.96f, 1f, settings.TouchOpacity);
+            GUI.DrawTexture(new Rect(center.x + knob.x - radius * 0.34f, center.y - knob.y - radius * 0.34f, radius * 0.68f, radius * 0.68f), mobileControlDisc);
+            GUI.color = new Color(1f, 1f, 1f, settings.TouchOpacity);
+            GUI.Label(new Rect(center.x - radius, center.y - 11f, radius * 2f, 22f), "MOVE", bodyStyle);
+            GUI.color = Color.white;
+        }
+
+        private void DrawMobileAction(Rect rect, string label, bool active, GUIStyle buttonStyle)
+        {
+            GUI.color = active ? new Color(0.16f, 0.62f, 0.66f, settings.TouchOpacity) : new Color(0.035f, 0.16f, 0.2f, settings.TouchOpacity);
+            GUI.DrawTexture(rect, Texture2D.whiteTexture);
+            GUI.color = new Color(1f, 1f, 1f, settings.TouchOpacity);
+            GUI.Label(rect, label, buttonStyle);
+            GUI.color = Color.white;
         }
 
         private void DrawHudEditor(Rect radarRect, Rect fireRect, Rect pauseRect, GUIStyle bodyStyle, GUIStyle buttonStyle)
@@ -1253,6 +1437,10 @@ namespace OperationRedline.Unity
         {
             AudioListener.pause = false;
             ClearWorld();
+            if (mobileControlDisc != null)
+            {
+                Destroy(mobileControlDisc);
+            }
         }
     }
 }

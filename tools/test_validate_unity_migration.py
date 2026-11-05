@@ -102,6 +102,29 @@ class UnityMigrationTests(unittest.TestCase):
             with self.assertRaisesRegex(unity_validator.UnityMigrationError, "desert_outpost_ground.png"):
                 unity_validator.validate(workspace)
 
+    def test_rejects_mobile_controls_that_leak_into_camera_look(self) -> None:
+        with self.copied_workspace() as directory:
+            workspace = Path(directory)
+            controller = workspace / "unity/Assets/OperationRedline/Scripts/OutpostPlayerController.cs"
+            controller.write_text(controller.read_text(encoding="utf-8").replace("SetMobileUiExclusions", "RemovedMobileUiExclusions"), encoding="utf-8")
+            with self.assertRaisesRegex(unity_validator.UnityMigrationError, "SetMobileUiExclusions"):
+                unity_validator.validate(workspace)
+
+    def test_rejects_missing_textured_outpost_presentation_asset(self) -> None:
+        with self.copied_workspace() as directory:
+            workspace = Path(directory)
+            (workspace / "unity/Assets/OperationRedline/Resources/Textures/outpost_corrugated_metal.png").unlink()
+            with self.assertRaisesRegex(unity_validator.UnityMigrationError, "outpost_corrugated_metal.png"):
+                unity_validator.validate(workspace)
+
+    def test_rejects_ambiguous_paused_mobile_label(self) -> None:
+        with self.copied_workspace() as directory:
+            workspace = Path(directory)
+            game = workspace / "unity/Assets/OperationRedline/Scripts/OperationGame.cs"
+            game.write_text(game.read_text(encoding="utf-8").replace("bindings.pause", "pause.title"), encoding="utf-8")
+            with self.assertRaisesRegex(unity_validator.UnityMigrationError, "bindings.pause"):
+                unity_validator.validate(workspace)
+
     def test_rejects_nondeterministic_apk_artifact_handoff(self) -> None:
         with self.copied_workspace() as directory:
             workspace = Path(directory)

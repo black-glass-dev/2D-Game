@@ -75,9 +75,14 @@ def validate(root: Path = ROOT) -> None:
             "CreateShotTracer",
             "DrawDamageNumbers",
             "DrawHudEditor",
+            "DrawMobileTouchControls",
+            "UpdateMobileActionInput",
+            "ResolveMobileActionLayout",
+            "bindings.pause",
             "mobileDesertShader",
             "Shaders/OperationRedlineMobile",
             "Textures/desert_outpost_ground",
+            "Textures/outpost_corrugated_metal",
             "ApplyWorldMaterial",
             "OnRaiderEliminated",
             "ApplyPlayerDamage",
@@ -121,7 +126,7 @@ def validate(root: Path = ROOT) -> None:
     )
     require(
         "unity/Assets/OperationRedline/Scripts/OutpostPlayerController.cs",
-        ("CharacterController", "SprintSpeed", "ToggleCrouch", "ReadTouchInput", "GamepadDeadzone"),
+        ("CharacterController", "SprintSpeed", "ToggleCrouch", "ReadTouchInput", "GamepadDeadzone", "SetMobileUiExclusions", "RequestTouchJump", "IsOverMobileUi"),
         root,
     )
     require(
@@ -165,6 +170,9 @@ def validate(root: Path = ROOT) -> None:
         "unity/Assets/OperationRedline/Resources/Fonts/NotoSansBengali-Regular.ttf",
         "unity/Assets/OperationRedline/Resources/UI/menu_desert_outpost.png",
         "unity/Assets/OperationRedline/Resources/Textures/desert_outpost_ground.png",
+        "unity/Assets/OperationRedline/Resources/Textures/outpost_concrete.png",
+        "unity/Assets/OperationRedline/Resources/Textures/outpost_corrugated_metal.png",
+        "unity/Assets/OperationRedline/Resources/Textures/outpost_weathered_crate.png",
         "unity/Assets/OperationRedline/Resources/Shaders/OperationRedlineMobile.shader",
     ):
         if not (root / asset).is_file():
