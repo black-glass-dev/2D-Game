@@ -103,6 +103,14 @@ class UnityMigrationTests(unittest.TestCase):
             with self.assertRaisesRegex(unity_validator.UnityMigrationError, "gh release create"):
                 unity_validator.validate(workspace)
 
+    def test_rejects_release_handoff_without_visible_sha256(self) -> None:
+        with self.copied_workspace() as directory:
+            workspace = Path(directory)
+            workflow = workspace / ".github/workflows/unity-android.yml"
+            workflow.write_text(workflow.read_text(encoding="utf-8").replace("SHA-256: \\`${apk_sha}\\`", "removed-visible-sha", 1), encoding="utf-8")
+            with self.assertRaisesRegex(unity_validator.UnityMigrationError, "SHA-256"):
+                unity_validator.validate(workspace)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -118,8 +118,12 @@ jobs:
         run: |
           set -euo pipefail
           tag="unity-human-review-${GITHUB_SHA:0:12}"
+          apk_sha="$(awk '{print $1}' unity-review-artifact/OperationRedline-Unity-review.apk.sha256)"
+          [[ "$apk_sha" =~ ^[a-f0-9]{64}$ ]]
           cat > unity-review-artifact/release-notes.md <<EOF
           This is an **explicitly unvalidated Unity Android review build** for source commit \`${GITHUB_SHA}\`.
+
+          SHA-256: \`${apk_sha}\` for \`OperationRedline-Unity-review.apk\`.
 
           It passed the Unity source contract, C# syntax parse, Unity license activation/build, and APK ZIP/hash verification. It has **not** passed emulator launch, physical-device review, signing-compatibility verification, or Highrise acceptance. It is not a release candidate or supported delivery.
 

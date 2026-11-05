@@ -186,6 +186,8 @@ def validate(root: Path = ROOT) -> None:
         "- name: Publish explicitly unvalidated Unity review handoff",
         "tag=\"unity-human-review-${GITHUB_SHA:0:12}\"",
         "gh release create \"$tag\"",
+        "apk_sha=\"$(awk '{print $1}' unity-review-artifact/OperationRedline-Unity-review.apk.sha256)\"",
+        "SHA-256: \\`${apk_sha}\\`",
         "explicitly unvalidated Unity Android review build",
         "not a release candidate or supported delivery",
         "--prerelease",
