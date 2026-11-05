@@ -83,7 +83,7 @@
 - [x] Add a credential-safe GameCI v6 Unity Android workflow using a restricted Unity-specific email/password alias set, a narrow first-build marker/manual confirmation, APK ZIP/hash validation, and seven-day review artifact retention.
 - [x] Add mutation-tested Unity migration source contracts and isolated C# syntax validation; retain Godot as reference/rollback rather than deleting it before Unity build/device proof.
 - [x] Trigger the first Unity source/build workflow; source validation passed in run 42016266679 and the non-sensitive credential preflight safely stopped the build before activation when the configured references were absent.
-- [ ] Run Unity license activation/import/Android build when one of the six existing Unity-specific secret aliases resolves; no secret value is needed in source or chat.
+- [ ] Run Unity license activation/import/Android build when one of the ten existing Unity-specific secret aliases resolves; no secret value is needed in source or chat.
 - [ ] Validate the Unity APK on a real device against the complete D01–D12 matrix; resolve signing/in-place-update evidence separately from application-ID preservation.
 - [ ] Finish gates that cannot be authored from this checkout: authoritative Highrise B2 coordinates/reference, physical performance/mix validation, feature-parity review (including tactical radar/visual effects), and replacement approval before archiving legacy runtime pipelines.
 

@@ -35,8 +35,8 @@ The current [GameCI `unity-builder` v6 source](https://github.com/game-ci/unity-
 
 ```yaml
 env:
-  UNITY_EMAIL: ${{ secrets.UNITY_EMAIL || secrets.UNITY_ACCOUNT_EMAIL || secrets.UNITY_LICENSE_EMAIL }}
-  UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD || secrets.UNITY_ACCOUNT_PASSWORD || secrets.UNITY_LICENSE_PASSWORD }}
+  UNITY_EMAIL: ${{ secrets.UNITY_EMAIL || secrets.UNITY_ACCOUNT_EMAIL || secrets.UNITY_LICENSE_EMAIL || secrets.UNITY_USERNAME || secrets.UNITY_USER_EMAIL }}
+  UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD || secrets.UNITY_ACCOUNT_PASSWORD || secrets.UNITY_LICENSE_PASSWORD || secrets.UNITY_PASS || secrets.UNITY_USER_PASSWORD }}
 ```
 
 The workflow never prints credentials, never places them in command arguments,
@@ -49,7 +49,7 @@ and retains the review artifact seven days.
 The current GitHub integration returned HTTP 403 when attempting to enumerate
 secret names, so the repository's exact secret identifiers could not be read and
 no values were accessed. The guarded fallback aliases above allow a first retry
-without guessing generic/non-Unity secret names. If those six Unity-specific
+without guessing generic/non-Unity secret names. If those ten Unity-specific
 names are also not the repository's names, update only the two references (or
 provide the secret **names**, never the values). The GitHub API also returns 404
 when trying to dispatch a workflow that exists only on this unmerged branch, so
