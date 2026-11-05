@@ -75,6 +75,10 @@ def validate(root: Path = ROOT) -> None:
             "CreateShotTracer",
             "DrawDamageNumbers",
             "DrawHudEditor",
+            "mobileDesertShader",
+            "Shaders/OperationRedlineMobile",
+            "Textures/desert_outpost_ground",
+            "ApplyWorldMaterial",
             "OnRaiderEliminated",
             "ApplyPlayerDamage",
             "KeyCode.Escape",
@@ -160,9 +164,17 @@ def validate(root: Path = ROOT) -> None:
         "unity/Assets/OperationRedline/Resources/Audio/rifle_shot.wav",
         "unity/Assets/OperationRedline/Resources/Fonts/NotoSansBengali-Regular.ttf",
         "unity/Assets/OperationRedline/Resources/UI/menu_desert_outpost.png",
+        "unity/Assets/OperationRedline/Resources/Textures/desert_outpost_ground.png",
+        "unity/Assets/OperationRedline/Resources/Shaders/OperationRedlineMobile.shader",
     ):
         if not (root / asset).is_file():
             fail(f"missing migrated Unity resource: {asset}")
+
+    require(
+        "unity/Assets/OperationRedline/Resources/Shaders/OperationRedlineMobile.shader",
+        ("Shader \"OperationRedline/Mobile Desert\"", "#pragma target 2.0", "tex2D(_MainTex, input.uv) * _Color"),
+        root,
+    )
 
     workflow = required_text(".github/workflows/unity-android.yml", root)
     for snippet in (

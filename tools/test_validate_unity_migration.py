@@ -87,6 +87,21 @@ class UnityMigrationTests(unittest.TestCase):
             with self.assertRaisesRegex(unity_validator.UnityMigrationError, "UnityHudLayout"):
                 unity_validator.validate(workspace)
 
+    def test_rejects_missing_mobile_safe_desert_shader(self) -> None:
+        with self.copied_workspace() as directory:
+            workspace = Path(directory)
+            shader = workspace / "unity/Assets/OperationRedline/Resources/Shaders/OperationRedlineMobile.shader"
+            shader.write_text(shader.read_text(encoding="utf-8").replace("#pragma target 2.0", "#pragma target removed", 1), encoding="utf-8")
+            with self.assertRaisesRegex(unity_validator.UnityMigrationError, "OperationRedlineMobile.shader"):
+                unity_validator.validate(workspace)
+
+    def test_rejects_missing_desert_ground_presentation_image(self) -> None:
+        with self.copied_workspace() as directory:
+            workspace = Path(directory)
+            (workspace / "unity/Assets/OperationRedline/Resources/Textures/desert_outpost_ground.png").unlink()
+            with self.assertRaisesRegex(unity_validator.UnityMigrationError, "desert_outpost_ground.png"):
+                unity_validator.validate(workspace)
+
     def test_rejects_nondeterministic_apk_artifact_handoff(self) -> None:
         with self.copied_workspace() as directory:
             workspace = Path(directory)

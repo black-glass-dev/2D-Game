@@ -52,6 +52,7 @@ namespace OperationRedline.Unity
 
         private readonly List<RaiderActor> raiders = new List<RaiderActor>();
         private readonly List<GameObject> worldObjects = new List<GameObject>();
+        private readonly List<Material> worldMaterials = new List<Material>();
         private readonly List<DamagePopup> damagePopups = new List<DamagePopup>();
         private readonly Vector3[] spawnPoints =
         {
@@ -106,6 +107,8 @@ namespace OperationRedline.Unity
         private AudioClip reloadClick;
         private AudioClip landingThump;
         private Texture2D menuBackdrop;
+        private Texture2D desertGroundTexture;
+        private Shader mobileDesertShader;
         private Font bengaliFont;
         private string soundCaption;
         private float soundCaptionUntil;
@@ -139,6 +142,16 @@ namespace OperationRedline.Unity
         private void LoadPresentationAssets()
         {
             menuBackdrop = Resources.Load<Texture2D>("UI/menu_desert_outpost");
+            desertGroundTexture = Resources.Load<Texture2D>("Textures/desert_outpost_ground");
+            mobileDesertShader = Resources.Load<Shader>("Shaders/OperationRedlineMobile");
+            if (mobileDesertShader == null)
+            {
+                Debug.LogError("Operation Redline mobile world shader is missing; the Desert Outpost cannot safely fall back to a stripped default material.");
+            }
+            if (desertGroundTexture != null)
+            {
+                desertGroundTexture.wrapMode = TextureWrapMode.Repeat;
+            }
             bengaliFont = Resources.Load<Font>("Fonts/NotoSansBengali-Regular");
             rifleShot = Resources.Load<AudioClip>("Audio/rifle_shot");
             pistolShot = Resources.Load<AudioClip>("Audio/pistol_shot");
@@ -407,7 +420,7 @@ namespace OperationRedline.Unity
             enemy.transform.position = spawn;
             enemy.transform.localScale = new Vector3(1.1f, 1.3f, 1.1f);
             var renderer = enemy.GetComponent<Renderer>();
-            renderer.material.color = wave % WaveSizes.Length == 0 ? new Color(0.58f, 0.16f, 0.12f) : new Color(0.35f, 0.24f, 0.16f);
+            ApplyWorldMaterial(renderer, wave % WaveSizes.Length == 0 ? new Color(0.58f, 0.16f, 0.12f) : new Color(0.35f, 0.24f, 0.16f));
             var actor = enemy.AddComponent<RaiderActor>();
             actor.Initialize(this, playerRoot, wave, DifficultyDamageMultiplier());
             raiders.Add(actor);
@@ -505,7 +518,7 @@ namespace OperationRedline.Unity
             tracer.transform.rotation = Quaternion.LookRotation(direction);
             tracer.transform.localScale = new Vector3(0.018f, 0.018f, length);
             var renderer = tracer.GetComponent<Renderer>();
-            renderer.material.color = new Color(1f, 0.8f, 0.28f);
+            ApplyWorldMaterial(renderer, new Color(1f, 0.8f, 0.28f));
             var collider = tracer.GetComponent<Collider>();
             if (collider != null)
             {
@@ -593,20 +606,22 @@ namespace OperationRedline.Unity
             RenderSettings.fogDensity = 0.006f;
 
             var ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
-            ground.name = "Desert Ground";
+            ground.name = "Desert Ground — textured mobile-safe terrain";
             ground.transform.localScale = new Vector3(12f, 1f, 12f);
-            ground.GetComponent<Renderer>().material.color = new Color(0.54f, 0.36f, 0.18f);
+            ApplyWorldMaterial(ground.GetComponent<Renderer>(), Color.white, desertGroundTexture, new Vector2(14f, 14f));
             worldObjects.Add(ground);
 
             CreateBlock("Command Yard", new Vector3(0f, 2.2f, -8f), new Vector3(14f, 4.4f, 6f), new Color(0.25f, 0.28f, 0.25f));
             CreateBlock("North Hangar", new Vector3(-20f, 2f, -24f), new Vector3(13f, 4f, 9f), new Color(0.31f, 0.32f, 0.28f));
             CreateBlock("South Checkpoint", new Vector3(21f, 1.3f, 20f), new Vector3(11f, 2.6f, 5f), new Color(0.35f, 0.3f, 0.22f));
             CreateBlock("Radio Tower", new Vector3(28f, 8f, -8f), new Vector3(2.2f, 16f, 2.2f), new Color(0.16f, 0.19f, 0.19f));
+            CreateBlock("Outpost Gate", new Vector3(0f, 2.6f, 37f), new Vector3(17f, 5.2f, 1.3f), new Color(0.18f, 0.25f, 0.23f));
             for (var index = 0; index < 8; index++)
             {
                 var position = new Vector3(-35f + index * 10f, 1f, 32f);
                 CreateBlock("Supply Cover " + index, position, new Vector3(3.6f, 2f, 2.2f), new Color(0.36f, 0.25f, 0.13f));
             }
+            CreateOutpostDetails();
 
             var root = new GameObject("Player");
             root.transform.position = new Vector3(0f, 1.05f, 13f);
@@ -626,8 +641,45 @@ namespace OperationRedline.Unity
             block.name = blockName;
             block.transform.position = position;
             block.transform.localScale = scale;
-            block.GetComponent<Renderer>().material.color = color;
+            ApplyWorldMaterial(block.GetComponent<Renderer>(), color);
             worldObjects.Add(block);
+        }
+
+        private void CreateOutpostDetails()
+        {
+            CreateCylinder("Signal Mast", new Vector3(-7f, 4.7f, -2f), new Vector3(0.42f, 4.7f, 0.42f), new Color(0.12f, 0.18f, 0.17f));
+            CreateCylinder("Fuel Drum A", new Vector3(10f, 0.62f, 7f), new Vector3(0.58f, 0.62f, 0.58f), new Color(0.48f, 0.16f, 0.08f));
+            CreateCylinder("Fuel Drum B", new Vector3(11.4f, 0.62f, 7.8f), new Vector3(0.58f, 0.62f, 0.58f), new Color(0.12f, 0.28f, 0.29f));
+            CreateCylinder("Fuel Drum C", new Vector3(9.1f, 0.62f, 8.1f), new Vector3(0.58f, 0.62f, 0.58f), new Color(0.48f, 0.16f, 0.08f));
+            CreateBlock("Sandbag Wall West", new Vector3(-11f, 0.7f, 7f), new Vector3(6.2f, 1.4f, 1.2f), new Color(0.5f, 0.37f, 0.21f));
+            CreateBlock("Sandbag Wall East", new Vector3(12f, 0.7f, -3f), new Vector3(1.2f, 1.4f, 6.2f), new Color(0.5f, 0.37f, 0.21f));
+            CreateBlock("Radio Array", new Vector3(27.4f, 16.7f, -8f), new Vector3(5.2f, 0.32f, 0.32f), new Color(0.72f, 0.58f, 0.25f));
+        }
+
+        private void CreateCylinder(string objectName, Vector3 position, Vector3 scale, Color color)
+        {
+            var cylinder = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            cylinder.name = objectName;
+            cylinder.transform.position = position;
+            cylinder.transform.localScale = scale;
+            ApplyWorldMaterial(cylinder.GetComponent<Renderer>(), color);
+            worldObjects.Add(cylinder);
+        }
+
+        private void ApplyWorldMaterial(Renderer renderer, Color tint, Texture2D texture = null, Vector2? textureTiling = null)
+        {
+            if (renderer == null || mobileDesertShader == null)
+            {
+                return;
+            }
+            var material = new Material(mobileDesertShader)
+            {
+                color = tint,
+                mainTexture = texture == null ? Texture2D.whiteTexture : texture,
+            };
+            material.mainTextureScale = textureTiling ?? Vector2.one;
+            renderer.sharedMaterial = material;
+            worldMaterials.Add(material);
         }
 
         private void ClearWorld()
@@ -640,6 +692,14 @@ namespace OperationRedline.Unity
                 }
             }
             worldObjects.Clear();
+            foreach (var material in worldMaterials)
+            {
+                if (material != null)
+                {
+                    Destroy(material);
+                }
+            }
+            worldMaterials.Clear();
             raiders.Clear();
             damagePopups.Clear();
             playerRoot = null;
