@@ -41,17 +41,20 @@ env:
 
 The workflow never prints credentials, never places them in command arguments,
 and has a non-empty preflight that reports only whether the secret references are
-available. It builds only after the explicit manual confirmation
-`BUILD_UNITY_REVIEW_APK`, checks the APK ZIP, produces SHA-256, and retains the
-review artifact seven days.
+available. The requested first branch build is allowed only by the one-time
+`[build-unity-review-apk]` commit marker; later builds require explicit manual
+confirmation `BUILD_UNITY_REVIEW_APK`. It checks the APK ZIP, produces SHA-256,
+and retains the review artifact seven days.
 
 The current GitHub integration returned HTTP 403 when attempting to enumerate
 secret names, so the repository's exact secret identifiers could not be read and
 no values were accessed. If the existing secret names differ from
 `UNITY_EMAIL`/`UNITY_PASSWORD`, change only the two references above (or provide
-the secret **names**, never the values). GitHub Actions also currently refuses to
-start jobs because account payments/spending eligibility is blocked, so Unity
-activation/build has not been executed.
+the secret **names**, never the values). The GitHub API also returns 404 when
+trying to dispatch a workflow that exists only on this unmerged branch, so the
+first requested build uses the narrow marker-trigger described above. GitHub
+Actions billing/spending must permit the job to start before Unity activation or
+APK export can be claimed.
 
 ## Android signing boundary
 

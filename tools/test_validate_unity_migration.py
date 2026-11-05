@@ -47,6 +47,14 @@ class UnityMigrationTests(unittest.TestCase):
             with self.assertRaisesRegex(unity_validator.UnityMigrationError, "must not print credential values"):
                 unity_validator.validate(workspace)
 
+    def test_rejects_missing_first_build_marker(self) -> None:
+        with self.copied_workspace() as directory:
+            workspace = Path(directory)
+            workflow = workspace / ".github/workflows/unity-android.yml"
+            workflow.write_text(workflow.read_text(encoding="utf-8").replace("[build-unity-review-apk]", "[removed-marker]"), encoding="utf-8")
+            with self.assertRaisesRegex(unity_validator.UnityMigrationError, "build-unity-review-apk"):
+                unity_validator.validate(workspace)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -105,6 +105,7 @@ def validate(root: Path = ROOT) -> None:
     workflow = required_text(".github/workflows/unity-android.yml", root)
     for snippet in (
         "workflow_dispatch:",
+        "[build-unity-review-apk]",
         "BUILD_UNITY_REVIEW_APK",
         "game-ci/unity-builder@v6",
         "unityVersion: 2022.3.62f1",
