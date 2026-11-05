@@ -31,12 +31,12 @@ empty folder. It is not yet build/import/device evidence.
 
 ## License automation research and safe workflow
 
-The current [GameCI `unity-builder` v6 source](https://github.com/game-ci/unity-builder/blob/v6.0.0/src/index.ts) states that Unity credentials are read from the process environment as `UNITY_EMAIL`, `UNITY_PASSWORD`, `UNITY_SERIAL`, `UNITY_LICENSE`, or `UNITY_LICENSING_SERVER`, rather than command arguments. The companion [GameCI `unity-activate` action](https://github.com/game-ci/unity-activate/blob/v2.0.0/src/index.ts) has the same environment-only contract. Since secret-name enumeration is forbidden to this integration, `unity-android.yml` safely tries only these Unity-specific email/password aliases, resolving the first configured value directly into GameCI's environment:
+The current [GameCI `unity-builder` v6 source](https://github.com/game-ci/unity-builder/blob/v6.0.0/src/index.ts) states that Unity credentials are read from the process environment as `UNITY_EMAIL`, `UNITY_PASSWORD`, `UNITY_SERIAL`, `UNITY_LICENSE`, or `UNITY_LICENSING_SERVER`, rather than command arguments. The companion [GameCI `unity-activate` action](https://github.com/game-ci/unity-activate/blob/v2.0.0/src/index.ts) has the same environment-only contract. The user has confirmed the repository's exact email/password secret identifiers, so `unity-android.yml` passes only these two environment references to `game-ci/unity-builder@v6`:
 
 ```yaml
 env:
-  UNITY_EMAIL: ${{ secrets.UNITY_EMAIL || secrets.UNITY_ACCOUNT_EMAIL || secrets.UNITY_LICENSE_EMAIL || secrets.UNITY_USERNAME || secrets.UNITY_USER_EMAIL }}
-  UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD || secrets.UNITY_ACCOUNT_PASSWORD || secrets.UNITY_LICENSE_PASSWORD || secrets.UNITY_PASS || secrets.UNITY_USER_PASSWORD }}
+  UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+  UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
 ```
 
 The workflow never prints credentials, never places them in command arguments,
@@ -46,10 +46,9 @@ available. The requested first branch build is allowed only by the one-time
 confirmation `BUILD_UNITY_REVIEW_APK`. It checks the APK ZIP, produces SHA-256,
 and retains the review artifact seven days.
 
-The current GitHub integration returned HTTP 403 when attempting to enumerate
-secret names, so the repository's exact secret identifiers could not be read and
-no values were accessed. The guarded fallback aliases above were exercised in
-[run 42018851346](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/42018851346): its source/C# syntax job passed, and its credential preflight confirmed that none of the ten Unity-specific names resolved. It exited before activation/build without printing a value. If the repository uses different names, map only the two environment references to those actual identifiers (or provide the secret **names**, never the values). The GitHub API also returns 404 when trying to dispatch a workflow that exists only on this unmerged branch, so the requested build uses the narrow marker-trigger described above. GitHub Actions must permit the job to start before Unity activation or APK export can be claimed.
+The GitHub integration returned HTTP 403 when attempting to enumerate secret
+names, so no values were accessed or disclosed. Earlier runs—including
+[42018851346](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/42018851346)—passed source/C# syntax validation and exited before activation when their credential preflight found unavailable references. The user has now confirmed the exact `UNITY_EMAIL` and `UNITY_PASSWORD` identifiers; a fresh protected build is the next evidence gate. The GitHub API returns 404 when trying to dispatch a workflow that exists only on this unmerged branch, so the requested build uses the narrow marker-trigger described above. Unity activation or APK export is not claimed until that build succeeds.
 
 ## Android signing boundary
 
@@ -63,9 +62,9 @@ mechanism.
 
 ## What remains before a complete Unity migration
 
-1. Trigger the protected Unity workflow with a recognized Unity email/password
-   secret alias and prove license activation, Unity import/compile, Android
-   export, APK hash, and artifact retrieval.
+1. Trigger the protected Unity workflow with the confirmed `UNITY_EMAIL` and
+   `UNITY_PASSWORD` references and prove license activation, Unity
+   import/compile, Android export, APK hash, and artifact retrieval.
 2. Install that APK on a real Android device and prove localized Map Select,
    Desert load, touch controls, audio, gameplay, Android Back, results, and
    D01–D12 evidence.

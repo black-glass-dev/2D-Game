@@ -63,12 +63,12 @@ class UnityMigrationTests(unittest.TestCase):
             with self.assertRaisesRegex(unity_validator.UnityMigrationError, "SwapWeapon"):
                 unity_validator.validate(workspace)
 
-    def test_rejects_removed_unity_specific_secret_aliases(self) -> None:
+    def test_rejects_changed_confirmed_secret_reference(self) -> None:
         with self.copied_workspace() as directory:
             workspace = Path(directory)
             workflow = workspace / ".github/workflows/unity-android.yml"
-            workflow.write_text(workflow.read_text(encoding="utf-8").replace("secrets.UNITY_LICENSE_EMAIL", "secrets.REMOVED_EMAIL", 1), encoding="utf-8")
-            with self.assertRaisesRegex(unity_validator.UnityMigrationError, "UNITY_LICENSE_EMAIL"):
+            workflow.write_text(workflow.read_text(encoding="utf-8").replace("secrets.UNITY_PASSWORD", "secrets.REMOVED_PASSWORD", 1), encoding="utf-8")
+            with self.assertRaisesRegex(unity_validator.UnityMigrationError, "UNITY_PASSWORD"):
                 unity_validator.validate(workspace)
 
 
