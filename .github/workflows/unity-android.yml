@@ -52,8 +52,8 @@ jobs:
     timeout-minutes: 45
     env:
       # GameCI v6 reads these only from process environment, never from argv.
-      # GitHub masks these confirmed repository secret values. Do not echo either
-      # environment variable in later steps.
+      # These are the confirmed Actions repository-secret identifiers. GitHub
+      # masks their values; do not echo either environment variable later.
       UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
       UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
       GITHUB_TOKEN: ${{ github.token }}
