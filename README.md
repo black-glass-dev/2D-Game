@@ -81,6 +81,10 @@ The APK is intentionally ignored by Git. Source, export preset, asset generator,
 
 A reproducible GitHub Actions lane is included at [`.github/workflows/android-apk.yml`](.github/workflows/android-apk.yml). It runs source checks, exports this exact Android preset, checks the APK archive/signature, launches normal-Boot/renderer gates, and attempts install/launch on the documented API-29/default x86_64 hosted probe. A new downloadable candidate is published only when all of those gates, including Android install/launch, succeed. Artifact storage or an emulator timeout is not an APK delivery.
 
+## Unity migration
+
+The forward engine target is now the Unity project in [`unity/`](unity/), documented in [`docs/UNITY_MIGRATION.md`](docs/UNITY_MIGRATION.md). It ports a playable Desert Outpost vertical slice while retaining Godot only as a migration reference until Unity Android export and physical QA are proven. Unity licensing is designed to consume masked GitHub Actions `UNITY_EMAIL` / `UNITY_PASSWORD` references through GameCI; no secret values are stored in source or printed. GitHub Actions billing/spending status currently prevents any Unity job from starting, so no Unity APK is claimed yet.
+
 ## Verification status
 
 See [`docs/TEST_REPORT.md`](docs/TEST_REPORT.md), [`docs/RELEASE_GATING.md`](docs/RELEASE_GATING.md), [`docs/PHYSICAL_DEVICE_QA.md`](docs/PHYSICAL_DEVICE_QA.md), and [`docs/PHYSICAL_ANDROID_HANDOFF.md`](docs/PHYSICAL_ANDROID_HANDOFF.md) for the exact evidence boundary. An APK must not be labelled **tested** until the Godot Android toolchain generates it, install/launch validation is recorded, and the required device matrix evidence exists.

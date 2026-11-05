@@ -1,6 +1,6 @@
 # Operation Redline — Production Progress
 
-Last updated: 2026-10-25 (Asia/Dhaka)
+Last updated: 2026-11-05 (Asia/Dhaka)
 
 | Milestone | Status | Evidence / next gate |
 | --- | --- | --- |
@@ -12,11 +12,13 @@ Last updated: 2026-10-25 (Asia/Dhaka)
 | M5 — Highrise art and optimization | Not started | CC0/procedural assets, audio, lighting, performance budgets. |
 | M6 — QA and release | In progress — CI account blocker | Foundation, packaged-content, and bilingual-catalog regression contracts are active. Candidate 87 is withdrawn after a real Android usability blocker. The new exported-PCK/human-review workflows were requested but GitHub Actions refused to start them because of account payments/spending-limit status; two-map packaged acceptance, physical QA, storage availability, and a launch-gated signed candidate remain. |
 
-## Roadmap completion snapshot — 2026-10-25
+## Unity migration completion snapshot — 2026-11-05
 
-**Estimated planned-scope completion: 60%; remaining: 40%.** This corrects the prior 66% planning estimate after a real Android screenshot showed that the only tester-visible APK could not localize or expose a map. Documentation and loose-source success are not playable-delivery completion. M0 is complete; M1/M2 source foundations are substantially implemented but M2 remains export-PCK/review-build pending; M3 is approximately 70% with the real-device matrix and a repaired install still open; M4 is approximately 20% because its source-safe intake/topology foundation is done but the authoritative B2 packet is absent; M5 is 0% pending Gate 2; and M6 is approximately 55% with source safeguards progressing while packaged-build proof, physical QA, Android launch, storage recovery, and release delivery remain blocked.
+**Estimated Unity-replacement completion: 20%; remaining: 80%.** This supersedes the previous 60% Godot-roadmap estimate as the user has now selected Unity as the forward engine target. The 20% covers a committed Unity project, a code-owned playable Desert vertical slice, source-safe Android settings, migrated player-facing resources, credential-safe GameCI licensing/build workflow, and static/mutation contracts. It does **not** claim Unity import, credential activation, APK export, package installation, device playability, full Godot feature parity, storage availability, or Highrise construction. GitHub Actions billing/spending currently blocks the first Unity build; real D01–D12 device evidence and the authoritative Highrise B2 inputs remain external gates.
 
 ## Current batch
+
+**Batch 45 — Unity engine migration baseline:** Created `unity/` as the forward Unity 2022.3.62f1 Android project. It contains an actual Bootstrap-driven localized menu, settings, playable Desert Outpost, procedural 3D survival loop, 6/9/12 waves, raiders, shooting, mobile/desktop controls, pause/Back, original audio/backdrop/Noto resources, and a locked Highrise card. A GameCI v6 manual Unity Android workflow uses masked `UNITY_EMAIL`/`UNITY_PASSWORD` environment references; GameCI source confirms credentials are read from environment rather than argv. Source/mutation validation passes. Secret names cannot be enumerated under the current GitHub integration (HTTP 403) and GitHub Actions billing/spending prevents execution, so no Unity license activation or APK exists yet. Godot is retained only as migration reference/rollback until Unity proof exists.
 
 **Batch 44 — real Android usability blocker and export-content repair:** A tester-supplied Android screenshot of candidate 87 shows raw localization keys and `menu.no_maps`, so the historical APK is withdrawn rather than treated as a game handoff. The repair generates a packaged GDScript translation catalog from the CSV, generated preloads for every map resource, source/mutation checks, and an exported-PCK execution gate that requires localized text plus playable `MP_DS_01` from outside the source tree. A one-time explicitly unvalidated human-review workflow requests a replacement APK only after source/native, import, APK archive/signature, and exported-content success. Local source validation passes, but requested human-review run [40203309780](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/40203309780) and Android workflow run [40203309723](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/40203309723) never started because GitHub reported failed account payments or an Actions spending-limit issue. No replacement APK, PCK execution, emulator result, or device PASS exists yet.
 

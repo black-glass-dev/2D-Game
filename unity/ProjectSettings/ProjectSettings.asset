@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!129 &1
+PlayerSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 26
+  productGUID: 2e4de7d0d1054b70b515492f5943c78d
+  companyName: Operation Redline
+  productName: Operation Redline
+  bundleVersion: 0.2.0-unity-migration
+  defaultScreenWidth: 1280
+  defaultScreenHeight: 720
+  defaultScreenWidthWeb: 1280
+  defaultScreenHeightWeb: 720
+  defaultScreenOrientation: 3
+  useOSAutorotation: 1
+  use32BitDisplayBuffer: 1
+  use24BitDepthBuffer: 1
+  useHDRDisplay: 0
+  m_ActiveColorSpace: 0
+  m_MTRendering: 1
+  m_RenderingPath: 1
+  m_MobileRenderingPath: 1
+  m_ShowUnitySplashScreen: 0
+  m_ShowUnitySplashLogo: 0
+  m_SplashScreenBackgroundColor: {r: 0.027, g: 0.078, b: 0.11, a: 1}
+  applicationIdentifier:
+    Standalone: com.operationredline.outpost
+    Android: com.operationredline.outpost
+  buildNumber:
+    Standalone: 0
+    Android: 1
+  AndroidMinSdkVersion: 23
+  AndroidTargetSdkVersion: 0
+  AndroidTargetArchitectures: 2
+  AndroidFullscreenMode: 1
+  AndroidRenderOutsideSafeArea: 1
+  AndroidEnableFramePacing: 1
+  AndroidUseCustomKeystore: 0
+  AndroidKeystoreName: 
+  AndroidKeyaliasName: 
+  AndroidBuildApkPerCpuArchitecture: 0
+  AndroidUseAPKExpansionFiles: 0
+  AndroidEnableProguard: 0
+  AndroidEnableMinifyRelease: 0
+  AndroidEnableMinifyDebug: 0
+  AndroidApplicationEntry: 2
+  scriptingBackend:
+    Android: 1
+  scriptingRuntimeVersion: 1
+  apiCompatibilityLevelPerPlatform: {}
+  managedStrippingLevel: {}
+  stripEngineCode: 1
+  useDeterministicCompilation: 1
+  gcIncremental: 1

@@ -1,0 +1,84 @@
+name: Build Unity Android migration
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: "Type BUILD_UNITY_REVIEW_APK to build the explicitly unvalidated Unity migration APK"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: operation-redline-unity-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate-unity-source:
+    name: Validate Unity migration source
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v5
+      - name: Validate Unity project contract
+        run: python3 tools/validate_unity_migration.py
+
+  build-unity-android:
+    name: License and build Unity Android review APK
+    needs: validate-unity-source
+    if: inputs.confirmation == 'BUILD_UNITY_REVIEW_APK'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+    env:
+      # GameCI v6 reads these only from process environment, never from argv.
+      # GitHub masks secret values. Do not echo either value in later steps.
+      UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+      UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+      GITHUB_TOKEN: ${{ github.token }}
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Verify Unity credential references are available
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${UNITY_EMAIL:-}" ] || [ -z "${UNITY_PASSWORD:-}" ]; then
+            echo "UNITY_EMAIL and/or UNITY_PASSWORD is unavailable to this workflow."
+            echo "Set those repository Action secret names (values must never be written to logs)."
+            exit 1
+          fi
+          echo "Unity credential references are present; values remain masked."
+
+      - name: Build Android APK with Unity license activation
+        uses: game-ci/unity-builder@v6
+        with:
+          projectPath: unity
+          unityVersion: 2022.3.62f1
+          targetPlatform: Android
+          androidExportType: androidPackage
+          buildName: OperationRedline-Unity-review
+          buildsPath: unity-build
+          androidVersionCode: ${{ github.run_number }}
+          customParameters: -nographics
+
+      - name: Verify and fingerprint the Unity APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk=$(find unity-build -type f -name '*.apk' -print -quit)
+          test -n "$apk"
+          unzip -t "$apk"
+          sha256sum "$apk" | tee "$apk.sha256"
+          printf 'apk=%s\n' "$apk" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload explicitly unvalidated Unity review APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: operation-redline-unity-android-review-${{ github.run_number }}
+          path: |
+            unity-build/**/*.apk
+            unity-build/**/*.apk.sha256
+          if-no-files-found: error
+          retention-days: 7

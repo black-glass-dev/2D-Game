@@ -32,6 +32,17 @@ build/
 # Tool downloads kept outside source control
 .tools/
 
+# Unity generated editor/build data (the source project lives in unity/)
+unity/[Ll]ibrary/
+unity/[Tt]emp/
+unity/[Oo]bj/
+unity/[Bb]uild/
+unity/[Bb]uilds/
+unity/[Ll]ogs/
+unity/[Uu]ser[Ss]ettings/
+unity/[Mm]emoryCaptures/
+unity/Assets/AssetStoreTools*
+
 # Python validation bytecode
 __pycache__/
 *.py[cod]
