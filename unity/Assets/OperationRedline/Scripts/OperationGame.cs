@@ -94,6 +94,10 @@ namespace OperationRedline.Unity
         private UnityWeaponState sidearm;
         private UnityWeaponState activeWeapon;
         private TacticalRadar tacticalRadar;
+        private UnityHudLayout hudLayout;
+        private bool hudEditMode;
+        private UnityHudLayout.Element? hudDragElement;
+        private Vector2 hudDragOffset;
         private AudioSource music;
         private AudioSource effects;
         private AudioSource uiEffects;
@@ -128,6 +132,7 @@ namespace OperationRedline.Unity
             LoadPresentationAssets();
             CreateAudio();
             tacticalRadar = gameObject.AddComponent<TacticalRadar>();
+            hudLayout = new UnityHudLayout();
             ApplyPresentationSettings();
         }
 
@@ -447,7 +452,10 @@ namespace OperationRedline.Unity
                     }
                 }
             }
-            CreateShotTracer(origin, destination);
+            if (settings.ScreenEffects)
+            {
+                CreateShotTracer(origin, destination);
+            }
         }
 
         private Vector3 ApplyMobileAimAssist(Vector3 direction)
@@ -853,6 +861,7 @@ namespace OperationRedline.Unity
             SliderRow(content, 95f, T("settings.fov"), settings.FieldOfView, 60f, 90f, settings.SetFieldOfView);
             SliderRow(content, 145f, T("settings.brightness"), settings.Brightness, 0.65f, 1.35f, settings.SetBrightness);
             if (Button(new Rect(content.x, content.y + 202f, 220f, 36f), settings.ShowFps ? T("settings.show_fps") + ": ON" : T("settings.show_fps") + ": " + T("settings.off"), buttonStyle)) settings.SetShowFps(!settings.ShowFps);
+            if (Button(new Rect(content.x + 250f, content.y + 202f, 220f, 36f), "EFFECTS: " + OnOff(settings.ScreenEffects), buttonStyle)) settings.SetScreenEffects(!settings.ScreenEffects);
         }
 
         private void DrawAudioSettings(Rect content, GUIStyle leftStyle, GUIStyle buttonStyle)
@@ -959,16 +968,68 @@ namespace OperationRedline.Unity
             GUI.Label(new Rect(Screen.width * 0.5f - 8f, Screen.height * 0.5f - 18f, 16f, 36f), "+", Style(28, hudColor, TextAnchor.MiddleCenter, true));
             if (settings.ShowFps) GUI.Label(new Rect(Screen.width - 115f, 66f, 100f, 24f), Mathf.RoundToInt(fpsSample) + " FPS", leftStyle);
             if (settings.Subtitles && Time.unscaledTime < soundCaptionUntil) GUI.Label(new Rect(0f, Screen.height - 72f, Screen.width, 26f), "♪  " + soundCaption, bodyStyle);
-            if (tacticalRadar != null) tacticalRadar.Draw(new Rect(Screen.width - 142f, 100f, 122f, 122f), playerRoot, raiders, settings.ColorblindMode);
             DrawDamageNumbers();
 
-            var fireWidth = 118f * settings.ButtonScale;
-            var fireHeight = 104f * settings.ButtonScale;
-            var fireX = settings.LeftHanded ? 22f : Screen.width - fireWidth - 22f;
+            var screenSize = new Vector2(Screen.width, Screen.height);
+            var fireSize = new Vector2(118f * settings.ButtonScale, 104f * settings.ButtonScale);
+            var radarRect = hudLayout.Resolve(UnityHudLayout.Element.Radar, new Vector2(122f, 122f), screenSize, settings.LeftHanded);
+            var fireRect = hudLayout.Resolve(UnityHudLayout.Element.Fire, fireSize, screenSize, settings.LeftHanded);
+            var pauseRect = hudLayout.Resolve(UnityHudLayout.Element.Pause, new Vector2(115f, 36f), screenSize, settings.LeftHanded);
+            if (hudEditMode)
+            {
+                DrawHudEditor(radarRect, fireRect, pauseRect, bodyStyle, buttonStyle);
+                return;
+            }
+
+            if (tacticalRadar != null) tacticalRadar.Draw(radarRect, playerRoot, raiders, settings.ColorblindMode);
             GUI.color = new Color(1f, 1f, 1f, settings.TouchOpacity);
-            if (GUI.RepeatButton(new Rect(fireX, Screen.height - fireHeight - 20f, fireWidth, fireHeight), T("bindings.fire"), buttonStyle)) FireActiveWeapon();
+            if (GUI.RepeatButton(fireRect, T("bindings.fire"), buttonStyle)) FireActiveWeapon();
             GUI.color = Color.white;
-            if (Button(new Rect(Screen.width - 130f, 18f, 115f, 36f), T("pause.title"), buttonStyle)) PauseOperation();
+            if (Button(pauseRect, T("pause.title"), buttonStyle)) PauseOperation();
+            if (Button(new Rect(292f, 18f, 88f, 36f), "HUD", buttonStyle)) hudEditMode = true;
+        }
+
+        private void DrawHudEditor(Rect radarRect, Rect fireRect, Rect pauseRect, GUIStyle bodyStyle, GUIStyle buttonStyle)
+        {
+            GUI.color = new Color(0f, 0f, 0f, 0.55f);
+            GUI.DrawTexture(new Rect(0f, 0f, Screen.width, Screen.height), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+            GUI.Label(new Rect(0f, 20f, Screen.width, 34f), T("settings.hud_layout_note"), bodyStyle);
+            DrawHudEditTarget(UnityHudLayout.Element.Radar, radarRect, "RADAR", buttonStyle);
+            DrawHudEditTarget(UnityHudLayout.Element.Fire, fireRect, T("bindings.fire"), buttonStyle);
+            DrawHudEditTarget(UnityHudLayout.Element.Pause, pauseRect, T("pause.title"), buttonStyle);
+            if (Button(new Rect(Screen.width * 0.5f - 185f, Screen.height - 70f, 175f, 42f), "RESET HUD", buttonStyle)) hudLayout.Reset();
+            if (Button(new Rect(Screen.width * 0.5f + 10f, Screen.height - 70f, 175f, 42f), "DONE", buttonStyle))
+            {
+                hudEditMode = false;
+                hudDragElement = null;
+            }
+        }
+
+        private void DrawHudEditTarget(UnityHudLayout.Element element, Rect rect, string label, GUIStyle buttonStyle)
+        {
+            var current = Event.current;
+            if (current.type == EventType.MouseDown && rect.Contains(current.mousePosition))
+            {
+                hudDragElement = element;
+                hudDragOffset = current.mousePosition - rect.position;
+                current.Use();
+            }
+            else if (current.type == EventType.MouseDrag && hudDragElement.HasValue && hudDragElement.Value == element)
+            {
+                var moved = new Rect(current.mousePosition - hudDragOffset, rect.size);
+                hudLayout.Store(element, moved, new Vector2(Screen.width, Screen.height));
+                current.Use();
+            }
+            else if (current.type == EventType.MouseUp && hudDragElement.HasValue && hudDragElement.Value == element)
+            {
+                hudDragElement = null;
+                current.Use();
+            }
+
+            GUI.color = new Color(0.18f, 0.52f, 0.62f, 0.9f);
+            GUI.Box(rect, label, buttonStyle);
+            GUI.color = Color.white;
         }
 
         private void DrawDamageNumbers()

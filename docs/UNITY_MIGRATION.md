@@ -86,7 +86,8 @@ Controls, Accessibility and Other sections; player movement with sprint, jump,
 crouch, aiming, mobile look/joystick controls and gamepad-axis deadzone; two
 ammo/reload/swap weapons; difficulty and Survival/Endless selection; result
 accuracy/best-record persistence; sound captions, focus mute, haptics,
-colorblind HUD, and a conflict-safe keyboard binding baseline. These are
+colorblind HUD, screen-effects preference, resolution-independent persistent HUD
+layout editing, and a conflict-safe keyboard binding baseline. These are
 source-level contracts until a Unity import/build proves them.
 4. Keep `MP_RF_02` locked until its authoritative B2 reference/coordinate inputs
    arrive; Unity does not authorize guessed Highrise geometry or traversal.

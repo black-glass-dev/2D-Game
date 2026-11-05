@@ -30,6 +30,7 @@ namespace OperationRedline.Unity
         private const string SubtitleKey = Prefix + "subtitles";
         private const string DamageNumbersKey = Prefix + "damage_numbers";
         private const string ReducedMotionKey = Prefix + "reduce_motion";
+        private const string ScreenEffectsKey = Prefix + "screen_effects";
         private const string ColorblindKey = Prefix + "colorblind";
         private const string HapticsKey = Prefix + "haptics";
         private const string DeadzoneKey = Prefix + "gamepad_deadzone";
@@ -55,6 +56,7 @@ namespace OperationRedline.Unity
         public bool Subtitles { get; private set; }
         public bool DamageNumbers { get; private set; }
         public bool ReducedMotion { get; private set; }
+        public bool ScreenEffects { get; private set; }
         public bool ColorblindMode { get; private set; }
         public bool Haptics { get; private set; }
         public float GamepadDeadzone { get; private set; }
@@ -108,6 +110,7 @@ namespace OperationRedline.Unity
         public void SetSubtitles(bool value) { Subtitles = SaveBool(SubtitleKey, value); }
         public void SetDamageNumbers(bool value) { DamageNumbers = SaveBool(DamageNumbersKey, value); }
         public void SetReducedMotion(bool value) { ReducedMotion = SaveBool(ReducedMotionKey, value); }
+        public void SetScreenEffects(bool value) { ScreenEffects = SaveBool(ScreenEffectsKey, value); }
         public void SetColorblindMode(bool value) { ColorblindMode = SaveBool(ColorblindKey, value); }
         public void SetHaptics(bool value) { Haptics = SaveBool(HapticsKey, value); }
         public void SetGamepadDeadzone(float value) { GamepadDeadzone = SaveClamped(DeadzoneKey, value, 0.05f, 0.85f); }
@@ -135,6 +138,7 @@ namespace OperationRedline.Unity
             PlayerPrefs.DeleteKey(SubtitleKey);
             PlayerPrefs.DeleteKey(DamageNumbersKey);
             PlayerPrefs.DeleteKey(ReducedMotionKey);
+            PlayerPrefs.DeleteKey(ScreenEffectsKey);
             PlayerPrefs.DeleteKey(ColorblindKey);
             PlayerPrefs.DeleteKey(HapticsKey);
             PlayerPrefs.DeleteKey(DeadzoneKey);
@@ -171,6 +175,7 @@ namespace OperationRedline.Unity
             Subtitles = PlayerPrefs.GetInt(SubtitleKey, 1) == 1;
             DamageNumbers = PlayerPrefs.GetInt(DamageNumbersKey, 1) == 1;
             ReducedMotion = PlayerPrefs.GetInt(ReducedMotionKey, 0) == 1;
+            ScreenEffects = PlayerPrefs.GetInt(ScreenEffectsKey, 1) == 1;
             ColorblindMode = PlayerPrefs.GetInt(ColorblindKey, 0) == 1;
             Haptics = PlayerPrefs.GetInt(HapticsKey, 1) == 1;
             GamepadDeadzone = Mathf.Clamp(PlayerPrefs.GetFloat(DeadzoneKey, 0.2f), 0.05f, 0.85f);

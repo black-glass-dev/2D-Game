@@ -74,6 +74,7 @@ def validate(root: Path = ROOT) -> None:
             "FireActiveWeapon()",
             "CreateShotTracer",
             "DrawDamageNumbers",
+            "DrawHudEditor",
             "OnRaiderEliminated",
             "ApplyPlayerDamage",
             "KeyCode.Escape",
@@ -94,6 +95,7 @@ def validate(root: Path = ROOT) -> None:
             "ToggleLanguage",
             "SetAutoFire",
             "SetReducedMotion",
+            "SetScreenEffects",
             "SetGamepadDeadzone",
         ),
         root,
@@ -121,6 +123,11 @@ def validate(root: Path = ROOT) -> None:
     require(
         "unity/Assets/OperationRedline/Scripts/TacticalRadar.cs",
         ("TacticalRadar", "InverseTransformDirection", "colorblindMode"),
+        root,
+    )
+    require(
+        "unity/Assets/OperationRedline/Scripts/UnityHudLayout.cs",
+        ("UnityHudLayout", "Resolve", "Store", "Reset", "PlayerPrefs.SetFloat"),
         root,
     )
     require(

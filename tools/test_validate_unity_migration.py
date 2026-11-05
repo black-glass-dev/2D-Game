@@ -79,6 +79,14 @@ class UnityMigrationTests(unittest.TestCase):
             with self.assertRaisesRegex(unity_validator.UnityMigrationError, "InverseTransformDirection"):
                 unity_validator.validate(workspace)
 
+    def test_rejects_missing_persisted_hud_layout(self) -> None:
+        with self.copied_workspace() as directory:
+            workspace = Path(directory)
+            layout = workspace / "unity/Assets/OperationRedline/Scripts/UnityHudLayout.cs"
+            layout.write_text(layout.read_text(encoding="utf-8").replace("PlayerPrefs.SetFloat", "RemovedLayoutPersistence"), encoding="utf-8")
+            with self.assertRaisesRegex(unity_validator.UnityMigrationError, "UnityHudLayout"):
+                unity_validator.validate(workspace)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
