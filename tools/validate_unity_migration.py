@@ -179,6 +179,8 @@ def validate(root: Path = ROOT) -> None:
         "Install isolated Unity source parser",
         "unity/tools-requirements.txt",
         "tools/validate_unity_csharp_syntax.py",
+        "find . -path './.git' -prune -o -type f -name '*.apk' -print -quit",
+        "unity-review-artifact/OperationRedline-Unity-review.apk",
         "actions/upload-artifact@v4",
         "retention-days: 7",
     ):

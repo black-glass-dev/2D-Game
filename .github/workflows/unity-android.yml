@@ -88,18 +88,25 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          apk=$(find unity-build -type f -name '*.apk' -print -quit)
-          test -n "$apk"
-          unzip -t "$apk"
-          sha256sum "$apk" | tee "$apk.sha256"
+          # GameCI versions differ on whether buildsPath is interpreted from the
+          # repository root or projectPath. Search the checked-out workspace,
+          # then copy the one APK into a deterministic artifact directory.
+          apk=$(find . -path './.git' -prune -o -type f -name '*.apk' -print -quit)
+          if [ -z "$apk" ]; then
+            echo "Unity builder completed but produced no APK in the workspace."
+            echo "Expected androidExportType=androidPackage; refusing to upload another format."
+            exit 1
+          fi
+          mkdir -p unity-review-artifact
+          cp "$apk" unity-review-artifact/OperationRedline-Unity-review.apk
+          unzip -t unity-review-artifact/OperationRedline-Unity-review.apk
+          sha256sum unity-review-artifact/OperationRedline-Unity-review.apk | tee unity-review-artifact/OperationRedline-Unity-review.apk.sha256
           printf 'apk=%s\n' "$apk" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload explicitly unvalidated Unity review APK
         uses: actions/upload-artifact@v4
         with:
           name: operation-redline-unity-android-review-${{ github.run_number }}
-          path: |
-            unity-build/**/*.apk
-            unity-build/**/*.apk.sha256
+          path: unity-review-artifact/
           if-no-files-found: error
           retention-days: 7
