@@ -55,16 +55,37 @@ names, so no values were accessed or disclosed. Earlier runs passed source/C#
 syntax validation and exited before activation when their credential preflight
 found unavailable references. Once the repository's Actions-secret configuration
 was corrected, successful protected run
-[42031582552](https://github.com/black-glass-dev/2D-Game/actions/runs/42031582552)
+[42033864492](https://github.com/black-glass-dev/2D-Game/actions/runs/42033864492)
 passed credential preflight, Unity license activation/build, APK ZIP validation,
 SHA-256 generation, artifact upload, and review-prerelease publication. Its
-[Unity human-review release](https://github.com/black-glass-dev/2D-Game/releases/tag/unity-human-review-a91cb7168886)
+[Unity human-review release](https://github.com/black-glass-dev/2D-Game/releases/tag/unity-human-review-d2b24d452afc)
 contains `OperationRedline-Unity-review.apk` and its `.sha256` sidecar. The
 release is explicitly unvalidated: this CI evidence does not assert emulator
 launch, physical-device behavior, signing compatibility, visual parity, or
 Highrise acceptance. The GitHub API's 403 secret-metadata boundary remains
 appropriate; the only credential evidence recorded is that the protected
 references were non-empty in the successful job.
+
+## Android renderer correction — 2026-11-05
+
+A user-provided Android screenshot from the first Unity review APK showed the
+Desert ground as solid magenta. In Unity, that color is the visible failure mode
+for a missing, unsupported, or stripped material shader. The runtime had been
+using the implicit material supplied by `GameObject.CreatePrimitive`, which is
+not a safe Android shipping dependency when the project has no serialized
+material reference to preserve its shader.
+
+The correction replaces every runtime world primitive (ground, structures,
+raiders, and tracers) with the bundled `Resources/Shaders/OperationRedlineMobile`
+shader. It also adds an original, deterministic `desert_outpost_ground.png`
+sand/track/stone texture, tileable terrain material, outpost gate, signal mast,
+fuel drums, sandbag walls, and radio array so the playable view is no longer a
+flat placeholder. Source/mutation validation requires both the shader and
+texture. Run [42033864492](https://github.com/black-glass-dev/2D-Game/actions/runs/42033864492)
+completed Unity Android build, archive/hash verification, and review-release
+publication for this correction. This establishes build/package evidence only;
+the user must install the replacement APK and confirm that the actual device
+no longer renders magenta terrain.
 
 ## Android signing boundary
 
