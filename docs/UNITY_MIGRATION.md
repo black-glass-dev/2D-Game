@@ -48,14 +48,8 @@ and retains the review artifact seven days.
 
 The current GitHub integration returned HTTP 403 when attempting to enumerate
 secret names, so the repository's exact secret identifiers could not be read and
-no values were accessed. The guarded fallback aliases above allow a first retry
-without guessing generic/non-Unity secret names. If those ten Unity-specific
-names are also not the repository's names, update only the two references (or
-provide the secret **names**, never the values). The GitHub API also returns 404
-when trying to dispatch a workflow that exists only on this unmerged branch, so
-the first requested build uses the narrow marker-trigger described above.
-GitHub Actions must permit the job to start before Unity activation or APK export
-can be claimed.
+no values were accessed. The guarded fallback aliases above were exercised in
+[run 42018851346](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/42018851346): its source/C# syntax job passed, and its credential preflight confirmed that none of the ten Unity-specific names resolved. It exited before activation/build without printing a value. If the repository uses different names, map only the two environment references to those actual identifiers (or provide the secret **names**, never the values). The GitHub API also returns 404 when trying to dispatch a workflow that exists only on this unmerged branch, so the requested build uses the narrow marker-trigger described above. GitHub Actions must permit the job to start before Unity activation or APK export can be claimed.
 
 ## Android signing boundary
 
