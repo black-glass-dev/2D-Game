@@ -53,15 +53,18 @@ or device-pass claim.
 The GitHub integration returned HTTP 403 when attempting to enumerate secret
 names, so no values were accessed or disclosed. Earlier runs passed source/C#
 syntax validation and exited before activation when their credential preflight
-found unavailable references. The user then confirmed the exact `UNITY_EMAIL`
-and `UNITY_PASSWORD` identifiers; fresh protected build
-[42020369310](https://github.com/islamyousuf032-glitch/2D-Game/actions/runs/42020369310)
-still received both as empty and stopped safely before the builder. This proves
-an Actions secret-availability/scope/configuration issue, not a need to disclose
-or change a value. The GitHub API returns 404 when trying to dispatch a workflow
-that exists only on this unmerged branch, so requested builds use the narrow
-marker-trigger described above. Unity activation or APK export is not claimed
-until a build succeeds.
+found unavailable references. Once the repository's Actions-secret configuration
+was corrected, successful protected run
+[42031582552](https://github.com/black-glass-dev/2D-Game/actions/runs/42031582552)
+passed credential preflight, Unity license activation/build, APK ZIP validation,
+SHA-256 generation, artifact upload, and review-prerelease publication. Its
+[Unity human-review release](https://github.com/black-glass-dev/2D-Game/releases/tag/unity-human-review-a91cb7168886)
+contains `OperationRedline-Unity-review.apk` and its `.sha256` sidecar. The
+release is explicitly unvalidated: this CI evidence does not assert emulator
+launch, physical-device behavior, signing compatibility, visual parity, or
+Highrise acceptance. The GitHub API's 403 secret-metadata boundary remains
+appropriate; the only credential evidence recorded is that the protected
+references were non-empty in the successful job.
 
 ## Android signing boundary
 
@@ -75,15 +78,15 @@ mechanism.
 
 ## What remains before a complete Unity migration
 
-1. Trigger the protected Unity workflow with the confirmed `UNITY_EMAIL` and
-   `UNITY_PASSWORD` references and prove license activation, Unity
-   import/compile, Android export, APK hash, and artifact retrieval.
-2. Install that APK on a real Android device and prove localized Map Select,
-   Desert load, touch controls, audio, gameplay, Android Back, results, and
-   D01–D12 evidence.
+1. Install the published review APK on a real Android device and prove localized
+   Map Select, Desert load, touch controls, audio, gameplay, Android Back,
+   results, and D01–D12 evidence. This is the named tester's remaining activity;
+   no result may be inferred from the CI build.
+2. Resolve signing/in-place-update compatibility separately from preserved
+   application-ID evidence, if an update over a historical install is required.
 3. Finish external-only gates: authoritative Highrise B2 coordinates/reference,
-   same-certificate update compatibility if required, performance tuning from a
-   real device profile, and full visual/audio/tactical-radar parity review.
+   performance tuning from a real device profile, and full
+   visual/audio/tactical-radar parity review.
 
 The Unity source now includes persisted bilingual settings in Graphics, Audio,
 Controls, Accessibility and Other sections; player movement with sprint, jump,

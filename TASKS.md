@@ -83,7 +83,8 @@
 - [x] Add a credential-safe GameCI v6 Unity Android workflow using the confirmed masked `UNITY_EMAIL`/`UNITY_PASSWORD` references, a narrow first-build marker/manual confirmation, APK ZIP/hash validation, and seven-day review artifact retention.
 - [x] Add mutation-tested Unity migration source contracts and isolated C# syntax validation; retain Godot as reference/rollback rather than deleting it before Unity build/device proof.
 - [x] Trigger source/build workflow and record safe failed preflights when secret references were previously unavailable; no secret value was read or printed.
-- [ ] Restore GitHub Actions availability of the confirmed repository `UNITY_EMAIL` and `UNITY_PASSWORD` secrets, then run Unity license activation/import/Android build. Run 42020369310 proved the identifiers are still empty inside the job despite their confirmed names; no secret value is needed in source or chat.
+- [x] Confirm the protected `UNITY_EMAIL`/`UNITY_PASSWORD` references are available without reading them; run [42031582552](https://github.com/black-glass-dev/2D-Game/actions/runs/42031582552) completed Unity license activation/import/Android build, APK ZIP/SHA-256 verification, artifact upload, and an explicitly unvalidated review prerelease.
+- [x] Provide the review-only APK and checksum through [Unity human-review `a91cb7168886`](https://github.com/black-glass-dev/2D-Game/releases/tag/unity-human-review-a91cb7168886); this remains distinct from a release candidate.
 - [ ] Validate the Unity APK on a real device against the complete D01–D12 matrix; resolve signing/in-place-update evidence separately from application-ID preservation.
 - [ ] Finish gates that cannot be authored from this checkout: authoritative Highrise B2 coordinates/reference, physical performance/mix validation, feature-parity review (including tactical radar/visual effects), and replacement approval before archiving legacy runtime pipelines.
 
