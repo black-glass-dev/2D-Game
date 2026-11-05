@@ -104,9 +104,38 @@ initial wave routes in the player's forward view. Concrete, metal, and crate
 textures now make the primitive outpost legible. The source contract has three
 new mutation cases for the responsive-control/asset boundary. Successful
 [run 42043887645](https://github.com/black-glass-dev/2D-Game/actions/runs/42043887645)
-built and published the corrected APK. It is still build/package evidence only:
-a real Android session must confirm that movement, look, Fire, waves, pause,
-and resume stay responsive.
+built and published the corrected APK. The tester subsequently reported that this
+second correction was still frozen/nonfunctional, so it is **not** treated as a
+successful device repair.
+
+## Android runtime input/simulation recovery — 2026-11-05
+
+The third source repair addresses runtime paths that the visible-HUD correction
+did not cover. `OperationGame`, `OutpostPlayerController`, `RaiderActor`, and
+`UnityTransientEffect` now use `Time.unscaledDeltaTime` for active-operation
+motion, weapon/reload timing, wave cadence, recovery, attacks, and effects. That
+prevents a zero/stalled scaled clock from making a rendered operation appear
+frozen. The controller and action palette also support a primary-pointer
+fallback, but only when `Input.touches` is empty, for Android input-handler
+configurations that expose a primary touch through mouse state instead of a
+raw-touch entry. UI exclusion rectangles still prevent Fire/action taps from
+becoming look gestures.
+
+A new wave emits its first raider immediately at a forward, visible spawn point;
+remaining contacts retain a paced cadence. The HUD shows current/pending contact
+counts, making an empty or advancing operation distinguishable during review.
+Two regression mutations protect the unscaled clock and pointer fallback. Local
+migration/release validation, 19 mutation tests, C# syntax parsing, GDScript
+analysis, native tests, and whitespace validation passed. Protected
+[run 42055258990](https://github.com/black-glass-dev/2D-Game/actions/runs/42055258990)
+passed source validation, Unity licensing/build, ZIP/hash verification, upload,
+and prerelease publication. The resulting
+[Unity human-review release](https://github.com/black-glass-dev/2D-Game/releases/tag/unity-human-review-6cc00a10f80b)
+contains the APK (SHA-256
+`b5ff4a14316e03ed3dc13e0dd240e98ddc47cbf06d0d99466133420385698f2c`). It is
+review-only package evidence; it does not assert that touch, simulation, pause,
+or any device workflow now passes. A real test of this exact build is the next
+acceptance gate.
 
 ## Android signing boundary
 
