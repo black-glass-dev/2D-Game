@@ -61,7 +61,43 @@ def validate(root: Path = ROOT) -> None:
     require("unity/Assets/Scenes/Bootstrap.unity", ("SceneSettings:",), root)
     require(
         "unity/Assets/OperationRedline/Scripts/OperationBootstrap.cs",
-        ("RuntimeInitializeOnLoadMethod", "root.AddComponent<OperationGame>()"),
+        ("RuntimeInitializeOnLoadMethod", "RedlineRebuildBootstrap.EnsureRuntime()", "retired from execution"),
+        root,
+    )
+    require(
+        "unity/Assets/RedlineRebuild/Scripts/RedlineRebuildBootstrap.cs",
+        ("RedlineRebuildGame", "Operation Redline Rebuild Runtime", "EnsureRuntime"),
+        root,
+    )
+    require(
+        "unity/Assets/RedlineRebuild/Scripts/RedlineRebuildGame.cs",
+        (
+            "enum AppState",
+            "BeginOperation()",
+            "Time.unscaledDeltaTime",
+            "EnsureEventSystem",
+            "BuildGameplayUi",
+            "CreateTouchSurface",
+            "SetUiMove",
+            "AddUiLook",
+            "SetUiFire",
+            "SpawnEnemy",
+            "TickWaves",
+            "PauseOperation",
+            "OnApplicationPause",
+            "CONTACTS ",
+            "UI READY",
+        ),
+        root,
+    )
+    require(
+        "unity/Assets/RedlineRebuild/Scripts/RedlineRebuildTouchSurface.cs",
+        ("IPointerDownHandler", "IDragHandler", "IPointerUpHandler", "ICancelHandler", "activePointer", "SetUiMove", "AddUiLook", "SetUiFire"),
+        root,
+    )
+    require(
+        "unity/Assets/RedlineRebuild/Scripts/RedlineRebuildEnemy.cs",
+        ("Tick(float deltaTime)", "ApplyDamage", "ApplyEnemyDamage", "EliminateEnemy"),
         root,
     )
     require(
@@ -228,7 +264,7 @@ def main() -> None:
     except UnityMigrationError as exc:
         print(f"UNITY_MIGRATION_ERROR: {exc}", file=sys.stderr)
         raise SystemExit(1) from exc
-    print("UNITY_MIGRATION_CONTRACT_PASS project=2022.3.62f1 android=ready gameplay=desert-baseline")
+    print("UNITY_MIGRATION_CONTRACT_PASS project=2022.3.62f1 android=ready gameplay=clean-rebuild-r1")
 
 
 if __name__ == "__main__":

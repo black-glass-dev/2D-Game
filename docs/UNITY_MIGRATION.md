@@ -8,6 +8,20 @@ and rollback source; it must not be deleted before a Unity APK is exported and a
 real tester can enter the Desert operation. The Unity project is the forward
 implementation target, not a claim that existing Godot packages are usable.
 
+## Clean rebuild decision — 2026-11-06
+
+The user reported that the two preceding Unity review APKs remained frozen or
+nonfunctional on their Android phone. The original Unity migration was itself a
+new procedural implementation, but its runtime/input architecture is now
+retired from execution rather than extended with another cosmetic control fix.
+`OperationBootstrap` starts the clean `Assets/RedlineRebuild/` runtime instead;
+the earlier `OperationGame` source remains only for audit/reference. The new
+runtime uses UGUI/EventSystem pointer ownership for mobile Move/Look/Fire,
+explicit app states, unscaled active simulation, immediate contacts, and live
+review telemetry. The rebuild's authoritative execution plan is
+[`UNITY_REBUILD_PLAN.md`](UNITY_REBUILD_PLAN.md). Prior APKs are not acceptance
+evidence for the rebuild.
+
 ## Implemented Unity baseline
 
 The committed Unity 2022.3.62f1 project contains a runnable Bootstrap scene and

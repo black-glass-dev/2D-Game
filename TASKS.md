@@ -77,7 +77,12 @@
 
 ## Unity migration — forward engine target
 
-- [x] Create a Unity 2022.3.62f1 Android project with an actual code-owned Bootstrap runtime, localised menu/settings/map selection, playable Desert Outpost vertical slice, 6/9/12 waves, procedural raiders, keyboard/mouse/touch controls, audio, pause/Back, and locked Highrise card.
+> **Restart directive, 2026-11-06:** the user reported two Unity review APKs frozen/nonfunctional and directed that the game begin again from the start in Unity. The former `OperationGame` runtime is retained for audit only and is not booted. Work now follows [`docs/UNITY_REBUILD_PLAN.md`](docs/UNITY_REBUILD_PLAN.md) in large consolidated batches.
+
+- [x] Rebuild R1 source: route Bootstrap into the clean `RedlineRebuild` runtime; create EventSystem/UGUI-owned Move/Look/Fire interaction, Home → Desert → Pause → Results state flow, CharacterController/camera, unscaled simulation, immediate contact waves, raycast fire/reload, enemy pursuit, focus pause, runtime telemetry, and temporary Android-safe desert materials.
+- [ ] Rebuild R1 build gate: run static/mutation/C# validation and publish a new explicitly unvalidated Unity review APK for the clean runtime.
+- [ ] Rebuild R2–R5: complete mission/localization/settings/audio/save systems; player asset manifest/prefab integration; Android mobile/performance hardening; exact-build physical D01–D12 evidence; signing and release readiness.
+- [x] Create a Unity 2022.3.62f1 Android project with an actual code-owned Bootstrap runtime, localised menu/settings/map selection, playable Desert Outpost vertical slice, 6/9/12 waves, procedural raiders, keyboard/mouse/touch controls, audio, pause/Back, and locked Highrise card. **Historical prototype; no longer executed.**
 - [x] Expand Unity's source-level Desert parity in coordinated passes: full reviewed English/Bengali catalog, persisted five-category settings, sprint/jump/crouch/aim, touch/gamepad deadzone support, dual weapons/ammo/reload/swap, captions/haptics/accessibility, difficulty plus Survival/Endless, durable operation records/input bindings, tactical radar, damage numbers, tracer feedback, screen-effects preference, and persisted HUD layout editing.
 - [x] Copy reviewed player-facing fonts, menu backdrop, and original audio to Unity Resources; preserve `com.operationredline.outpost`, landscape, arm64, and API-23 Android baseline in Unity ProjectSettings.
 - [x] Add a credential-safe GameCI v6 Unity Android workflow using the confirmed masked `UNITY_EMAIL`/`UNITY_PASSWORD` references, a narrow first-build marker/manual confirmation, APK ZIP/hash validation, and seven-day review artifact retention.

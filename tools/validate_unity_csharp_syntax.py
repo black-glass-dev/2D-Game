@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPTS = ROOT / "unity" / "Assets" / "OperationRedline" / "Scripts"
+SCRIPTS_ROOT = ROOT / "unity" / "Assets"
 
 
 def main() -> int:
@@ -25,7 +25,7 @@ def main() -> int:
 
     parser = Parser(Language(tree_sitter_c_sharp.language()))
     failures: list[str] = []
-    files = sorted(SCRIPTS.glob("*.cs"))
+    files = sorted(SCRIPTS_ROOT.rglob("*.cs"))
     if not files:
         print("UNITY_CSHARP_SYNTAX_ERROR no Unity C# scripts found", file=sys.stderr)
         return 1

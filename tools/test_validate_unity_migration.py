@@ -133,6 +133,22 @@ class UnityMigrationTests(unittest.TestCase):
             with self.assertRaisesRegex(unity_validator.UnityMigrationError, "Time.unscaledDeltaTime"):
                 unity_validator.validate(workspace)
 
+    def test_rejects_missing_rebuild_eventsystem_touch_routing(self) -> None:
+        with self.copied_workspace() as directory:
+            workspace = Path(directory)
+            surface = workspace / "unity/Assets/RedlineRebuild/Scripts/RedlineRebuildTouchSurface.cs"
+            surface.write_text(surface.read_text(encoding="utf-8").replace("IPointerDownHandler", "RemovedPointerDown"), encoding="utf-8")
+            with self.assertRaisesRegex(unity_validator.UnityMigrationError, "IPointerDownHandler"):
+                unity_validator.validate(workspace)
+
+    def test_rejects_rebuild_scaled_simulation_clock(self) -> None:
+        with self.copied_workspace() as directory:
+            workspace = Path(directory)
+            game = workspace / "unity/Assets/RedlineRebuild/Scripts/RedlineRebuildGame.cs"
+            game.write_text(game.read_text(encoding="utf-8").replace("Time.unscaledDeltaTime", "Time.deltaTime"), encoding="utf-8")
+            with self.assertRaisesRegex(unity_validator.UnityMigrationError, "Time.unscaledDeltaTime"):
+                unity_validator.validate(workspace)
+
     def test_rejects_ambiguous_paused_mobile_label(self) -> None:
         with self.copied_workspace() as directory:
             workspace = Path(directory)
