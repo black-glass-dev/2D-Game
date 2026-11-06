@@ -66,6 +66,12 @@ sequence.
 - The live loop creates a CharacterController/camera, direct UGUI HUD,
   immediate enemy contacts, three wave rounds, raycast combat/reload, enemy
   pursuit/damage, failure/success results, and app-focus pause.
+- After the first clean-runtime phone report that Start Operation did not visibly
+  advance, R1 now starts directly on pointer-down, has a narrowly scoped
+  primary-pointer fallback for the start rectangle, stages Home → loading →
+  world → control initialization across frames, and renders a recoverable error
+  screen instead of silently remaining on a frozen surface if initialization
+  throws.
 - The temporary Desert Outpost uses the repository's explicit Android-safe
   shader and reviewed ground/concrete/metal/crate textures. It has no reliance
   on Unity's default primitive material.
@@ -81,7 +87,11 @@ publication. Its explicitly unvalidated review APK is
 [Unity human-review `56f01d882dd5`](https://github.com/black-glass-dev/2D-Game/releases/tag/unity-human-review-56f01d882dd5),
 SHA-256 `939b3266e851e1e80a8b4e9955af5d8235396d54e74a44f1a94758153affc359`.
 It is the first package from the new runtime, not evidence that a touch or
-Android session has passed. The retained workflow artifact
+Android session has passed. The user subsequently reported that Start Operation
+again failed to advance on their phone. The current source therefore replaces
+that standard click route with direct pointer-down activation, a constrained
+start-region fallback, staged loading, and an on-screen recoverable error path;
+a replacement R1 review build is pending. The retained workflow artifact
 `operation-redline-unity-android-review-15` expires 2026-11-13 06:38 UTC.
 
 ## Asset handoff seam
@@ -94,9 +104,11 @@ Until final art arrives, only these temporary references are used:
 - `Resources/Textures/outpost_weathered_crate.png`
 - `Resources/Shaders/OperationRedlineMobile.shader`
 
-When the player supplies final art, the next batch will add a documented asset
-manifest with source/provenance and prefab/material bindings. The supplied art
-will not require rewriting the stable game loop or mobile controls.
+The rebuild now includes a documented asset manifest and automatic Resource
+resolver for the future prefab/texture keys. See
+[`REBUILD_ASSET_INTEGRATION.md`](REBUILD_ASSET_INTEGRATION.md) for exact drop
+locations and names. The supplied art will not require rewriting the stable game
+loop or mobile controls.
 
 ## Remaining evidence boundary
 

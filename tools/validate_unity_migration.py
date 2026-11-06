@@ -78,7 +78,12 @@ def validate(root: Path = ROOT) -> None:
         "unity/Assets/RedlineRebuild/Scripts/RedlineRebuildGame.cs",
         (
             "enum AppState",
+            "AppState.Loading",
             "BeginOperation()",
+            "BeginOperationRoutine",
+            "ReadHomePointerFallback",
+            "ShowStartupFailure",
+            "ActivateTouchAction",
             "Time.unscaledDeltaTime",
             "EnsureEventSystem",
             "BuildGameplayUi",
@@ -97,7 +102,7 @@ def validate(root: Path = ROOT) -> None:
     )
     require(
         "unity/Assets/RedlineRebuild/Scripts/RedlineRebuildTouchSurface.cs",
-        ("IPointerDownHandler", "IDragHandler", "IPointerUpHandler", "ICancelHandler", "activePointer", "SetUiMove", "AddUiLook", "SetUiFire"),
+        ("IPointerDownHandler", "IDragHandler", "IPointerUpHandler", "ICancelHandler", "activePointer", "StartOperation", "ActivateTouchAction", "SetUiMove", "AddUiLook", "SetUiFire"),
         root,
     )
     require(
@@ -106,8 +111,17 @@ def validate(root: Path = ROOT) -> None:
         root,
     )
     require(
-        "unity/Assets/OperationRedline/Scripts/OperationGame.cs",
-        (
+        "unity/Assets/RedlineRebuild/Scripts/RedlineRebuildAssetResolver.cs",
+        ("Resources.Load<GameObject>", "Rebuild/Prefabs/", "TextureOrFallback"),
+        root,
+    )
+    require(
+        "unity/Assets/RedlineRebuild/Resources/Rebuild/asset_manifest.json",
+        ("prefabKeys", "outpost_gate", "raider", "textureKeys"),
+        root,
+    )
+    require(
+        "unity/Assets/OperationRedline/Scripts/OperationGame.cs",        (
             "WaveSizes = { 6, 9, 12 }",
             "MP_DS_01 Desert Outpost",
             "MP_RF_02",

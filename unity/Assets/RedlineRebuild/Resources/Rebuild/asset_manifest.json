@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "purpose": "Player asset handoff seam for the clean Unity rebuild. Missing entries intentionally use safe temporary fallbacks.",
+  "prefabRoot": "Assets/RedlineRebuild/Resources/Rebuild/Prefabs/",
+  "textureRoot": "Assets/RedlineRebuild/Resources/Rebuild/Textures/",
+  "prefabKeys": [
+    "outpost_left",
+    "outpost_right",
+    "outpost_gate",
+    "watch_tower",
+    "crate_stack_a",
+    "crate_stack_b",
+    "sandbag_cover",
+    "raider"
+  ],
+  "textureKeys": [
+    "desert_ground",
+    "outpost_concrete",
+    "outpost_metal",
+    "outpost_crate"
+  ],
+  "rules": [
+    "A supplied prefab must include a visible Renderer and a Collider when it is intended to block shots or player movement.",
+    "Keep the prefab pivot at ground level and apply scale in Blender/Unity before delivery when possible.",
+    "Do not embed gameplay scripts in supplied prefabs; RedlineRebuild owns input, combat, waves, and state."
+  ]
+}

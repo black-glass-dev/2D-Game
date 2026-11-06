@@ -17,6 +17,7 @@ namespace OperationRedline.Rebuild
         private enum AppState
         {
             Home,
+            Loading,
             Playing,
             Paused,
             Results,
@@ -45,6 +46,8 @@ namespace OperationRedline.Rebuild
         private Text healthLabel;
         private Text waveLabel;
         private Text ammoLabel;
+        private Text loadingLabel;
+        private Coroutine operationStartRoutine;
 
         private Vector2 uiMove;
         private Vector2 queuedLook;
@@ -97,6 +100,11 @@ namespace OperationRedline.Rebuild
 
         private void Update()
         {
+            if (state == AppState.Home)
+            {
+                ReadHomePointerFallback();
+                return;
+            }
             if (state != AppState.Playing)
             {
                 return;
@@ -161,15 +169,54 @@ namespace OperationRedline.Rebuild
             CreateText(page.transform, "OPERATION REDLINE", 62, Color.white, TextAnchor.MiddleCenter, new Vector2(0.12f, 0.70f), new Vector2(0.88f, 0.84f));
             CreateText(page.transform, "ডেজার্ট আউটপোস্ট  |  DESERT OUTPOST", 28, new Color(0.55f, 0.92f, 0.84f), TextAnchor.MiddleCenter, new Vector2(0.14f, 0.62f), new Vector2(0.86f, 0.68f));
             CreateText(page.transform, "Fresh Unity rebuild — direct mobile controls, live waves, and pause-safe simulation.", 23, new Color(0.78f, 0.86f, 0.88f), TextAnchor.MiddleCenter, new Vector2(0.16f, 0.50f), new Vector2(0.84f, 0.58f));
-            CreateButton(page.transform, "START OPERATION\nঅপারেশন শুরু", new Vector2(0.32f, 0.30f), new Vector2(0.68f, 0.43f), new Color(0.12f, 0.55f, 0.42f, 1f), BeginOperation);
+            CreateTouchSurface(page.transform, "Start Operation", "START OPERATION\nঅপারেশন শুরু", RedlineRebuildTouchSurface.Role.StartOperation, new Vector2(0.32f, 0.30f), new Vector2(0.68f, 0.43f), new Color(0.12f, 0.55f, 0.42f, 1f));
             CreateText(page.transform, "Temporary authored materials are in use. Player-provided final assets will replace them without changing gameplay code.", 17, new Color(0.62f, 0.7f, 0.72f), TextAnchor.MiddleCenter, new Vector2(0.12f, 0.13f), new Vector2(0.88f, 0.21f));
         }
 
         private void BeginOperation()
         {
-            ClearPage();
-            state = AppState.Playing;
+            if ((state != AppState.Home && state != AppState.Results) || operationStartRoutine != null)
+            {
+                return;
+            }
+            operationStartRoutine = StartCoroutine(BeginOperationRoutine());
+        }
+
+        private System.Collections.IEnumerator BeginOperationRoutine()
+        {
+            state = AppState.Loading;
             Time.timeScale = 1f;
+            ClearPage();
+            ClearWorld();
+            page = CreatePanel("Operation Loading", canvas.transform, Vector2.zero, Vector2.one, new Color(0.025f, 0.055f, 0.075f, 1f));
+            loadingLabel = CreateText(page.transform, "DEPLOYING DESERT OUTPOST\nলোড হচ্ছে...", 34, Color.white, TextAnchor.MiddleCenter, new Vector2(0.18f, 0.46f), new Vector2(0.82f, 0.62f));
+            yield return null;
+
+            try
+            {
+                ResetOperationState();
+                loadingLabel.text = "BUILDING SAFE WORLD\nবিশ্ব তৈরি হচ্ছে...";
+                CreateWorld();
+                yield return null;
+                loadingLabel.text = "INITIALIZING TOUCH CONTROLS\nকন্ট্রোল প্রস্তুত হচ্ছে...";
+                BuildGameplayUi();
+                yield return null;
+                state = AppState.Playing;
+                SetStatus("UI READY · WAVE 1 STARTING");
+            }
+            catch (System.Exception exception)
+            {
+                Debug.LogException(exception);
+                ShowStartupFailure(exception.Message);
+            }
+            finally
+            {
+                operationStartRoutine = null;
+            }
+        }
+
+        private void ResetOperationState()
+        {
             elapsed = 0f;
             wave = 1;
             pendingSpawns = WaveSize(wave);
@@ -191,10 +238,6 @@ namespace OperationRedline.Rebuild
             uiFireHeld = false;
             yaw = 0f;
             pitch = 0f;
-            ClearWorld();
-            CreateWorld();
-            BuildGameplayUi();
-            SetStatus("UI READY · WAVE 1 STARTING");
         }
 
         private void CreateWorld()
@@ -205,16 +248,16 @@ namespace OperationRedline.Rebuild
             var ground = CreatePrimitive("Desert Ground", PrimitiveType.Plane, Vector3.zero, new Vector3(12f, 1f, 12f), GroundMaterial());
             ground.transform.SetParent(worldRoot.transform, true);
 
-            var concrete = CreateMaterial(new Color(0.56f, 0.47f, 0.37f, 1f), concreteTexture);
-            var metal = CreateMaterial(new Color(0.29f, 0.32f, 0.30f, 1f), metalTexture);
-            var crate = CreateMaterial(new Color(0.52f, 0.30f, 0.13f, 1f), crateTexture);
-            CreatePrimitive("Outpost Left", PrimitiveType.Cube, new Vector3(-11f, 2.8f, 13f), new Vector3(5.2f, 5.6f, 7f), concrete).transform.SetParent(worldRoot.transform, true);
-            CreatePrimitive("Outpost Right", PrimitiveType.Cube, new Vector3(11f, 2.5f, 16f), new Vector3(5f, 5f, 6f), concrete).transform.SetParent(worldRoot.transform, true);
-            CreatePrimitive("Gate", PrimitiveType.Cube, new Vector3(0f, 3f, 34f), new Vector3(15f, 6f, 0.75f), metal).transform.SetParent(worldRoot.transform, true);
-            CreatePrimitive("Tower", PrimitiveType.Cube, new Vector3(-17f, 5.5f, 27f), new Vector3(3.2f, 11f, 3.2f), metal).transform.SetParent(worldRoot.transform, true);
-            CreatePrimitive("Crate Stack A", PrimitiveType.Cube, new Vector3(-4.5f, 1f, 8f), new Vector3(2f, 2f, 2f), crate).transform.SetParent(worldRoot.transform, true);
-            CreatePrimitive("Crate Stack B", PrimitiveType.Cube, new Vector3(4.5f, 1f, 10f), new Vector3(2f, 2f, 2f), crate).transform.SetParent(worldRoot.transform, true);
-            CreatePrimitive("Sandbag Cover", PrimitiveType.Cube, new Vector3(7f, 0.65f, 4f), new Vector3(5f, 1.3f, 1.2f), GroundMaterial(new Color(0.58f, 0.47f, 0.27f, 1f))).transform.SetParent(worldRoot.transform, true);
+            var concrete = CreateMaterial(new Color(0.56f, 0.47f, 0.37f, 1f), RedlineRebuildAssetResolver.TextureOrFallback("outpost_concrete", concreteTexture));
+            var metal = CreateMaterial(new Color(0.29f, 0.32f, 0.30f, 1f), RedlineRebuildAssetResolver.TextureOrFallback("outpost_metal", metalTexture));
+            var crate = CreateMaterial(new Color(0.52f, 0.30f, 0.13f, 1f), RedlineRebuildAssetResolver.TextureOrFallback("outpost_crate", crateTexture));
+            CreateWorldProp("outpost_left", "Outpost Left", PrimitiveType.Cube, new Vector3(-11f, 2.8f, 13f), new Vector3(5.2f, 5.6f, 7f), concrete);
+            CreateWorldProp("outpost_right", "Outpost Right", PrimitiveType.Cube, new Vector3(11f, 2.5f, 16f), new Vector3(5f, 5f, 6f), concrete);
+            CreateWorldProp("outpost_gate", "Gate", PrimitiveType.Cube, new Vector3(0f, 3f, 34f), new Vector3(15f, 6f, 0.75f), metal);
+            CreateWorldProp("watch_tower", "Tower", PrimitiveType.Cube, new Vector3(-17f, 5.5f, 27f), new Vector3(3.2f, 11f, 3.2f), metal);
+            CreateWorldProp("crate_stack_a", "Crate Stack A", PrimitiveType.Cube, new Vector3(-4.5f, 1f, 8f), new Vector3(2f, 2f, 2f), crate);
+            CreateWorldProp("crate_stack_b", "Crate Stack B", PrimitiveType.Cube, new Vector3(4.5f, 1f, 10f), new Vector3(2f, 2f, 2f), crate);
+            CreateWorldProp("sandbag_cover", "Sandbag Cover", PrimitiveType.Cube, new Vector3(7f, 0.65f, 4f), new Vector3(5f, 1.3f, 1.2f), GroundMaterial(new Color(0.58f, 0.47f, 0.27f, 1f)));
 
             var lightRoot = new GameObject("Desert Sun");
             lightRoot.transform.SetParent(worldRoot.transform, false);
@@ -252,19 +295,48 @@ namespace OperationRedline.Rebuild
 
         private void BuildGameplayUi()
         {
+            ClearPage();
             page = CreatePanel("Gameplay UI", canvas.transform, Vector2.zero, Vector2.one, new Color(0f, 0f, 0f, 0f));
             waveLabel = CreateText(page.transform, "WAVE 1 / 3", 30, Color.white, TextAnchor.UpperLeft, new Vector2(0.025f, 0.90f), new Vector2(0.38f, 0.97f));
             healthLabel = CreateText(page.transform, "HP 100", 30, new Color(0.54f, 1f, 0.7f), TextAnchor.UpperLeft, new Vector2(0.025f, 0.84f), new Vector2(0.38f, 0.91f));
             ammoLabel = CreateText(page.transform, "30 / 120", 30, Color.white, TextAnchor.UpperRight, new Vector2(0.62f, 0.84f), new Vector2(0.975f, 0.91f));
             statusLabel = CreateText(page.transform, "UI READY", 20, new Color(0.75f, 0.94f, 0.91f), TextAnchor.UpperLeft, new Vector2(0.025f, 0.79f), new Vector2(0.72f, 0.85f));
-            CreateButton(page.transform, "PAUSE", new Vector2(0.84f, 0.91f), new Vector2(0.975f, 0.98f), new Color(0.20f, 0.30f, 0.36f, 0.95f), PauseOperation);
+            CreateTouchSurface(page.transform, "Pause Surface", "PAUSE", RedlineRebuildTouchSurface.Role.Pause, new Vector2(0.84f, 0.91f), new Vector2(0.975f, 0.98f), new Color(0.20f, 0.30f, 0.36f, 0.95f));
 
             var look = CreateTouchSurface(page.transform, "Look Surface", string.Empty, RedlineRebuildTouchSurface.Role.Look, new Vector2(0.44f, 0.04f), new Vector2(0.98f, 0.82f), new Color(0f, 0f, 0f, 0.012f));
             look.GetComponent<Image>().raycastTarget = true;
             CreateTouchSurface(page.transform, "Move Surface", "MOVE", RedlineRebuildTouchSurface.Role.Move, new Vector2(0.02f, 0.04f), new Vector2(0.39f, 0.35f), new Color(0.08f, 0.36f, 0.36f, 0.55f));
             CreateTouchSurface(page.transform, "Fire Surface", "FIRE", RedlineRebuildTouchSurface.Role.Fire, new Vector2(0.76f, 0.08f), new Vector2(0.97f, 0.24f), new Color(0.67f, 0.18f, 0.12f, 0.9f));
-            CreateButton(page.transform, "RELOAD", new Vector2(0.76f, 0.27f), new Vector2(0.97f, 0.36f), new Color(0.26f, 0.38f, 0.44f, 0.92f), StartReload);
+            CreateTouchSurface(page.transform, "Reload Surface", "RELOAD", RedlineRebuildTouchSurface.Role.Reload, new Vector2(0.76f, 0.27f), new Vector2(0.97f, 0.36f), new Color(0.26f, 0.38f, 0.44f, 0.92f));
             CreateText(page.transform, "+", 45, Color.white, TextAnchor.MiddleCenter, new Vector2(0.485f, 0.46f), new Vector2(0.515f, 0.54f)).raycastTarget = false;
+        }
+
+        private void ReadHomePointerFallback()
+        {
+            // Direct EventSystem pointer ownership is the primary route. This
+            // narrow legacy pointer fallback covers Android devices that expose
+            // their first touch only as a primary mouse press.
+            if (!Input.GetMouseButtonDown(0) || operationStartRoutine != null)
+            {
+                return;
+            }
+            var point = (Vector2)Input.mousePosition;
+            var startArea = new Rect(Screen.width * 0.32f, Screen.height * 0.30f, Screen.width * 0.36f, Screen.height * 0.13f);
+            if (startArea.Contains(point))
+            {
+                BeginOperation();
+            }
+        }
+
+        private void ShowStartupFailure(string detail)
+        {
+            state = AppState.Home;
+            ClearPage();
+            ClearWorld();
+            page = CreatePanel("Startup Failure", canvas.transform, Vector2.zero, Vector2.one, new Color(0.14f, 0.03f, 0.03f, 1f));
+            CreateText(page.transform, "OPERATION START FAILED\nশুরু করা যায়নি", 38, new Color(1f, 0.7f, 0.65f), TextAnchor.MiddleCenter, new Vector2(0.15f, 0.58f), new Vector2(0.85f, 0.76f));
+            CreateText(page.transform, "The game returned safely instead of silently freezing.\nDiagnostic: " + detail, 19, Color.white, TextAnchor.MiddleCenter, new Vector2(0.14f, 0.40f), new Vector2(0.86f, 0.55f));
+            CreateTouchSurface(page.transform, "Retry Operation", "RETRY START", RedlineRebuildTouchSurface.Role.StartOperation, new Vector2(0.33f, 0.20f), new Vector2(0.67f, 0.31f), new Color(0.12f, 0.55f, 0.42f, 1f));
         }
 
         private void ReadDesktopInput()
@@ -448,12 +520,40 @@ namespace OperationRedline.Rebuild
                 new Vector3(0f, 1.3f, 15f), new Vector3(-7f, 1.3f, 20f), new Vector3(7f, 1.3f, 20f),
                 new Vector3(-13f, 1.3f, 25f), new Vector3(13f, 1.3f, 25f),
             };
-            var enemyObject = CreatePrimitive("Raider", PrimitiveType.Capsule, positions[lane], new Vector3(1.05f, 1.3f, 1.05f), CreateMaterial(new Color(0.84f, 0.20f, 0.13f, 1f), null));
-            enemyObject.transform.SetParent(worldRoot.transform, true);
+            var enemyObject = RedlineRebuildAssetResolver.InstantiateIfPresent("raider", worldRoot.transform, positions[lane], Quaternion.identity, new Vector3(1.05f, 1.3f, 1.05f));
+            if (enemyObject == null)
+            {
+                enemyObject = CreatePrimitive("Raider", PrimitiveType.Capsule, positions[lane], new Vector3(1.05f, 1.3f, 1.05f), CreateMaterial(new Color(0.84f, 0.20f, 0.13f, 1f), null));
+                enemyObject.transform.SetParent(worldRoot.transform, true);
+            }
             var enemy = enemyObject.AddComponent<RedlineRebuildEnemy>();
             enemy.Configure(this, playerRoot.transform, 68f + wave * 8f, 2.1f + wave * 0.18f);
             enemies.Add(enemy);
             SetStatus("CONTACTS " + enemies.Count + "  +" + pendingSpawns);
+        }
+
+        public void ActivateTouchAction(RedlineRebuildTouchSurface.Role role)
+        {
+            if (role == RedlineRebuildTouchSurface.Role.StartOperation)
+            {
+                BeginOperation();
+            }
+            else if (role == RedlineRebuildTouchSurface.Role.Reload)
+            {
+                StartReload();
+            }
+            else if (role == RedlineRebuildTouchSurface.Role.Pause)
+            {
+                PauseOperation();
+            }
+            else if (role == RedlineRebuildTouchSurface.Role.Resume)
+            {
+                ResumeOperation();
+            }
+            else if (role == RedlineRebuildTouchSurface.Role.ReturnToMenu)
+            {
+                ShowHome();
+            }
         }
 
         public void SetUiMove(Vector2 value)
@@ -517,8 +617,8 @@ namespace OperationRedline.Rebuild
             uiMove = Vector2.zero;
             pauseOverlay = CreatePanel("Pause Overlay", page.transform, Vector2.zero, Vector2.one, new Color(0.01f, 0.03f, 0.05f, 0.88f));
             CreateText(pauseOverlay.transform, "OPERATION PAUSED\nঅপারেশন বিরতিতে", 40, Color.white, TextAnchor.MiddleCenter, new Vector2(0.2f, 0.59f), new Vector2(0.8f, 0.74f));
-            CreateButton(pauseOverlay.transform, "RESUME", new Vector2(0.34f, 0.39f), new Vector2(0.66f, 0.49f), new Color(0.12f, 0.55f, 0.42f, 1f), ResumeOperation);
-            CreateButton(pauseOverlay.transform, "RETURN TO MENU", new Vector2(0.34f, 0.25f), new Vector2(0.66f, 0.35f), new Color(0.42f, 0.20f, 0.18f, 1f), ShowHome);
+            CreateTouchSurface(pauseOverlay.transform, "Resume Surface", "RESUME", RedlineRebuildTouchSurface.Role.Resume, new Vector2(0.34f, 0.39f), new Vector2(0.66f, 0.49f), new Color(0.12f, 0.55f, 0.42f, 1f));
+            CreateTouchSurface(pauseOverlay.transform, "Menu Surface", "RETURN TO MENU", RedlineRebuildTouchSurface.Role.ReturnToMenu, new Vector2(0.34f, 0.25f), new Vector2(0.66f, 0.35f), new Color(0.42f, 0.20f, 0.18f, 1f));
         }
 
         private void ResumeOperation()
@@ -549,8 +649,8 @@ namespace OperationRedline.Rebuild
             CreateText(page.transform, title + "\n" + localized, 48, resultSuccess ? new Color(0.52f, 1f, 0.72f) : new Color(1f, 0.42f, 0.35f), TextAnchor.MiddleCenter, new Vector2(0.18f, 0.63f), new Vector2(0.82f, 0.80f));
             var accuracy = shotsFired == 0 ? 0 : Mathf.RoundToInt(shotsHit * 100f / shotsFired);
             CreateText(page.transform, "Waves reached: " + wave + " / " + TotalWaves + "\nContacts eliminated: " + enemiesDefeated + "\nAccuracy: " + accuracy + "%", 26, Color.white, TextAnchor.MiddleCenter, new Vector2(0.26f, 0.42f), new Vector2(0.74f, 0.57f));
-            CreateButton(page.transform, "PLAY AGAIN", new Vector2(0.33f, 0.23f), new Vector2(0.67f, 0.34f), new Color(0.12f, 0.55f, 0.42f, 1f), BeginOperation);
-            CreateButton(page.transform, "MAIN MENU", new Vector2(0.33f, 0.10f), new Vector2(0.67f, 0.20f), new Color(0.26f, 0.38f, 0.44f, 1f), ShowHome);
+            CreateTouchSurface(page.transform, "Play Again Surface", "PLAY AGAIN", RedlineRebuildTouchSurface.Role.StartOperation, new Vector2(0.33f, 0.23f), new Vector2(0.67f, 0.34f), new Color(0.12f, 0.55f, 0.42f, 1f));
+            CreateTouchSurface(page.transform, "Main Menu Surface", "MAIN MENU", RedlineRebuildTouchSurface.Role.ReturnToMenu, new Vector2(0.33f, 0.10f), new Vector2(0.67f, 0.20f), new Color(0.26f, 0.38f, 0.44f, 0.92f));
         }
 
         private void RefreshHud()
@@ -579,7 +679,7 @@ namespace OperationRedline.Rebuild
 
         private Material GroundMaterial(Color color)
         {
-            var material = CreateMaterial(color, groundTexture);
+            var material = CreateMaterial(color, RedlineRebuildAssetResolver.TextureOrFallback("desert_ground", groundTexture));
             material.mainTextureScale = new Vector2(12f, 12f);
             return material;
         }
@@ -612,6 +712,18 @@ namespace OperationRedline.Rebuild
                 renderer.sharedMaterial = material;
             }
             return primitive;
+        }
+
+        private GameObject CreateWorldProp(string assetKey, string fallbackName, PrimitiveType type, Vector3 position, Vector3 scale, Material material)
+        {
+            var supplied = RedlineRebuildAssetResolver.InstantiateIfPresent(assetKey, worldRoot.transform, position, Quaternion.identity, scale);
+            if (supplied != null)
+            {
+                return supplied;
+            }
+            var fallback = CreatePrimitive(fallbackName, type, position, scale, material);
+            fallback.transform.SetParent(worldRoot.transform, true);
+            return fallback;
         }
 
         private void ClearWorld()

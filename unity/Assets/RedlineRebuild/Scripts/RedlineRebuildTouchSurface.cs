@@ -15,6 +15,11 @@ namespace OperationRedline.Rebuild
             Move,
             Look,
             Fire,
+            StartOperation,
+            Reload,
+            Pause,
+            Resume,
+            ReturnToMenu,
         }
 
         private RedlineRebuildGame owner;
@@ -45,7 +50,7 @@ namespace OperationRedline.Rebuild
 
         public void OnDrag(PointerEventData eventData)
         {
-            if (eventData.pointerId != activePointer)
+            if (eventData.pointerId != activePointer || (role != Role.Move && role != Role.Look && role != Role.Fire))
             {
                 return;
             }
@@ -85,9 +90,13 @@ namespace OperationRedline.Rebuild
                 owner.AddUiLook(position - previous);
                 previous = position;
             }
-            else
+            else if (role == Role.Fire)
             {
                 owner.SetUiFire(true);
+            }
+            else
+            {
+                owner.ActivateTouchAction(role);
             }
         }
 

@@ -149,6 +149,21 @@ class UnityMigrationTests(unittest.TestCase):
             with self.assertRaisesRegex(unity_validator.UnityMigrationError, "Time.unscaledDeltaTime"):
                 unity_validator.validate(workspace)
 
+    def test_rejects_rebuild_without_direct_start_recovery(self) -> None:
+        with self.copied_workspace() as directory:
+            workspace = Path(directory)
+            game = workspace / "unity/Assets/RedlineRebuild/Scripts/RedlineRebuildGame.cs"
+            game.write_text(game.read_text(encoding="utf-8").replace("ShowStartupFailure", "RemovedStartupFailure"), encoding="utf-8")
+            with self.assertRaisesRegex(unity_validator.UnityMigrationError, "ShowStartupFailure"):
+                unity_validator.validate(workspace)
+
+    def test_rejects_rebuild_without_player_asset_handoff_seam(self) -> None:
+        with self.copied_workspace() as directory:
+            workspace = Path(directory)
+            (workspace / "unity/Assets/RedlineRebuild/Resources/Rebuild/asset_manifest.json").unlink()
+            with self.assertRaisesRegex(unity_validator.UnityMigrationError, "asset_manifest.json"):
+                unity_validator.validate(workspace)
+
     def test_rejects_ambiguous_paused_mobile_label(self) -> None:
         with self.copied_workspace() as directory:
             workspace = Path(directory)
