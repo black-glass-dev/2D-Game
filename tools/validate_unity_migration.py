@@ -40,6 +40,11 @@ def validate(root: Path = ROOT) -> None:
         fail("Unity project must pin the documented 2022.3.62f1 editor")
 
     require(
+        "unity/Packages/manifest.json",
+        ("com.unity.ugui",),
+        root,
+    )
+    require(
         "unity/ProjectSettings/ProjectSettings.asset",
         (
             "productName: Operation Redline",

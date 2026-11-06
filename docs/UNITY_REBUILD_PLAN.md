@@ -16,8 +16,9 @@ to that runtime is not an acceptable repair.
 
 The new implementation is a clean Unity runtime under
 `Assets/RedlineRebuild/`. It intentionally does not instantiate `OperationGame`
-or `OutpostPlayerController`. It uses Unity UGUI/EventSystem pointer ownership
-for the touch surfaces instead of screen-wide `OnGUI` and raw-touch polling.
+or `OutpostPlayerController`. It uses the explicit Unity `com.unity.ugui`
+package and EventSystem pointer ownership for the touch surfaces instead of
+screen-wide `OnGUI` and raw-touch polling.
 
 ## Fixed product contract
 
