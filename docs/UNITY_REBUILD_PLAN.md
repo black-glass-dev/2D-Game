@@ -72,6 +72,18 @@ sequence.
 - `WAVE`, `CONTACTS`, `HP`, `SIM`, and input-status text are deliberate test
   telemetry, not a claim that a device test passed.
 
+### R1 build evidence
+
+Protected [run 42174955399](https://github.com/black-glass-dev/2D-Game/actions/runs/42174955399)
+passed the migration contract, 16-file C# syntax parse, protected Unity license
+activation/build, APK ZIP/hash verification, artifact upload, and prerelease
+publication. Its explicitly unvalidated review APK is
+[Unity human-review `56f01d882dd5`](https://github.com/black-glass-dev/2D-Game/releases/tag/unity-human-review-56f01d882dd5),
+SHA-256 `939b3266e851e1e80a8b4e9955af5d8235396d54e74a44f1a94758153affc359`.
+It is the first package from the new runtime, not evidence that a touch or
+Android session has passed. The retained workflow artifact
+`operation-redline-unity-android-review-15` expires 2026-11-13 06:38 UTC.
+
 ## Asset handoff seam
 
 Until final art arrives, only these temporary references are used:
