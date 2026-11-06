@@ -88,11 +88,19 @@ publication. Its explicitly unvalidated review APK is
 SHA-256 `939b3266e851e1e80a8b4e9955af5d8235396d54e74a44f1a94758153affc359`.
 It is the first package from the new runtime, not evidence that a touch or
 Android session has passed. The user subsequently reported that Start Operation
-again failed to advance on their phone. The current source therefore replaces
-that standard click route with direct pointer-down activation, a constrained
-start-region fallback, staged loading, and an on-screen recoverable error path;
-a replacement R1 review build is pending. The retained workflow artifact
-`operation-redline-unity-android-review-15` expires 2026-11-13 06:38 UTC.
+again failed to advance on their phone. The source now uses direct pointer-down
+activation, a constrained start-region fallback, staged loading, and an
+on-screen recoverable error path. The first staged-start source commit exposed
+a C# coroutine rule during the protected build (a yield cannot be inside a
+try/catch); it was corrected immediately by moving exception handling to
+non-yielding initialization stages. Protected
+[run 42187615965](https://github.com/black-glass-dev/2D-Game/actions/runs/42187615965)
+then passed source validation, Unity build, ZIP/hash verification, artifact
+upload, and publication for the replacement
+[Unity human-review `e1f109f4bdf6`](https://github.com/black-glass-dev/2D-Game/releases/tag/unity-human-review-e1f109f4bdf6),
+SHA-256 `c7990497cf85afb450bf8f175670f3823e246e32519ec1bf1689d1db4e00f6bb`.
+It remains a replacement review build, not physical proof. The retained workflow
+artifact `operation-redline-unity-android-review-17` expires 2026-11-13 08:32 UTC.
 
 ## Asset handoff seam
 

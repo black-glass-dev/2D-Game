@@ -19,13 +19,14 @@ the earlier `OperationGame` source remains only for audit/reference. The new
 runtime uses UGUI/EventSystem pointer ownership for mobile Move/Look/Fire,
 explicit app states, unscaled active simulation, immediate contacts, and live
 review telemetry. The rebuild's authoritative execution plan is
-[`UNITY_REBUILD_PLAN.md`](UNITY_REBUILD_PLAN.md). Protected
-[run 42174955399](https://github.com/black-glass-dev/2D-Game/actions/runs/42174955399)
-built and published the first clean-runtime review package,
-[human-review `56f01d882dd5`](https://github.com/black-glass-dev/2D-Game/releases/tag/unity-human-review-56f01d882dd5),
-SHA-256 `939b3266e851e1e80a8b4e9955af5d8235396d54e74a44f1a94758153affc359`.
-It is still explicitly unvalidated. Prior APKs are not acceptance evidence for
-the rebuild.
+[`UNITY_REBUILD_PLAN.md`](UNITY_REBUILD_PLAN.md). The first clean-runtime
+review package was user-reported to fail at Start Operation, so it is not
+acceptance evidence. The direct-pointer/staged-start replacement passed protected
+[run 42187615965](https://github.com/black-glass-dev/2D-Game/actions/runs/42187615965)
+and is published as [human-review `e1f109f4bdf6`](https://github.com/black-glass-dev/2D-Game/releases/tag/unity-human-review-e1f109f4bdf6),
+SHA-256 `c7990497cf85afb450bf8f175670f3823e246e32519ec1bf1689d1db4e00f6bb`.
+It remains explicitly unvalidated: no prior APK is acceptance evidence for the
+rebuild.
 
 ## Implemented Unity baseline
 
