@@ -192,26 +192,38 @@ namespace OperationRedline.Rebuild
             loadingLabel = CreateText(page.transform, "DEPLOYING DESERT OUTPOST\nলোড হচ্ছে...", 34, Color.white, TextAnchor.MiddleCenter, new Vector2(0.18f, 0.46f), new Vector2(0.82f, 0.62f));
             yield return null;
 
+            ResetOperationState();
+            loadingLabel.text = "BUILDING SAFE WORLD\nবিশ্ব তৈরি হচ্ছে...";
+            if (!TryInitializationStage(CreateWorld))
+            {
+                operationStartRoutine = null;
+                yield break;
+            }
+            yield return null;
+            loadingLabel.text = "INITIALIZING TOUCH CONTROLS\nকন্ট্রোল প্রস্তুত হচ্ছে...";
+            if (!TryInitializationStage(BuildGameplayUi))
+            {
+                operationStartRoutine = null;
+                yield break;
+            }
+            yield return null;
+            state = AppState.Playing;
+            operationStartRoutine = null;
+            SetStatus("UI READY · WAVE 1 STARTING");
+        }
+
+        private bool TryInitializationStage(System.Action stage)
+        {
             try
             {
-                ResetOperationState();
-                loadingLabel.text = "BUILDING SAFE WORLD\nবিশ্ব তৈরি হচ্ছে...";
-                CreateWorld();
-                yield return null;
-                loadingLabel.text = "INITIALIZING TOUCH CONTROLS\nকন্ট্রোল প্রস্তুত হচ্ছে...";
-                BuildGameplayUi();
-                yield return null;
-                state = AppState.Playing;
-                SetStatus("UI READY · WAVE 1 STARTING");
+                stage();
+                return true;
             }
             catch (System.Exception exception)
             {
                 Debug.LogException(exception);
                 ShowStartupFailure(exception.Message);
-            }
-            finally
-            {
-                operationStartRoutine = null;
+                return false;
             }
         }
 
