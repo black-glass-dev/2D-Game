@@ -5,3 +5,5 @@ MENU_BACKGROUND_MODE quality=LOW mode=procedural_low
 MENU_BACKGROUND_MODE quality=HIGH mode=static_outpost
 MENU_BACKGROUND_MODE quality=AUTO mode=static_outpost
 MENU_BACKGROUND_PASS low=procedural_low high=static_outpost
+WARNING: 2 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)

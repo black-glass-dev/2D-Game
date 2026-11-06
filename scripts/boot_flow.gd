@@ -31,6 +31,9 @@ const BACK_FLOW_TEST_ARGUMENT := "--verify-back-flow"
 const MENU_BACKGROUND_TEST_ARGUMENT := "--verify-menu-background-flow"
 const MENU_BACKGROUND_CAPTURE_ARGUMENT := "--capture-menu-backgrounds"
 const MENU_CAPTURE_PATH_ARGUMENT := "--menu-capture-path"
+# Runs from an exported PCK in CI. It specifically protects the menu/map content
+# that a historical Android APK stripped while loose-source checks still passed.
+const EXPORT_CONTENT_TEST_ARGUMENT := "--verify-export-content"
 
 var active_view: View = View.SPLASH
 var selected_map_id := "MP_DS_01"
@@ -68,7 +71,9 @@ func _ready() -> void:
 	_build_shell()
 	_apply_menu_background_quality()
 	_show_splash()
-	if OS.get_cmdline_user_args().has(MENU_BACKGROUND_CAPTURE_ARGUMENT):
+	if OS.get_cmdline_user_args().has(EXPORT_CONTENT_TEST_ARGUMENT):
+		call_deferred("_begin_export_content_test")
+	elif OS.get_cmdline_user_args().has(MENU_BACKGROUND_CAPTURE_ARGUMENT):
 		call_deferred("_begin_menu_background_capture")
 	elif OS.get_cmdline_user_args().has(MENU_BACKGROUND_TEST_ARGUMENT):
 		call_deferred("_begin_menu_background_flow_test")
@@ -84,6 +89,30 @@ func _ready() -> void:
 		call_deferred("_begin_settings_menu_test")
 	elif OS.get_cmdline_user_args().has(MAP_SELECT_TEST_ARGUMENT):
 		call_deferred("_begin_map_select_test")
+
+func _begin_export_content_test() -> void:
+	# Do not use a loose-source result as proof that an exported APK/PCK has the
+	# same dynamically discovered data. The CI command runs this exact check from
+	# a generated PCK in an otherwise empty directory.
+	await get_tree().process_frame
+	var maps: Array[RedlineMapData] = MapRegistry.get_all_maps()
+	var desert: RedlineMapData = MapRegistry.get_map("MP_DS_01")
+	var localized_title := tr("app.title")
+	var localized_map_select := tr("menu.map_select")
+	var translated_title := localized_title in ["OPERATION REDLINE", "অপারেশন রেডলাইন"]
+	var translated_map_select := localized_map_select in ["MAP SELECT", "ম্যাপ নির্বাচন"]
+	if not translated_title or not translated_map_select or desert == null or not desert.can_launch() or maps.size() < 2 or MapRegistry.get_playable_maps().is_empty():
+		push_error("Export-content verification requires translations and a playable MP_DS_01 map (maps=%d title=%s map_select=%s)." % [maps.size(), localized_title, localized_map_select])
+		get_tree().quit(1)
+		return
+	_show_map_select()
+	await get_tree().process_frame
+	if not _selected_map_is_playable():
+		push_error("Export-content verification could not select the playable Desert map.")
+		get_tree().quit(1)
+		return
+	print("EXPORT_CONTENT_PASS maps=", maps.size(), " playable=", MapRegistry.get_playable_maps().size(), " locale=", LocalizationService.active_locale)
+	get_tree().quit()
 
 func _begin_headless_handoff_test() -> void:
 	_show_menu()

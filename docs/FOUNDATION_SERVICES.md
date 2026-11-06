@@ -8,10 +8,10 @@ M1 introduces global services without replacing the playable Desert runtime in t
 
 1. `SettingsService` — versioned `user://settings.cfg`, safe migration from `user://operation_redline_settings.cfg`.
 2. `SaveService` — versioned `user://save.json`, unlocked maps, best results, last map, and future touch-layout ownership.
-3. `MapRegistry` — scans `data/maps/*.tres` and validates `RedlineMapData` resources.
+3. `MapRegistry` — scans `data/maps/*.tres`, merges generated export anchors for committed map resources, and validates `RedlineMapData` resources.
 4. `InputService` — named keyboard/mouse/gamepad actions while legacy direct input remains active.
 5. `AudioService` — prepares `Music`, `SFX`, and `UI` buses while current combat players retain their existing Master routing.
-6. `LocalizationService` — resolves `Auto`, Bengali, and English locale preference using the initial CSV catalog.
+6. `LocalizationService` — resolves `Auto`, Bengali, and English locale preference from a generated export-safe catalog whose reviewable source remains the CSV.
 7. `SceneLoader` — threaded request/progress/fade contract adopted by `Boot.tscn` for map hand-off.
 8. `GameManager` — Boot/Menu/MapSelect/Loading/Playing/Pause/End state contract; `Main.tscn` marks Playing when it takes legacy gameplay ownership.
 

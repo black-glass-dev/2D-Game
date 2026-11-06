@@ -1,0 +1,3 @@
+# Source-only C# parser used before Unity is activated in CI.
+tree-sitter==0.25.2
+tree-sitter-c-sharp==0.23.5

@@ -5,9 +5,11 @@ on:
   push:
     branches:
       - arena/e2b9c124-2d-game
+      - arena/cc748250-2d-game
     paths:
       - ".github/workflows/android-apk.yml"
       - "assets/**"
+      - "data/**"
       - "native/**"
       - "scenes/**"
       - "scripts/**"
@@ -170,6 +172,24 @@ jobs:
           test -s build/OperationRedline-debug.apk
           unzip -t build/OperationRedline-debug.apk
           jarsigner -verify -certs -verbose build/OperationRedline-debug.apk
+
+      - name: Verify exported PCK menu content
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.local/bin:$PATH"
+          # Execute the PCK from an empty directory. This prevents loose source
+          # files from masking an Android-export omission of localization/maps.
+          godot --headless --path . --export-pack "Android Debug" build/OperationRedline-content-check.pck 2>&1 | tee build/godot-export-pack.log
+          test -s build/OperationRedline-content-check.pck
+          export_content_runtime=/tmp/operation-redline-export-content
+          rm -rf "$export_content_runtime"
+          mkdir -p "$export_content_runtime"
+          (
+            cd "$export_content_runtime"
+            timeout 30s godot --headless --main-pack "$GITHUB_WORKSPACE/build/OperationRedline-content-check.pck" -- --verify-export-content
+          ) 2>&1 | tee build/godot-export-content.log
+          grep -q "EXPORT_CONTENT_PASS" build/godot-export-content.log
 
       - name: Launch Boot and gameplay flow headlessly
         id: gameplay_smoke

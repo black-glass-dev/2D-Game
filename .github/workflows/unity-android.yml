@@ -1,0 +1,138 @@
+name: Build Unity Android migration
+
+on:
+  # The workflow is initially on the migration branch rather than main. A single
+  # marker-triggered push lets the requested first review build run before merge;
+  # later runs stay manual and confirmation-gated.
+  push:
+    branches:
+      - arena/cc748250-2d-game
+    paths:
+      - ".github/workflows/unity-android.yml"
+      - "unity/**"
+      - "tools/validate_unity_migration.py"
+      - "tools/test_validate_unity_migration.py"
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: "Type BUILD_UNITY_REVIEW_APK to build the explicitly unvalidated Unity migration APK"
+        required: true
+        type: string
+
+permissions:
+  # Limited to the explicitly unvalidated Unity review handoff below. This is
+  # not the emulator-gated candidate-release workflow.
+  contents: write
+
+concurrency:
+  group: operation-redline-unity-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate-unity-source:
+    name: Validate Unity migration source
+    if: >-
+      (github.event_name == 'push' && contains(github.event.head_commit.message, '[build-unity-review-apk]')) ||
+      (github.event_name == 'workflow_dispatch' && inputs.confirmation == 'BUILD_UNITY_REVIEW_APK')
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install isolated Unity source parser
+        run: python3 -m pip install --disable-pip-version-check -r unity/tools-requirements.txt
+      - name: Validate Unity project contract and C# syntax
+        run: |
+          python3 tools/validate_unity_migration.py
+          python3 tools/validate_unity_csharp_syntax.py
+
+  build-unity-android:
+    name: License and build Unity Android review APK
+    needs: validate-unity-source
+    if: >-
+      (github.event_name == 'push' && contains(github.event.head_commit.message, '[build-unity-review-apk]')) ||
+      (github.event_name == 'workflow_dispatch' && inputs.confirmation == 'BUILD_UNITY_REVIEW_APK')
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+    env:
+      # GameCI v6 reads these only from process environment, never from argv.
+      # These are the confirmed Actions repository-secret identifiers. GitHub
+      # masks their values; do not echo either environment variable later.
+      UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+      UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+      GITHUB_TOKEN: ${{ github.token }}
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Verify Unity credential references are available
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${UNITY_EMAIL:-}" ] || [ -z "${UNITY_PASSWORD:-}" ]; then
+            echo "UNITY_EMAIL and/or UNITY_PASSWORD is unavailable to this workflow."
+            echo "Set those repository Action secret names (values must never be written to logs)."
+            exit 1
+          fi
+          echo "Unity credential references are present; values remain masked."
+
+      - name: Build Android APK with Unity license activation
+        uses: game-ci/unity-builder@v6
+        with:
+          projectPath: unity
+          unityVersion: 2022.3.62f1
+          targetPlatform: Android
+          androidExportType: androidPackage
+          buildName: OperationRedline-Unity-review
+          buildsPath: unity-build
+          androidVersionCode: ${{ github.run_number }}
+          customParameters: -nographics
+
+      - name: Verify and fingerprint the Unity APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          # GameCI versions differ on whether buildsPath is interpreted from the
+          # repository root or projectPath. Search the checked-out workspace,
+          # then copy the one APK into a deterministic artifact directory.
+          apk=$(find . -path './.git' -prune -o -type f -name '*.apk' -print -quit)
+          if [ -z "$apk" ]; then
+            echo "Unity builder completed but produced no APK in the workspace."
+            echo "Expected androidExportType=androidPackage; refusing to upload another format."
+            exit 1
+          fi
+          mkdir -p unity-review-artifact
+          cp "$apk" unity-review-artifact/OperationRedline-Unity-review.apk
+          unzip -t unity-review-artifact/OperationRedline-Unity-review.apk
+          sha256sum unity-review-artifact/OperationRedline-Unity-review.apk | tee unity-review-artifact/OperationRedline-Unity-review.apk.sha256
+          printf 'apk=%s\n' "$apk" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload explicitly unvalidated Unity review APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: operation-redline-unity-android-review-${{ github.run_number }}
+          path: unity-review-artifact/
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Publish explicitly unvalidated Unity review handoff
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="unity-human-review-${GITHUB_SHA:0:12}"
+          apk_sha="$(awk '{print $1}' unity-review-artifact/OperationRedline-Unity-review.apk.sha256)"
+          [[ "$apk_sha" =~ ^[a-f0-9]{64}$ ]]
+          cat > unity-review-artifact/release-notes.md <<EOF
+          This is an **explicitly unvalidated Unity Android review build** for source commit \`${GITHUB_SHA}\`.
+
+          SHA-256: \`${apk_sha}\` for \`OperationRedline-Unity-review.apk\`.
+
+          It passed the Unity source contract, C# syntax parse, Unity license activation/build, and APK ZIP/hash verification. It has **not** passed emulator launch, physical-device review, signing-compatibility verification, or Highrise acceptance. It is not a release candidate or supported delivery.
+
+          Install only for the named tester's factual mobile review. Return test evidence rather than treating this build as a production release.
+          EOF
+          gh release create "$tag" \
+            unity-review-artifact/OperationRedline-Unity-review.apk \
+            unity-review-artifact/OperationRedline-Unity-review.apk.sha256 \
+            --target "$GITHUB_SHA" \
+            --title "Operation Redline Unity human-review ${GITHUB_SHA:0:12}" \
+            --notes-file unity-review-artifact/release-notes.md \
+            --prerelease
